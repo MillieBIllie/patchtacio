@@ -6,7 +6,9 @@ project_name: patchtacio
 
 before:
   hooks:
-    - go mod tidy
+    # Check, never modify: release binaries must match the committed module graph.
+    - go mod tidy -diff
+    - go mod verify
 
 builds:
   - id: patchtacio
