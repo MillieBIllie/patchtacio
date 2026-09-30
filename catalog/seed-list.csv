@@ -1,0 +1,4 @@
+product,vendor,category,where_it_runs,version_if_known,who_told_you,notes
+FortiGate firewall (FortiOS),Fortinet,firewall-vpn,edge / VPN,,example row,replace these example rows
+Exchange Server,Microsoft,email,on-prem server,,example row,
+Windows Server,Microsoft,os,servers,2019,example row,

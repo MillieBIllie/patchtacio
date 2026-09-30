@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.go) gofmt -w \"$f\" ;; esac; exit 0"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -f go.mod ] || exit 0; out=$(go build ./... 2>&1 && go vet ./... 2>&1) || { echo \"$out\" >&2; exit 2; }"
+          }
+        ]
+      }
+    ]
+  }
+}

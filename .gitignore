@@ -1,0 +1,9 @@
+# secrets — never commit
+.env
+*.env
+# build output
+/dist/
+/patchtacio
+/patchtacio.exe
+# local Claude Code overrides
+.claude/settings.local.json
