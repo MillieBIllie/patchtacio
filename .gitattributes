@@ -1,0 +1,10 @@
+# Normalize line endings: LF in the repo and in working copies on every OS.
+# Keeps gofmt/golangci-lint and shell scripts happy on Windows checkouts.
+* text=auto eol=lf
+
+# Binary files: never touch.
+*.png binary
+*.gif binary
+*.ico binary
+*.db binary
+*.sqlite binary

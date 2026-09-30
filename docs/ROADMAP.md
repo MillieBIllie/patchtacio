@@ -5,7 +5,7 @@ Work top to bottom. Each milestone has a "done when" check. Tick boxes as tasks 
 ## Phase 1: "Tick your stack" alerts
 
 ### M0: Scaffold
-- [ ] `go mod init github.com/MillieBIllie/patchtacio`, cobra skeleton, `patchtacio version`
+- [ ] `go mod init github.com/milliebillie/patchtacio`, cobra skeleton, `patchtacio version`
 - [ ] LICENSE (Apache-2.0), `catalog/LICENSE` (CC0), README stub, CONTRIBUTING, SECURITY.md
 - [ ] GitHub Actions CI: matrix ubuntu/windows/macos → build, vet, test, golangci-lint
 - [ ] `.goreleaser.yaml` with `goreleaser release --snapshot` working locally

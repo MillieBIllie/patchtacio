@@ -22,7 +22,7 @@ MCP servers available (see `.mcp.json`): `github` (issues/PRs/Actions/code scann
 
 ## Tech stack
 
-- Go (latest stable). Module: `github.com/MillieBIllie/patchtacio`. Binary: `patchtacio`.
+- Go (latest stable). Module: `github.com/milliebillie/patchtacio`. Binary: `patchtacio`.
 - **Pure Go only: `CGO_ENABLED=0` always.** SQLite via `modernc.org/sqlite`.
 - CLI: `spf13/cobra`. Config: YAML. Interactive picker: `charmbracelet/huh`.
 - Local web UI: `net/http` + `html/template` + `embed`. No JS framework (a vendored htmx file is OK).
@@ -62,7 +62,7 @@ go run ./cmd/patchtacio catalog lint
 1. **Tests never call live APIs.** Use recorded fixtures in `testdata/`. Live calls only behind
    `//go:build integration`.
 2. **Every fetch is polite:** timeouts, retries with backoff, ETag/If-Modified-Since caching,
-   User-Agent `patchtacio/<version> (+https://github.com/MillieBIllie/patchtacio)`, respect NVD rate limits.
+   User-Agent `patchtacio/<version> (+https://github.com/milliebillie/patchtacio)`, respect NVD rate limits.
 3. **If a feed is down, use the cached copy and warn.** Never crash or report "all clear".
 4. **Cross-platform:** use `os.UserConfigDir()`, `os.UserCacheDir()`, `filepath.Join`. OS-specific
    code goes in `_linux.go` / `_windows.go` / `_darwin.go` files. Run subprocesses with arg slices,
