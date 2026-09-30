@@ -1,6 +1,9 @@
 # secrets — never commit
 .env
 *.env
+/*_PAT*
+/*_API_KEY*
+/*token*.txt
 # build output
 /dist/
 /patchtacio
