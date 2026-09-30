@@ -1,0 +1,36 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - bodyclose     # unclosed HTTP response bodies
+    - errorlint     # errors.Is/As and %w wrapping
+    - gosec         # security checks
+    - misspell
+    - noctx         # HTTP requests without a context
+    - revive
+    - unconvert
+  settings:
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/milliebillie/patchtacio
