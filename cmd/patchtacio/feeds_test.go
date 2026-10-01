@@ -221,6 +221,30 @@ func TestFeedsRejectedDataIsOutOfDate(t *testing.T) {
 	requireContains(t, errOut, "the newest download was rejected")
 }
 
+func TestFeedsAcceptShrink(t *testing.T) {
+	e := newTestEnv(t)
+	e.exec(t, "feeds", "update")
+
+	// endoflife.date now publishes a valid but much smaller dataset.
+	e.eol.body = []byte(`{"schema_version":"1.2.1","generated_at":"2026-10-01T12:00:00+00:00","total":1,"result":[
+	 {"name":"acme-os","label":"Acme OS","category":"os","links":{"html":"https://endoflife.date/acme-os"},
+	  "releases":[{"name":"2","label":"2","releaseDate":"2024-01-01","isEol":false,"eolFrom":null}]}]}`)
+	e.eol.etagOverride.Store(true)
+	e.clock = e.clock.Add(time.Hour)
+
+	out, errOut, code := e.exec(t, "feeds", "update")
+	requireCode(t, code, exitStale, out, errOut)
+	requireContains(t, errOut, "far fewer entries", "patchtacio feeds update --accept-shrink eol")
+
+	out, errOut, code = e.exec(t, "feeds", "update", "--accept-shrink", "eol")
+	requireCode(t, code, exitOK, out, errOut)
+	requireContains(t, out, "endoflife.date: updated. 1 products")
+
+	out, errOut, code = e.exec(t, "feeds", "update", "--accept-shrink", "kve")
+	requireCode(t, code, exitToolError, out, errOut)
+	requireContains(t, errOut, `unknown source "kve"`, "kev, eol")
+}
+
 func TestCleanStripsControlCharacters(t *testing.T) {
 	in := "2026.09.30\x1b]0;pwned\x07\x1b[31m red"
 	if got := clean(in); strings.ContainsAny(got, "\x1b\x07") {

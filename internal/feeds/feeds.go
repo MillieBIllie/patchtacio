@@ -69,18 +69,26 @@ const MaxShrink = 0.10
 // cached copy.
 var ErrRejected = errors.New("rejected new data")
 
+// ErrShrunk marks a rejection caused only by the record count falling more
+// than MaxShrink. It always comes wrapped together with ErrRejected.
+var ErrShrunk = errors.New("record count fell too far")
+
 // Validate applies the checks every source shares. prev is nil on first fetch,
 // when only structural checks apply.
-func Validate(prev *Summary, next Summary) error {
+func Validate(prev *Summary, next Summary) error { return validateFor(prev, next, false) }
+
+// validateFor is Validate, optionally skipping the shrink check (and only
+// that check) for a reduction the user confirmed with --accept-shrink.
+func validateFor(prev *Summary, next Summary, acceptShrink bool) error {
 	if next.Count < 1 {
 		return fmt.Errorf("%w: it has no records", ErrRejected)
 	}
 	if prev == nil {
 		return nil
 	}
-	if prev.Count > 0 && float64(prev.Count-next.Count) > MaxShrink*float64(prev.Count) {
-		return fmt.Errorf("%w: record count fell from %d to %d (more than %.0f%%)",
-			ErrRejected, prev.Count, next.Count, MaxShrink*100)
+	if !acceptShrink && prev.Count > 0 && float64(prev.Count-next.Count) > MaxShrink*float64(prev.Count) {
+		return fmt.Errorf("%w: %w: from %d to %d (more than %.0f%%)",
+			ErrRejected, ErrShrunk, prev.Count, next.Count, MaxShrink*100)
 	}
 	if !prev.PublishedAt.IsZero() && !next.PublishedAt.IsZero() && next.PublishedAt.Before(prev.PublishedAt) {
 		return fmt.Errorf("%w: it is older (published %s) than the cached copy (published %s)",

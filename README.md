@@ -34,6 +34,8 @@ Release binaries for Linux, Windows, and macOS will be published once v0.1.0 is 
 ```
 
 If a source can't be reached, Patchtacio keeps using its saved copy and tells you how old it is.
+A download that looks broken (not valid data, or far fewer entries than before) is never used;
+if a source really did remove many entries, the warning tells you how to accept it.
 It never treats missing or out-of-date data as "nothing to report". Exit codes: `0` everything
 up to date, `3` some data could not be updated or is out of date, `2` some data is not available.
 

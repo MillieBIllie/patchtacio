@@ -425,6 +425,88 @@ func TestLostLockWritesNothing(t *testing.T) {
 	}
 }
 
+func TestAcceptShrink(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{body: body(50, day2)}, fakeResp{body: body(50, day2)})
+	h.update(t, false)
+
+	r := h.update(t, false)
+	if !errors.Is(r.Err, ErrShrunk) || !errors.Is(r.Err, ErrRejected) {
+		t.Fatalf("without the flag: want ErrShrunk+ErrRejected, got %+v", r)
+	}
+	h.u.AcceptShrink = []string{"fake"}
+	if r := h.update(t, false); r.Outcome != Updated || r.Status.Count != 50 || r.Status.State != Fresh {
+		t.Fatalf("with --accept-shrink: %+v", r)
+	}
+}
+
+func TestAcceptShrinkKeepsOtherChecks(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{body: body(50, day0)}, fakeResp{body: body(0, day2)})
+	h.update(t, false)
+	h.u.AcceptShrink = []string{"fake"}
+	if r := h.update(t, false); !errors.Is(r.Err, ErrRejected) || errors.Is(r.Err, ErrShrunk) {
+		t.Errorf("older data must still be rejected: %+v", r)
+	}
+	if r := h.update(t, false); !errors.Is(r.Err, ErrRejected) {
+		t.Errorf("an empty feed must still be rejected: %+v", r)
+	}
+}
+
+func TestCheckAcceptShrink(t *testing.T) {
+	h := newHarness(t)
+	h.u.AcceptShrink = []string{"fake"}
+	if err := h.u.CheckAcceptShrink(); err != nil {
+		t.Errorf("known source: %v", err)
+	}
+	h.u.AcceptShrink = []string{"kve"}
+	if err := h.u.CheckAcceptShrink(); err == nil || !strings.Contains(err.Error(), "fake") {
+		t.Errorf("a typo must be refused and list the valid names: %v", err)
+	}
+}
+
+func TestLostLockAfterCacheWriteFailsSafe(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{body: body(120, day2)})
+	h.update(t, false)
+	ctx := context.Background()
+	// The lock is lost in the one-rename window between replacing the file
+	// and saving its metadata.
+	h.u.afterCommit = func() {
+		if ok, err := h.u.Store.AcquireLock(ctx, lockName, "new-owner", 0); err != nil || !ok {
+			t.Errorf("take over lock: %v, %v", ok, err)
+		}
+	}
+	r := h.update(t, false)
+	if r.Outcome != Failed || !errors.Is(r.Err, errLockLost) {
+		t.Fatalf("got %+v", r)
+	}
+	got, _, _ := h.u.Store.GetFeed(ctx, "fake")
+	if got.RecordCount != 100 {
+		t.Errorf("metadata was written without the lock: %+v", got)
+	}
+	// File and metadata now disagree, which must read as Missing (so the
+	// next run downloads again), never as a fresh copy.
+	if r.Status.State != Missing {
+		t.Errorf("state = %s, want missing", r.Status.State)
+	}
+}
+
+func TestFailAfterLockLostWritesNothing(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)})
+	h.update(t, false)
+	ctx, cancel := context.WithCancelCause(context.Background())
+	cancel(errLockLost)
+
+	meta, _, _ := h.u.Store.GetFeed(context.Background(), "fake")
+	before := meta
+	meta.LastError = "should not be stored"
+	r, err := h.u.fail(ctx, h.src, meta, "us", errors.New("download interrupted"))
+	if err != nil || r.Outcome != Failed || !errors.Is(r.Err, errLockLost) {
+		t.Fatalf("fail = %+v, %v", r, err)
+	}
+	if after, _, _ := h.u.Store.GetFeed(context.Background(), "fake"); after != before {
+		t.Errorf("fail wrote after the lock was lost:\nbefore %+v\nafter  %+v", before, after)
+	}
+}
+
 // secondSource is a fakeSource with a different name.
 type secondSource struct{ *fakeSource }
 
