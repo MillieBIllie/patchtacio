@@ -263,7 +263,8 @@ func (u *Updater) fail(ctx context.Context, src Source, meta Feed, cause error) 
 	if err := u.Store.PutFeed(context.WithoutCancel(ctx), meta); err != nil {
 		return Result{}, fmt.Errorf("save %s metadata: %w", src.Name(), err)
 	}
-	u.logger().Warn("could not refresh", "source", src.Name(), "err", cause)
+	// Info, not Warn: the CLI prints its own plain-language warning for this.
+	u.logger().Info("could not refresh", "source", src.Name(), "err", cause)
 	return Result{Outcome: Failed, Err: cause, Status: u.status(src, meta)}, nil
 }
 

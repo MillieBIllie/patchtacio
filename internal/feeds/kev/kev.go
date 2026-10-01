@@ -97,7 +97,7 @@ func (s *Source) Fetch(ctx context.Context, c *httpcache.Client, prev httpcache.
 	if s.MirrorURL == "" || ctx.Err() != nil {
 		return nil, err
 	}
-	c.Log().Warn("CISA did not answer; trying the official GitHub mirror", "err", err)
+	c.Log().Info("CISA did not answer; trying the official GitHub mirror", "err", err)
 	mresp, merr := c.Get(ctx, s.MirrorURL, prev)
 	if merr != nil {
 		return nil, fmt.Errorf("CISA: %w; mirror: %w", err, merr)

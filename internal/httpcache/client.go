@@ -196,6 +196,10 @@ func (c *Client) attempt(ctx context.Context, u *url.URL, v Validators) (*Respon
 
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
+		// *url.Error repeats the method and URL; we add our own (redacted) prefix.
+		if ue, ok := errors.AsType[*url.Error](err); ok {
+			err = ue.Err
+		}
 		if errors.Is(err, ErrInsecureURL) || ctx.Err() != nil {
 			return nil, fmt.Errorf("GET %s: %w", u.Redacted(), err)
 		}
