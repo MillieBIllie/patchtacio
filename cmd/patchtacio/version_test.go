@@ -47,6 +47,18 @@ func TestVersionJSON(t *testing.T) {
 	}
 }
 
+func TestVersionJSONCreditsDataSources(t *testing.T) {
+	out, err := run(t, "version", "--json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`"dataSources"`, "endoflife.date", "MIT", "CC0-1.0"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("version --json missing %q:\n%s", want, out)
+		}
+	}
+}
+
 func TestVersionFlag(t *testing.T) {
 	out, err := run(t, "--version")
 	if err != nil {

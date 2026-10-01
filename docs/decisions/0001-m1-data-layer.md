@@ -73,7 +73,8 @@ A scheduled check and a manual run can overlap.
   publish date is shown alongside, e.g. "checked 2h ago, catalog published 3 days ago".
 - `--offline` skips the network and reports staleness honestly. Falling back to the cache when
   the network fails is the default anyway.
-- **Validate before replacing the cache**, through a per-source `Validate(prev, next)`:
+- **Validate before replacing the cache** (as built in M1: each adapter's `Parse` does the
+  structural checks, and a shared `feeds.Validate(prev, next)` does the rest):
   - On first fetch, only structural checks: the body parses, required top-level fields are
     present, at least one record, and for KEV, `count` equals the number of records. No
     hard-coded minimum counts, which would quietly go out of date.
