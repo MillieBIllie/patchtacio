@@ -1,0 +1,63 @@
+name: Feed drift
+
+# Weekly check that the live feeds still parse. Unit tests use recorded
+# fixtures and never go online, so this is how an upstream format change is
+# noticed before users hit it. It never blocks pull requests.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feeds-drift
+  cancel-in-progress: false
+
+env:
+  CGO_ENABLED: "0"
+
+jobs:
+  live-feeds:
+    name: live feeds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Integration tests against live feeds
+        run: go test -tags integration -count=1 -v ./internal/feeds/...
+
+  report:
+    name: open or update issue
+    needs: live-feeds
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Feed drift: live feed check failed"
+          existing=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          body="The weekly live-feed check failed: $RUN_URL
+
+          A feed may have changed format, moved, or be blocking requests. Until this is fixed,
+          users may see stale-data warnings. Check the run log, update the parser and fixture
+          (\`go run ./tools/record <feed>\`), and close this issue."
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
