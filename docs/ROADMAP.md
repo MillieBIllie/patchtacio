@@ -13,10 +13,15 @@ Work top to bottom. Each milestone has a "done when" check. Tick boxes as tasks 
 **Done when:** CI is green on all three OSes and a snapshot build produces 6 binaries (amd64/arm64 × 3).
 
 ### M1: Data layer
-- [ ] KEV feed adapter (JSON) with fixture + tests
-- [ ] endoflife.date adapter (product list + per-product cycles) with fixtures + tests
-- [ ] SQLite store: feed cache metadata, findings, acknowledgements; migrations
-- [ ] `patchtacio feeds update` / `patchtacio feeds status`
+Design decisions: [docs/decisions/0001-m1-data-layer.md](decisions/0001-m1-data-layer.md).
+- [ ] `internal/paths`: config / cache / data dirs per OS, `PATCHTACIO_*_DIR` overrides
+- [ ] Logging: slog to stderr, `-v`/`-vv`/`--quiet`, secret + URL redaction
+- [ ] `httpcache` client: timeouts, retries + `Retry-After`, conditional requests, size cap, atomic cache writes
+- [ ] KEV feed adapter (JSON) with fixture + tests; GitHub mirror fallback
+- [ ] endoflife.date adapter (API v1, `/products/full`) with fixtures + tests
+- [ ] SQLite store: feed cache metadata + update lock; embedded migrations (`user_version`)
+- [ ] `patchtacio feeds update [--offline]` / `patchtacio feeds status` (exit 0 / 2 / 3)
+- [ ] Weekly scheduled integration-test workflow (feed format drift); data-source attribution in README + fixtures
 
 **Done when:** `feeds update` works offline from cache and reports staleness honestly.
 
@@ -32,6 +37,7 @@ Work top to bottom. Each milestone has a "done when" check. Tick boxes as tasks 
 **Done when:** a fresh user can tick products and see relevant KEV findings in under 2 minutes.
 
 ### M3: Alerts
+- [ ] Store migration: findings + acknowledgements tables (finding identity designed here)
 - [ ] Findings dedupe: alert once, remind as `dueDate` approaches
 - [ ] Advice templates (see `alert-writing` skill) with golden-file tests
 - [ ] Notifiers: SMTP, webhook (Slack/Teams/Discord), ntfy, desktop notification
