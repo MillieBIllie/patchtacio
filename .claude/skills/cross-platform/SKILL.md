@@ -9,8 +9,9 @@ description: Rules and per-OS details for making Patchtacio work identically on 
 
 | Concern | Linux | Windows | macOS |
 |---|---|---|---|
-| Config dir (`os.UserConfigDir`) | `~/.config/patchtacio` | `%AppData%\patchtacio` | `~/Library/Application Support/patchtacio` |
-| Cache dir (`os.UserCacheDir`) | `~/.cache/patchtacio` | `%LocalAppData%\patchtacio` | `~/Library/Caches/patchtacio` |
+| Config dir: YAML only (`os.UserConfigDir`) | `~/.config/patchtacio` | `%AppData%\patchtacio` (Roaming) | `~/Library/Application Support/patchtacio` |
+| Cache dir: raw feeds, safe to delete (`os.UserCacheDir`) | `~/.cache/patchtacio/cache` | `%LocalAppData%\patchtacio\cache` | `~/Library/Caches/patchtacio/cache` |
+| Data dir: SQLite state (`internal/paths`) | `$XDG_DATA_HOME/patchtacio` (`~/.local/share/patchtacio`) | `%LocalAppData%\patchtacio\data` | `~/Library/Application Support/patchtacio` |
 | Scheduled check | systemd **user** timer; fallback cron | Task Scheduler (`schtasks` with args, or COM API) | launchd agent in `~/Library/LaunchAgents` |
 | Installed software | dpkg, rpm, snap, flatpak | registry Uninstall keys (HKLM + HKCU, 32/64-bit views), winget | `/Applications` bundle Info.plist, Homebrew |
 | Desktop notification | `notify-send` / D-Bus | toast notification | `osascript` / UserNotifications |
@@ -18,7 +19,13 @@ description: Rules and per-OS details for making Patchtacio work identically on 
 
 ## Rules
 
-- Always `filepath.Join`; never hardcode `/` or `\`. Use `os.UserConfigDir` / `os.UserCacheDir`.
+- Always `filepath.Join`; never hardcode `/` or `\`. Get directories from `internal/paths` (config,
+  cache, data), which honors `PATCHTACIO_CONFIG_DIR` / `PATCHTACIO_CACHE_DIR` / `PATCHTACIO_DATA_DIR`.
+  Tests point these at `t.TempDir()`.
+- Never put SQLite or other live state in Windows Roaming `%AppData%` (roaming profiles corrupt it)
+  or in the cache dir (users delete caches). See `docs/decisions/0001-m1-data-layer.md`.
+- Replace files atomically: write a temp file in the same directory, close it, then rename.
+  On Windows, retry the rename briefly, because another process may hold the target open.
 - OS code lives in `foo_linux.go`, `foo_windows.go`, `foo_darwin.go` behind a shared interface,
   with a `foo_other.go` fallback that returns a clear "not supported" error.
 - Subprocesses: `exec.CommandContext(ctx, name, args...)`. Never `sh -c` / `cmd /c` with

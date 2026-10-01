@@ -27,5 +27,9 @@ current CycloneDX spec** (web fetch / Context7). Details and limits change; don'
 
 ## Exit codes
 
-`0` no findings at/above `--fail-on`; `1` findings at/above threshold; `2` tool error.
+`0` no findings at/above `--fail-on` and all data fresh; `1` findings at/above threshold;
+`2` tool error or a feed with no usable data; `3` finished but some data was stale.
+Findings + stale → `1`; no findings + stale → `3` (never `0`). Constants live in
+`cmd/patchtacio/exitcode.go`; commands return `&exitError{code: …}` for outcomes.
 Stale data is a warning, not success: print it and include it in the SARIF run properties.
+The GitHub Action treats `3` as a warning annotation and passes, unless `fail-on-stale: true`.
