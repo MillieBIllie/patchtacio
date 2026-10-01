@@ -135,7 +135,7 @@ func (c *Client) Get(ctx context.Context, rawURL string, v Validators) (*Respons
 	for attempt := 0; attempt <= retries; attempt++ {
 		if attempt > 0 {
 			wait := c.backoff(attempt, lastErr)
-			c.Logger.Info("retrying", "url", u, "attempt", attempt+1, "wait", wait, "err", lastErr)
+			c.Log().Info("retrying", "url", u, "attempt", attempt+1, "wait", wait, "err", lastErr)
 			if err := c.wait(ctx, wait); err != nil {
 				return nil, fmt.Errorf("GET %s: %w (last error: %w)", u.Redacted(), err, lastErr)
 			}
@@ -285,6 +285,14 @@ func orDefault(d, def time.Duration) time.Duration {
 		return d
 	}
 	return def
+}
+
+// Log returns the client's logger, or a discarding one if none was set.
+func (c *Client) Log() *slog.Logger {
+	if c.Logger != nil {
+		return c.Logger
+	}
+	return slog.New(slog.DiscardHandler)
 }
 
 func firstNonEmpty(a, b string) string {
