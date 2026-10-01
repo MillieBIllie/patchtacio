@@ -13,8 +13,9 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	err := newRootCmd().ExecuteContext(ctx)
 	stop()
-	if err != nil {
+	code := exitCodeFor(err)
+	if code == exitToolError {
 		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
 	}
+	os.Exit(code)
 }
