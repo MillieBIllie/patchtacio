@@ -79,6 +79,8 @@ A scheduled check and a manual run can overlap.
     present, at least one record, and for KEV, `count` equals the number of records. No
     hard-coded minimum counts, which would quietly go out of date.
   - After that, the same checks plus: the record count must not drop by more than 10%.
+    A user who has confirmed a real reduction can override this one check, once, with
+    `feeds update --accept-shrink <source>`; the warning suggests it only for this case.
   - On failure, keep the old cache, mark the feed stale, warn, and exit 3. A truncated body or
     an HTML error page must never become an empty "all clear".
 

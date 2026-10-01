@@ -29,6 +29,7 @@ func newFeedsCmd(a *app) *cobra.Command {
 
 func newFeedsUpdateCmd(a *app) *cobra.Command {
 	var offline bool
+	var acceptShrink []string
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Download the latest data (falls back to the saved copy if a source is down)",
@@ -43,6 +44,10 @@ func newFeedsUpdateCmd(a *app) *cobra.Command {
 				return err
 			}
 			defer closeFn()
+			u.AcceptShrink = acceptShrink
+			if err := u.CheckAcceptShrink(); err != nil {
+				return err
+			}
 			results, err := u.Update(cmd.Context(), offline)
 			if err != nil {
 				return fmt.Errorf("update feeds: %w", err)
@@ -57,6 +62,10 @@ func newFeedsUpdateCmd(a *app) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&offline, "offline", false, "do not use the network; report on the saved copies only")
+	cmd.Flags().StringSliceVar(&acceptShrink, "accept-shrink", nil,
+		"accept a download with far fewer records than the saved copy, for these sources (kev, eol);\n"+
+			"use only after confirming on the source's website that entries were really removed")
+	cmd.MarkFlagsMutuallyExclusive("offline", "accept-shrink")
 	return cmd
 }
 
@@ -139,6 +148,7 @@ func (a *app) reportResult(out, warn io.Writer, r feeds.Result, offline bool) in
 				"or in a format this version does not understand), and there is no saved copy, so this data is not available.%s\n"+
 				"  Try again later. If it keeps happening, update Patchtacio or report it at %s/issues.\n",
 				st.Title, reason, version.ProjectURL)
+			shrinkHint(warn, r)
 			return exitToolError
 		}
 		_, _ = fmt.Fprintf(warn, "Warning: %s could not be downloaded and there is no saved copy, so this data is not available.%s\n"+
@@ -150,7 +160,19 @@ func (a *app) reportResult(out, warn io.Writer, r feeds.Result, offline bool) in
 	if st.State == feeds.Stale {
 		a.warnState(warn, st)
 	}
+	shrinkHint(warn, r)
 	return exitStale
+}
+
+// shrinkHint explains the one rejection a user can safely override: a source
+// that really did remove many entries.
+func shrinkHint(w io.Writer, r feeds.Result) {
+	if !errors.Is(r.Err, feeds.ErrShrunk) {
+		return
+	}
+	_, _ = fmt.Fprintf(w, "  The new download has far fewer entries than the saved copy, which usually means it is incomplete.\n"+
+		"  If %s's website confirms that entries were really removed, accept it with:\n"+
+		"    patchtacio feeds update --accept-shrink %s\n", r.Status.Title, r.Status.Name)
 }
 
 // warnState explains stale or missing data. Fresh data needs no warning.

@@ -10,6 +10,8 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -63,6 +65,30 @@ type Updater struct {
 	LockWait  time.Duration // how long to wait for a concurrent update (default 60s)
 	LockTTL   time.Duration // when a lock with no heartbeat counts as abandoned (default 5m)
 	PollEvery time.Duration // how often to retry the lock while waiting (default 1s)
+
+	// AcceptShrink names sources whose next download may have more than
+	// MaxShrink fewer records than the saved copy. It is for a reduction the
+	// user has confirmed is real; every other check still applies.
+	AcceptShrink []string
+
+	afterCommit func() // test hook: runs between the cache rename and the metadata save
+}
+
+func (u *Updater) acceptsShrink(src Source) bool { return slices.Contains(u.AcceptShrink, src.Name()) }
+
+// CheckAcceptShrink reports an AcceptShrink entry that names no source, so
+// a typo cannot silently do nothing.
+func (u *Updater) CheckAcceptShrink() error {
+	for _, name := range u.AcceptShrink {
+		if !slices.ContainsFunc(u.Sources, func(s Source) bool { return s.Name() == name }) {
+			names := make([]string, len(u.Sources))
+			for i, s := range u.Sources {
+				names[i] = s.Name()
+			}
+			return fmt.Errorf("unknown source %q for --accept-shrink (choose from: %s)", name, strings.Join(names, ", "))
+		}
+	}
+	return nil
 }
 
 func (u *Updater) now() time.Time {
@@ -275,21 +301,34 @@ func (u *Updater) updateOne(ctx context.Context, src Source, owner string) (Resu
 	if err != nil {
 		return u.fail(ctx, src, meta, owner, fmt.Errorf("%w: %w", ErrRejected, err))
 	}
-	if err := Validate(prev, sum); err != nil {
+	if err := validateFor(prev, sum, u.acceptsShrink(src)); err != nil {
 		return u.fail(ctx, src, meta, owner, err)
 	}
-	// Last check before touching the shared cache file. The remaining window
-	// (milliseconds, against a 5-minute TTL) fails safe: a mismatched file
-	// reads as Missing and the next update downloads it again.
+	if u.acceptsShrink(src) && prev != nil && sum.Count < prev.Count {
+		log.Warn("accepting a smaller feed as requested", "from", prev.Count, "to", sum.Count)
+	}
+
+	// Do the slow part (write + sync) first, then check the lock immediately
+	// before the atomic rename. The remaining window is one rename; if the
+	// lock is lost inside it, the mismatched file reads as Missing and the
+	// next update downloads it again (fails safe).
+	name := cacheFileName(src)
+	pending, err := prepareFile(u.CacheDir, name, f.Body)
+	if err != nil {
+		return Result{}, fmt.Errorf("write %s cache: %w", src.Name(), err)
+	}
 	if held, err := u.Store.HeartbeatLock(context.WithoutCancel(ctx), lockName, owner); err != nil || !held {
+		pending.Abort()
 		if err == nil {
 			err = errLockLost
 		}
 		return u.lockLostOr(ctx, src, err)
 	}
-	name := cacheFileName(src)
-	if err := writeFileAtomic(u.CacheDir, name, f.Body); err != nil {
+	if err := pending.Commit(); err != nil {
 		return Result{}, fmt.Errorf("write %s cache: %w", src.Name(), err)
+	}
+	if u.afterCommit != nil {
+		u.afterCommit()
 	}
 	digest := sha256.Sum256(f.Body)
 	meta.URL, meta.Via = logging.RedactString(f.URL), f.Via
