@@ -2,19 +2,20 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
-	"unicode"
 	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/logging"
+	"github.com/milliebillie/patchtacio/internal/version"
 )
 
 func newFeedsCmd(a *app) *cobra.Command {
@@ -133,6 +134,13 @@ func (a *app) reportResult(out, warn io.Writer, r feeds.Result, offline bool) in
 		reason = " Reason: " + firstLine(st.LastError)
 	}
 	if st.State == feeds.Missing {
+		if errors.Is(r.Err, feeds.ErrRejected) {
+			_, _ = fmt.Fprintf(warn, "Warning: %s was downloaded but failed Patchtacio's safety checks (it may be incomplete, "+
+				"or in a format this version does not understand), and there is no saved copy, so this data is not available.%s\n"+
+				"  Try again later. If it keeps happening, update Patchtacio or report it at %s/issues.\n",
+				st.Title, reason, version.ProjectURL)
+			return exitToolError
+		}
 		_, _ = fmt.Fprintf(warn, "Warning: %s could not be downloaded and there is no saved copy, so this data is not available.%s\n"+
 			"  Check your internet connection or proxy settings (HTTPS_PROXY), then run `patchtacio feeds update` again.\n", st.Title, reason)
 		return exitToolError
@@ -325,13 +333,5 @@ func firstLine(s string) string {
 	return s
 }
 
-// clean drops control characters from text that came from a feed or a
-// server, so it cannot move the cursor, recolor or retitle the terminal.
-func clean(s string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsControl(r) {
-			return -1
-		}
-		return r
-	}, s)
-}
+// clean makes feed- or server-supplied text safe to print.
+func clean(s string) string { return logging.Clean(s) }

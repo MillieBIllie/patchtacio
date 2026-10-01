@@ -97,6 +97,18 @@ func TestRedactString(t *testing.T) {
 	}
 }
 
+func TestClean(t *testing.T) {
+	bidi := string([]rune{0x202e, 0x2066, 0x2069}) // RLO, LRI, PDI
+	in := "2026.09.30\x1b]0;pwned\x07\x1b[31m red " + bidi + "evil é"
+	got := Clean(in)
+	if strings.ContainsAny(got, "\x1b\x07"+bidi) {
+		t.Errorf("Clean(%q) = %q", in, got)
+	}
+	if !strings.Contains(got, "é") || !strings.Contains(got, "red") {
+		t.Errorf("Clean removed ordinary text: %q", got)
+	}
+}
+
 func TestRedactAttrValues(t *testing.T) {
 	u, err := url.Parse("https://u:p@example.com/x?k=v")
 	if err != nil {

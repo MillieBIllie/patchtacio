@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -70,6 +71,26 @@ func TestConcurrentFirstOpen(t *testing.T) {
 		if err := <-errs; err != nil {
 			t.Errorf("concurrent first Open: %v", err)
 		}
+	}
+}
+
+func TestPutFeedLocked(t *testing.T) {
+	ctx := context.Background()
+	s, _ := openTemp(t)
+	if err := s.PutFeedLocked(ctx, "feeds-update", "A", Feed{Name: "kev"}); !errors.Is(err, ErrLockNotHeld) {
+		t.Fatalf("write without the lock: %v", err)
+	}
+	if ok, err := s.AcquireLock(ctx, "feeds-update", "A", time.Minute); err != nil || !ok {
+		t.Fatal(err)
+	}
+	if err := s.PutFeedLocked(ctx, "feeds-update", "A", Feed{Name: "kev", Version: "v1"}); err != nil {
+		t.Fatalf("write with the lock: %v", err)
+	}
+	if err := s.PutFeedLocked(ctx, "feeds-update", "B", Feed{Name: "kev", Version: "v2"}); !errors.Is(err, ErrLockNotHeld) {
+		t.Fatalf("write by non-owner: %v", err)
+	}
+	if f, _, _ := s.GetFeed(ctx, "kev"); f.Version != "v1" {
+		t.Errorf("non-owner write landed: %+v", f)
 	}
 }
 

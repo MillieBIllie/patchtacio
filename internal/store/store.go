@@ -28,6 +28,10 @@ import (
 //go:embed migrations/*.sql
 var migrationFS embed.FS
 
+// setupDeadline bounds how long Open keeps retrying while another process
+// is creating the database.
+const setupDeadline = 15 * time.Second
+
 // Store wraps the database. It is safe for concurrent use.
 type Store struct {
 	db  *sql.DB
@@ -67,16 +71,20 @@ func Open(ctx context.Context, file string) (*Store, error) {
 	s := &Store{db: db, now: time.Now}
 	// While another process is creating the database and switching it to WAL,
 	// SQLite can answer SQLITE_BUSY without honoring busy_timeout, so retry
-	// setup for a few seconds.
+	// setup until a fixed deadline (not an attempt count: each attempt may
+	// itself wait out busy_timeout).
+	deadline := time.Now().Add(setupDeadline)
 	for attempt := 0; ; attempt++ {
 		err = s.migrate(ctx)
-		if err == nil || !isBusy(err) || attempt >= 50 {
+		if err == nil || !isBusy(err) || time.Now().After(deadline) {
 			break
 		}
+		t := time.NewTimer(time.Duration(min(20+attempt*10, 500)) * time.Millisecond)
 		select {
 		case <-ctx.Done():
+			t.Stop()
 			err = ctx.Err()
-		case <-time.After(time.Duration(20+attempt*10) * time.Millisecond):
+		case <-t.C:
 			continue
 		}
 		break
