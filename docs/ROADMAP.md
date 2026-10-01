@@ -14,14 +14,14 @@ Work top to bottom. Each milestone has a "done when" check. Tick boxes as tasks 
 
 ### M1: Data layer
 Design decisions: [docs/decisions/0001-m1-data-layer.md](decisions/0001-m1-data-layer.md).
-- [ ] `internal/paths`: config / cache / data dirs per OS, `PATCHTACIO_*_DIR` overrides
-- [ ] Logging: slog to stderr, `-v`/`-vv`/`--quiet`, secret + URL redaction
-- [ ] `httpcache` client: timeouts, retries + `Retry-After`, conditional requests, size cap, atomic cache writes
-- [ ] KEV feed adapter (JSON) with fixture + tests; GitHub mirror fallback
-- [ ] endoflife.date adapter (API v1, `/products/full`) with fixtures + tests
-- [ ] SQLite store: feed cache metadata + update lock; embedded migrations (`user_version`)
-- [ ] `patchtacio feeds update [--offline]` / `patchtacio feeds status` (exit 0 / 2 / 3)
-- [ ] Weekly scheduled integration-test workflow (feed format drift); data-source attribution in README + fixtures
+- [x] `internal/paths`: config / cache / data dirs per OS, `PATCHTACIO_*_DIR` overrides
+- [x] Logging: slog to stderr, `-v`/`-vv`/`--quiet`, secret + URL redaction
+- [x] `httpcache` client: timeouts, retries + `Retry-After`, conditional requests, size cap, atomic cache writes
+- [x] KEV feed adapter (JSON) with fixture + tests; GitHub mirror fallback
+- [x] endoflife.date adapter (API v1, `/products/full`) with fixtures + tests
+- [x] SQLite store: feed cache metadata + update lock; embedded migrations (`user_version`)
+- [x] `patchtacio feeds update [--offline]` / `patchtacio feeds status` (exit 0 / 2 / 3)
+- [x] Weekly scheduled integration-test workflow (feed format drift); data-source attribution in README + fixtures
 
 **Done when:** `feeds update` works offline from cache and reports staleness honestly.
 
