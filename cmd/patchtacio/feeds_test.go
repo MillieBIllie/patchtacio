@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/feeds/eol"
@@ -24,9 +25,10 @@ import (
 // fakeFeed serves a fixture with validators and honors conditional requests.
 // It can be switched to fail with a status code.
 type fakeFeed struct {
-	body     []byte
-	failWith atomic.Int32 // 0 = serve normally
-	requests atomic.Int32
+	body         []byte
+	failWith     atomic.Int32 // 0 = serve normally
+	etagOverride atomic.Bool  // true = ignore validators (content changed)
+	requests     atomic.Int32
 }
 
 const fixedLastModified = "Wed, 30 Sep 2026 16:59:23 GMT"
@@ -38,7 +40,7 @@ func (f *fakeFeed) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	const etag = `"fixture-ssl"`
-	if r.Header.Get("If-None-Match") == etag || r.Header.Get("If-Modified-Since") == fixedLastModified {
+	if !f.etagOverride.Load() && (r.Header.Get("If-None-Match") == etag || r.Header.Get("If-Modified-Since") == fixedLastModified) {
 		w.WriteHeader(http.StatusNotModified)
 		return
 	}
@@ -185,7 +187,8 @@ func TestFeedsUpdateSourceDownUsesSavedCopy(t *testing.T) {
 	e.clock = e.clock.Add(48 * time.Hour)
 	out, errOut, code = e.exec(t, "feeds", "update")
 	requireCode(t, code, exitStale, out, errOut)
-	requireContains(t, errOut, "Warning: CISA KEV catalog data is out of date: last checked 1 Oct 2026 09:00 UTC (2 days ago).")
+	requireContains(t, errOut, "Warning: CISA KEV catalog data is out of date because it has not been checked for more than 2 days. "+
+		"Last checked 1 Oct 2026 09:00 UTC (2 days ago).")
 	if strings.Contains(errOut, "endoflife.date data is out of date") {
 		t.Errorf("endoflife.date is within its 7-day threshold:\n%s", errOut)
 	}
@@ -193,6 +196,40 @@ func TestFeedsUpdateSourceDownUsesSavedCopy(t *testing.T) {
 	out, errOut, code = e.exec(t, "feeds", "status")
 	requireCode(t, code, exitStale, out, errOut)
 	requireContains(t, out, "CISA KEV catalog  out of date", "endoflife.date    up to date")
+	// endoflife.date is within its limit, but status must not hide that the last attempt failed.
+	requireContains(t, errOut, "Note: the last update attempt for endoflife.date", "503")
+}
+
+func TestFeedsRejectedDataIsOutOfDate(t *testing.T) {
+	e := newTestEnv(t)
+	e.exec(t, "feeds", "update")
+
+	// endoflife.date starts answering with something that is not valid data.
+	e.eol.body = []byte(`<!DOCTYPE html><html>Something went wrong</html>`)
+	e.eol.failWith.Store(0)
+	e.clock = e.clock.Add(time.Hour)
+	// Make the conditional request miss so the bad body is actually served.
+	e.eol.etagOverride.Store(true)
+
+	out, errOut, code := e.exec(t, "feeds", "update")
+	requireCode(t, code, exitStale, out, errOut)
+	requireContains(t, errOut, "endoflife.date could not be updated", "rejected new data")
+
+	out, errOut, code = e.exec(t, "feeds", "status")
+	requireCode(t, code, exitStale, out, errOut)
+	requireContains(t, out, "endoflife.date    out of date")
+	requireContains(t, errOut, "the newest download was rejected")
+}
+
+func TestCleanStripsControlCharacters(t *testing.T) {
+	in := "2026.09.30\x1b]0;pwned\x07\x1b[31m red"
+	if got := clean(in); strings.ContainsAny(got, "\x1b\x07") {
+		t.Errorf("clean(%q) = %q", in, got)
+	}
+	long := strings.Repeat("é", 400)
+	if got := firstLine(long); !utf8.ValidString(got) {
+		t.Errorf("firstLine split a character: %q", got)
+	}
 }
 
 func TestFeedsMirrorFallback(t *testing.T) {

@@ -86,19 +86,28 @@ func (*Source) StaleAfter() time.Duration { return StaleAfter }
 // mirror copy older than the cached one.
 func (s *Source) Fetch(ctx context.Context, c *httpcache.Client, prev httpcache.Validators) (*feeds.Fetched, error) {
 	resp, err := c.Get(ctx, s.PrimaryURL, prev)
+	var invalid error // CISA answered, but not with a catalog we accept
 	if err == nil && !resp.NotModified {
 		if _, perr := ParseCatalog(resp.Body); perr != nil {
+			invalid = perr
 			err = fmt.Errorf("primary returned an invalid catalog: %w", perr)
 		}
 	}
 	if err == nil {
 		return &feeds.Fetched{Response: resp, Via: feeds.ViaPrimary}, nil
 	}
+	if invalid != nil {
+		// If no copy can be accepted, report it as rejected data, not an
+		// outage, so the saved copy is marked out of date.
+		err = fmt.Errorf("%w: CISA returned a catalog that failed validation: %w", feeds.ErrRejected, invalid)
+	}
 	if s.MirrorURL == "" || ctx.Err() != nil {
 		return nil, err
 	}
 	c.Log().Info("CISA did not answer; trying the official GitHub mirror", "err", err)
-	mresp, merr := c.Get(ctx, s.MirrorURL, prev)
+	// prev came from CISA (the Updater never keeps mirror validators); they
+	// mean nothing to GitHub, so ask the mirror for the full file.
+	mresp, merr := c.Get(ctx, s.MirrorURL, httpcache.Validators{})
 	if merr != nil {
 		return nil, fmt.Errorf("CISA: %w; mirror: %w", err, merr)
 	}
@@ -181,18 +190,18 @@ func ParseCatalog(raw []byte) (*Catalog, error) {
 	for i, rv := range vulns {
 		v, err := normalize(rv)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("entry %d (%s): %w", i, rv.CVEID, err))
+			errs = append(errs, fmt.Errorf("entry %d (%q): %w", i, rv.CVEID, err))
 			continue
 		}
 		if seen[v.CVEID] {
-			errs = append(errs, fmt.Errorf("entry %d: duplicate %s", i, v.CVEID))
+			errs = append(errs, fmt.Errorf("entry %d: duplicate %q", i, v.CVEID))
 			continue
 		}
 		seen[v.CVEID] = true
 		cat.Vulnerabilities = append(cat.Vulnerabilities, v)
 	}
 	if len(errs) > 0 {
-		return nil, fmt.Errorf("KEV has %d malformed entries: %w", len(errs), errors.Join(errs...))
+		return nil, fmt.Errorf("KEV has %d malformed entries: %w", len(errs), feeds.JoinFirst(errs, 10))
 	}
 	return cat, nil
 }

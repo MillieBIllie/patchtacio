@@ -24,10 +24,13 @@ type Feed struct {
 	CheckedAt    time.Time
 	AttemptedAt  time.Time
 	LastError    string
+	// Rejected means the source offered newer data that failed validation, so
+	// the cached copy is known to be behind what the source now publishes.
+	Rejected bool
 }
 
 const feedColumns = `name, url, via, etag, last_modified, cache_file, sha256, record_count,
-	version, published_at, fetched_at, checked_at, attempted_at, last_error`
+	version, published_at, fetched_at, checked_at, attempted_at, last_error, rejected`
 
 // GetFeed returns the metadata for name; ok is false if there is none.
 func (s *Store) GetFeed(ctx context.Context, name string) (f Feed, ok bool, err error) {
@@ -66,17 +69,18 @@ func (s *Store) ListFeeds(ctx context.Context) ([]Feed, error) {
 // PutFeed inserts or replaces the metadata row for f.Name.
 func (s *Store) PutFeed(ctx context.Context, f Feed) error {
 	_, err := s.db.ExecContext(ctx, `INSERT INTO feeds (`+feedColumns+`)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(name) DO UPDATE SET
 			url = excluded.url, via = excluded.via, etag = excluded.etag,
 			last_modified = excluded.last_modified, cache_file = excluded.cache_file,
 			sha256 = excluded.sha256, record_count = excluded.record_count,
 			version = excluded.version, published_at = excluded.published_at,
 			fetched_at = excluded.fetched_at, checked_at = excluded.checked_at,
-			attempted_at = excluded.attempted_at, last_error = excluded.last_error`,
+			attempted_at = excluded.attempted_at, last_error = excluded.last_error,
+			rejected = excluded.rejected`,
 		f.Name, f.URL, f.Via, f.ETag, f.LastModified, f.CacheFile, f.SHA256, f.RecordCount,
 		f.Version, timeArg(f.PublishedAt), timeArg(f.FetchedAt), timeArg(f.CheckedAt),
-		timeArg(f.AttemptedAt), f.LastError)
+		timeArg(f.AttemptedAt), f.LastError, f.Rejected)
 	if err != nil {
 		return fmt.Errorf("save feed %s: %w", f.Name, err)
 	}
@@ -89,7 +93,7 @@ func scanFeed(sc scanner) (Feed, error) {
 	var f Feed
 	var published, fetched, checked, attempted sql.NullString
 	if err := sc.Scan(&f.Name, &f.URL, &f.Via, &f.ETag, &f.LastModified, &f.CacheFile, &f.SHA256,
-		&f.RecordCount, &f.Version, &published, &fetched, &checked, &attempted, &f.LastError); err != nil {
+		&f.RecordCount, &f.Version, &published, &fetched, &checked, &attempted, &f.LastError, &f.Rejected); err != nil {
 		return Feed{}, err // callers wrap with context
 	}
 	var err error

@@ -11,6 +11,7 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -20,7 +21,8 @@ import (
 	"strings"
 	"time"
 
-	_ "modernc.org/sqlite" // registers the "sqlite" driver
+	"modernc.org/sqlite" // also registers the "sqlite" driver
+	sqlite3 "modernc.org/sqlite/lib"
 )
 
 //go:embed migrations/*.sql
@@ -48,6 +50,10 @@ func Open(ctx context.Context, file string) (*Store, error) {
 	if err := f.Close(); err != nil {
 		return nil, fmt.Errorf("close database file: %w", err)
 	}
+	// O_CREATE's mode only applies to new files; tighten an existing one too.
+	if err := os.Chmod(file, 0o600); err != nil {
+		return nil, fmt.Errorf("set database file permissions: %w", err)
+	}
 
 	dsn := file + "?_txlock=immediate&_busy_timeout=10000&_journal_mode=WAL&_synchronous=NORMAL&_foreign_keys=1"
 	db, err := sql.Open("sqlite", dsn)
@@ -59,11 +65,35 @@ func Open(ctx context.Context, file string) (*Store, error) {
 	db.SetMaxOpenConns(1)
 
 	s := &Store{db: db, now: time.Now}
-	if err := s.migrate(ctx); err != nil {
+	// While another process is creating the database and switching it to WAL,
+	// SQLite can answer SQLITE_BUSY without honoring busy_timeout, so retry
+	// setup for a few seconds.
+	for attempt := 0; ; attempt++ {
+		err = s.migrate(ctx)
+		if err == nil || !isBusy(err) || attempt >= 50 {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+		case <-time.After(time.Duration(20+attempt*10) * time.Millisecond):
+			continue
+		}
+		break
+	}
+	if err != nil {
 		_ = db.Close()
 		return nil, err
 	}
 	return s, nil
+}
+
+func isBusy(err error) bool {
+	if se, ok := errors.AsType[*sqlite.Error](err); ok {
+		code := se.Code() & 0xff // primary result code
+		return code == sqlite3.SQLITE_BUSY || code == sqlite3.SQLITE_LOCKED
+	}
+	return false
 }
 
 // Close closes the database.
@@ -119,9 +149,19 @@ func (s *Store) migrate(ctx context.Context) error {
 		return fmt.Errorf("database schema version %d is newer than this patchtacio supports (%d); upgrade patchtacio", current, len(ms))
 	}
 	for _, m := range ms[current:] {
-		tx, err := s.db.BeginTx(ctx, nil)
+		tx, err := s.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE: one migrator at a time
 		if err != nil {
 			return fmt.Errorf("begin migration %s: %w", m.name, err)
+		}
+		// Another process may have applied it while we waited for the lock.
+		var v int
+		if err := tx.QueryRowContext(ctx, "PRAGMA user_version").Scan(&v); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("read schema version: %w", err)
+		}
+		if v >= m.version {
+			_ = tx.Rollback()
+			continue
 		}
 		if _, err := tx.ExecContext(ctx, m.sql); err != nil {
 			_ = tx.Rollback()

@@ -53,6 +53,37 @@ func TestOpenMigratesOnceAndUsesWAL(t *testing.T) {
 	_ = s2.Close()
 }
 
+func TestConcurrentFirstOpen(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, "race.db")
+	errs := make(chan error, 4)
+	for range 4 {
+		go func() {
+			s, err := Open(context.Background(), file)
+			if err == nil {
+				err = s.Close()
+			}
+			errs <- err
+		}()
+	}
+	for range 4 {
+		if err := <-errs; err != nil {
+			t.Errorf("concurrent first Open: %v", err)
+		}
+	}
+}
+
+func TestRejectedRoundTrip(t *testing.T) {
+	ctx := context.Background()
+	s, _ := openTemp(t)
+	if err := s.PutFeed(ctx, Feed{Name: "kev", Rejected: true}); err != nil {
+		t.Fatal(err)
+	}
+	if f, _, err := s.GetFeed(ctx, "kev"); err != nil || !f.Rejected {
+		t.Fatalf("Rejected not stored: %+v, %v", f, err)
+	}
+}
+
 func TestOpenRefusesNewerSchema(t *testing.T) {
 	ctx := context.Background()
 	s, file := openTemp(t)

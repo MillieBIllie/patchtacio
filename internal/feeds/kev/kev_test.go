@@ -2,6 +2,7 @@ package kev
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -183,6 +184,28 @@ func TestFetchBothFail(t *testing.T) {
 	_, err := src.Fetch(context.Background(), c, httpcache.Validators{})
 	if err == nil || !strings.Contains(err.Error(), "CISA") || !strings.Contains(err.Error(), "mirror") {
 		t.Fatalf("want an error naming both sources, got %v", err)
+	}
+}
+
+func TestFetchInvalidPrimaryAndMirrorDownIsRejection(t *testing.T) {
+	src, c := servers(t, serve(`{"catalogVersion":"x"}`), status(http.StatusNotFound))
+	_, err := src.Fetch(context.Background(), c, httpcache.Validators{})
+	if !errors.Is(err, feeds.ErrRejected) {
+		t.Fatalf("want ErrRejected, got %v", err)
+	}
+}
+
+func TestFetchMirrorGetsNoValidators(t *testing.T) {
+	var got http.Header
+	src, c := servers(t, status(http.StatusForbidden), func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Clone()
+		_, _ = w.Write([]byte(validDoc))
+	})
+	if _, err := src.Fetch(context.Background(), c, httpcache.Validators{ETag: `"cisa"`, LastModified: "Wed, 30 Sep 2026 16:59:23 GMT"}); err != nil {
+		t.Fatal(err)
+	}
+	if got.Get("If-None-Match") != "" || got.Get("If-Modified-Since") != "" {
+		t.Errorf("CISA validators sent to the mirror: %v", got)
 	}
 }
 

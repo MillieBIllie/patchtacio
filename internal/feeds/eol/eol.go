@@ -186,7 +186,7 @@ func ParseCatalog(raw []byte) (*Catalog, error) {
 		return nil, errors.New("endoflife.date response is missing schema_version, generated_at or result")
 	}
 	if major, _, _ := strings.Cut(*env.SchemaVersion, "."); major != supportedSchemaMajor {
-		return nil, fmt.Errorf("endoflife.date API schema %s is not supported (need %s.x); update patchtacio", *env.SchemaVersion, supportedSchemaMajor)
+		return nil, fmt.Errorf("endoflife.date API schema %q is not supported (need %s.x); update patchtacio", *env.SchemaVersion, supportedSchemaMajor)
 	}
 	generated, err := time.Parse(time.RFC3339, *env.GeneratedAt)
 	if err != nil {
@@ -203,18 +203,18 @@ func ParseCatalog(raw []byte) (*Catalog, error) {
 	for i, rp := range products {
 		p, err := normalizeProduct(rp)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("product %d (%s): %w", i, rp.Name, err))
+			errs = append(errs, fmt.Errorf("product %d (%q): %w", i, rp.Name, err))
 			continue
 		}
 		if seen[p.Name] {
-			errs = append(errs, fmt.Errorf("product %d: duplicate %s", i, p.Name))
+			errs = append(errs, fmt.Errorf("product %d: duplicate %q", i, p.Name))
 			continue
 		}
 		seen[p.Name] = true
 		cat.Products = append(cat.Products, p)
 	}
 	if len(errs) > 0 {
-		return nil, fmt.Errorf("endoflife.date has %d malformed products: %w", len(errs), errors.Join(errs...))
+		return nil, fmt.Errorf("endoflife.date has %d malformed products: %w", len(errs), feeds.JoinFirst(errs, 10))
 	}
 	return cat, nil
 }
