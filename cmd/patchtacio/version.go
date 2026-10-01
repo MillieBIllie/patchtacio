@@ -9,6 +9,18 @@ import (
 	"github.com/milliebillie/patchtacio/internal/version"
 )
 
+// dataSource credits a feed Patchtacio uses, and its license.
+type dataSource struct {
+	Name    string `json:"name"`
+	URL     string `json:"url"`
+	License string `json:"license"`
+}
+
+var dataSources = []dataSource{
+	{"CISA Known Exploited Vulnerabilities catalog", "https://www.cisa.gov/known-exploited-vulnerabilities-catalog", "CC0-1.0"},
+	{"endoflife.date", "https://endoflife.date", "MIT (Copyright 2020 endoflife.date contributors)"},
+}
+
 func newVersionCmd() *cobra.Command {
 	var asJSON bool
 	cmd := &cobra.Command{
@@ -21,7 +33,11 @@ func newVersionCmd() *cobra.Command {
 			if asJSON {
 				enc := json.NewEncoder(out)
 				enc.SetIndent("", "  ")
-				if err := enc.Encode(info); err != nil {
+				enc.SetEscapeHTML(false)
+				if err := enc.Encode(struct {
+					version.Info
+					DataSources []dataSource `json:"dataSources"`
+				}{info, dataSources}); err != nil {
 					return fmt.Errorf("encode version info: %w", err)
 				}
 				return nil

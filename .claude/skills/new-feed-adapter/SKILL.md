@@ -10,14 +10,22 @@ description: Pattern and checklist for adding or changing a Patchtacio data sour
 Every source lives in its own package under `internal/feeds/<name>` and implements:
 
 ```go
+// internal/feeds
 type Source interface {
-    Name() string                                   // "kev", "eol", "nvd", ...
-    Fetch(ctx context.Context, c *httpcache.Client) (*Snapshot, error)
+    Name() string             // "kev", "eol", "nvd", ...: lowercase, also the cache file name
+    Title() string            // shown to users: "CISA KEV catalog"
+    StaleAfter() time.Duration
+    Fetch(ctx context.Context, c *httpcache.Client, prev httpcache.Validators) (*Fetched, error)
+    Parse(raw []byte) (Summary, error) // count, version, publish time; reject anything malformed
 }
 ```
 
-`Snapshot` holds normalized records plus metadata: `FetchedAt`, `SourceURL`, `ETag`, `Stale bool`.
-Adapters **parse and normalize only**. No matching logic, no alert text.
+Adapters **fetch and parse only**: no caching, no freshness decisions, no matching, no alert text.
+`feeds.Updater` owns the rest: it passes the cached copy's validators to `Fetch`, calls `Parse`,
+applies the shared `feeds.Validate(prev, next)`, writes the cache atomically, stores metadata, and
+computes Fresh/Stale/Missing. Each adapter also exports a typed parser for consumers
+(`kev.ParseCatalog`, `eol.ParseCatalog`), and reads the cached bytes via `Updater.ReadCache`.
+Mirrors are the adapter's job: try them inside `Fetch` and return `Via: feeds.ViaMirror`.
 
 ## Checklist
 
@@ -31,18 +39,22 @@ Adapters **parse and normalize only**. No matching logic, no alert text.
 4. **Implement Fetch** using the shared cache client (ETag / If-Modified-Since, timeout, retry
    with backoff, our User-Agent). Honor documented rate limits; NVD needs `NVD_API_KEY` and
    pacing between requests.
-5. **Failure behavior:** network or parse failure → return the last cached snapshot with
-   `Stale: true` and a wrapped error the CLI shows as a warning (exit `3`). Never return an empty
-   "all clear". No cache at all → error (exit `2`).
-   **Validate before replacing the cache** with `Validate(prev, next)`. First fetch: structural
-   checks only (parses, required fields, ≥1 record, no hard-coded minimum counts). After that,
-   also reject a record count that drops by more than 10%. A rejected fetch keeps the old cache
-   and marks it stale.
+5. **Failure behavior** (handled by the Updater; your job is to return errors, never fake data):
+   a network or parse failure keeps the cached copy and the CLI warns (exit `3`). Never return an
+   empty "all clear". No cache at all → exit `2`.
+   **Validation before replacing the cache:** `Parse` rejects structural problems (not JSON,
+   missing required fields, declared count ≠ actual, bad dates, duplicates). A malformed record
+   rejects the whole document; silently dropping one could hide an affected product. The shared
+   `feeds.Validate` then requires ≥1 record and, after the first fetch, rejects a count drop of
+   more than 10% or an older publish time. No hard-coded minimum counts.
    **Staleness** is measured from the last successful contact (304 counts). Each source sets its
    threshold: KEV 48h, endoflife.date 7 days. Also report the feed's own publish date.
 6. **Be strict about dates** (store UTC, parse the source's exact format) and **lenient about
    unknown fields** (ignore extras, so upstream additions don't break us).
-7. **Register** the source in `internal/feeds/registry.go` and add it to `feeds status`.
+7. **Register** the source in `defaultApp().sources` in `cmd/patchtacio/app.go` (adapters import
+   `internal/feeds`, so the list can't live there), add its unit to `unitFor` in
+   `cmd/patchtacio/feeds.go`, its credit to `dataSources` in `version.go`, and a README "Data sources"
+   entry. Put the source's license next to its fixture.
 8. **Integration test** behind `//go:build integration` that hits the live endpoint once.
 9. Run the `security-reviewer` agent: check URL handling, response size limits
    (`io.LimitReader`), and that no secrets reach logs.
