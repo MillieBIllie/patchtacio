@@ -16,7 +16,9 @@ CREATE TABLE feeds (
     checked_at    TEXT,                        -- last successful contact (200 or 304)
     attempted_at  TEXT,                        -- last attempt, successful or not
     last_error    TEXT    NOT NULL DEFAULT '', -- why the last attempt failed ('' = it didn't)
-    rejected      INTEGER NOT NULL DEFAULT 0   -- 1 = the newest download was refused by validation
+    rejected      INTEGER NOT NULL DEFAULT 0,  -- 1 = the newest download was refused by validation
+    shrunk_count  INTEGER NOT NULL DEFAULT 0   -- record count of a download refused for shrinking
+                                               -- (what --accept-shrink may accept); 0 = none
 ) STRICT;
 
 -- Cross-process locks (a scheduled check and a manual run can overlap).

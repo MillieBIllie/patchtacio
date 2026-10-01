@@ -122,6 +122,10 @@ func (a *app) reportResult(out, warn io.Writer, r feeds.Result, offline bool) in
 		if st.Via == feeds.ViaMirror && r.Outcome == feeds.Updated {
 			_, _ = fmt.Fprintf(warn, "Note: %s was downloaded from its official GitHub mirror because the main site did not answer.\n", st.Title)
 		}
+		if r.ShrankFrom > 0 {
+			_, _ = fmt.Fprintf(warn, "Note: accepted a smaller %s dataset as you asked with --accept-shrink: %s -> %s %s.\n",
+				st.Title, thousands(r.ShrankFrom), thousands(st.Count), unitFor(st.Name))
+		}
 		a.warnState(warn, st) // e.g. an old copy from a mirror
 		return stateCode(st.State)
 	}
@@ -170,7 +174,7 @@ func shrinkHint(w io.Writer, r feeds.Result) {
 	if !errors.Is(r.Err, feeds.ErrShrunk) {
 		return
 	}
-	_, _ = fmt.Fprintf(w, "  The new download has far fewer entries than the saved copy, which usually means it is incomplete.\n"+
+	_, _ = fmt.Fprintf(w, "  The new download has far fewer entries than the last copy Patchtacio accepted, which usually means it is incomplete.\n"+
 		"  If %s's website confirms that entries were really removed, accept it with:\n"+
 		"    patchtacio feeds update --accept-shrink %s\n", r.Status.Title, r.Status.Name)
 }
