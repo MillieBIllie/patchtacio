@@ -6,7 +6,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/version"
 )
 
-func newRootCmd() *cobra.Command {
+func newRootCmd(a *app) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "patchtacio",
 		Short: "Alerts for exploited and end-of-life products in your stack",
@@ -16,7 +16,16 @@ func newRootCmd() *cobra.Command {
 		Version:       version.Get().Version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+			a.setupLogging(cmd.ErrOrStderr())
+		},
 	}
-	cmd.AddCommand(newVersionCmd())
+	// Defining -v here takes it from cobra's automatic --version shorthand;
+	// --version keeps working.
+	cmd.PersistentFlags().CountVarP(&a.verbosity, "verbose", "v", "show more detail on stderr (-v info, -vv debug)")
+	cmd.PersistentFlags().BoolVarP(&a.quiet, "quiet", "q", false, "print only warnings and errors")
+	cmd.MarkFlagsMutuallyExclusive("verbose", "quiet")
+
+	cmd.AddCommand(newVersionCmd(), newFeedsCmd(a))
 	return cmd
 }

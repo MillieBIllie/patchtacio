@@ -17,8 +17,15 @@ const exitCodesHelp = `Exit codes:
   2  error, or a data source has no usable data
   3  finished, but some data came from an out-of-date cache (warning printed)`
 
-// exitError lets a command finish with a non-zero code that is an outcome, not
-// a failure (findings or stale data). The command prints its own explanation.
+// isOutcome reports whether err only carries an exit code; the command has
+// already explained it, so main prints nothing more.
+func isOutcome(err error) bool {
+	_, ok := errors.AsType[*exitError](err)
+	return ok
+}
+
+// exitError lets a command finish with a non-zero code after explaining the
+// result itself: findings, stale data, or a feed with no usable data.
 type exitError struct {
 	code int
 }
