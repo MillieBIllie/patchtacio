@@ -1,0 +1,4526 @@
+{
+  "schema_version": "1.2.1",
+  "generated_at": "2026-10-01T00:08:50+00:00",
+  "total": 9,
+  "result": [
+    {
+      "name": "antix",
+      "aliases": [
+        "antixlinux",
+        "antix-linux"
+      ],
+      "label": "antiX Linux",
+      "category": "os",
+      "tags": [
+        "linux-distribution",
+        "os"
+      ],
+      "versionCommand": "cat /etc/os-release",
+      "identifiers": [
+        {
+          "type": "cpe",
+          "id": "cpe:2.3:o:antixlinux:antix_linux"
+        }
+      ],
+      "labels": {
+        "eoas": "Active Support",
+        "discontinued": null,
+        "eol": "Security Support",
+        "eoes": null
+      },
+      "links": {
+        "icon": null,
+        "html": "https://endoflife.date/antix",
+        "releasePolicy": "https://www.antixforum.com/forums/topic/when-is-end-of-support-for-stable-antix-versions-17-19/#post-26424"
+      },
+      "releases": [
+        {
+          "name": "26",
+          "codename": "Stephen Kapos",
+          "label": "26 (Stephen Kapos)",
+          "releaseDate": "2026-03-21",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2028-08-09",
+          "isEol": false,
+          "eolFrom": "2030-07-30",
+          "isMaintained": true,
+          "latest": {
+            "name": "26",
+            "date": "2026-03-21",
+            "link": "https://antixlinux.com/antix-26-released/"
+          },
+          "custom": null
+        },
+        {
+          "name": "23",
+          "codename": "Arditi del Popolo",
+          "label": "23 (Arditi del Popolo)",
+          "releaseDate": "2023-08-28",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2026-07-11",
+          "isEol": false,
+          "eolFrom": "2028-06-30",
+          "isMaintained": true,
+          "latest": {
+            "name": "23.2",
+            "date": "2024-10-07",
+            "link": "https://antixlinux.com/antix-23-released/"
+          },
+          "custom": null
+        },
+        {
+          "name": "21",
+          "codename": "Grup Yorum",
+          "label": "21 (Grup Yorum)",
+          "releaseDate": "2021-10-31",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2024-08-14",
+          "isEol": true,
+          "eolFrom": "2026-08-31",
+          "isMaintained": false,
+          "latest": {
+            "name": "22",
+            "date": "2022-10-19",
+            "link": "https://antixlinux.com/antix-22-released/"
+          },
+          "custom": null
+        },
+        {
+          "name": "19",
+          "codename": "Grup Yorum",
+          "label": "19 (Grup Yorum)",
+          "releaseDate": "2019-10-17",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-09-10",
+          "isEol": true,
+          "eolFrom": "2024-06-30",
+          "isMaintained": false,
+          "latest": {
+            "name": "19.5",
+            "date": "2022-01-25",
+            "link": "https://antixlinux.com/antix-19-5-point-release-update/"
+          },
+          "custom": null
+        },
+        {
+          "name": "17",
+          "codename": "Helen Keller",
+          "label": "17 (Helen Keller)",
+          "releaseDate": "2017-10-24",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2020-06-05",
+          "isEol": true,
+          "eolFrom": "2022-06-30",
+          "isMaintained": false,
+          "latest": {
+            "name": "17.4.1",
+            "date": "2019-03-28",
+            "link": "https://antixlinux.com/antix-17-4-1-now-out/"
+          },
+          "custom": null
+        },
+        {
+          "name": "16",
+          "codename": "Berta Cáceres",
+          "label": "16 (Berta Cáceres)",
+          "releaseDate": "2016-06-27",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-06-23",
+          "isEol": true,
+          "eolFrom": "2020-06-30",
+          "isMaintained": false,
+          "latest": {
+            "name": "16.3",
+            "date": "2017-12-21",
+            "link": "https://antixlinux.com/antix-16-3-full-iso-files-available/"
+          },
+          "custom": null
+        },
+        {
+          "name": "15",
+          "codename": "Berta Cáceres",
+          "label": "15 (Berta Cáceres)",
+          "releaseDate": "2015-06-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-06-23",
+          "isEol": true,
+          "eolFrom": "2020-06-30",
+          "isMaintained": false,
+          "latest": {
+            "name": "15",
+            "date": "2015-06-30",
+            "link": "https://antixlinux.com/forum-archive/antix-15-released-t5697.html"
+          },
+          "custom": null
+        }
+      ]
+    },
+    {
+      "name": "apple-watch",
+      "aliases": [],
+      "label": "Apple Watch",
+      "category": "device",
+      "tags": [
+        "apple",
+        "device",
+        "watch"
+      ],
+      "versionCommand": null,
+      "identifiers": [],
+      "labels": {
+        "eoas": null,
+        "discontinued": "Discontinued",
+        "eol": "Supported",
+        "eoes": null
+      },
+      "links": {
+        "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/apple.svg",
+        "html": "https://endoflife.date/apple-watch",
+        "releasePolicy": "https://support.apple.com/watch"
+      },
+      "releases": [
+        {
+          "name": "series-11",
+          "codename": null,
+          "label": "Series 11",
+          "releaseDate": "2025-09-19",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": false,
+          "discontinuedFrom": null,
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "26"
+          }
+        },
+        {
+          "name": "se-3",
+          "codename": null,
+          "label": "SE (3rd generation)",
+          "releaseDate": "2025-09-19",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": false,
+          "discontinuedFrom": null,
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "26"
+          }
+        },
+        {
+          "name": "ultra-3",
+          "codename": null,
+          "label": "Ultra 3",
+          "releaseDate": "2025-09-19",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": false,
+          "discontinuedFrom": null,
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "26"
+          }
+        },
+        {
+          "name": "series-10",
+          "codename": null,
+          "label": "Series 10",
+          "releaseDate": "2024-09-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": true,
+          "discontinuedFrom": "2025-09-19",
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "11 - 26"
+          }
+        },
+        {
+          "name": "ultra-2",
+          "codename": null,
+          "label": "Ultra 2",
+          "releaseDate": "2023-09-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": true,
+          "discontinuedFrom": "2025-09-19",
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "10 - 26"
+          }
+        },
+        {
+          "name": "series-9",
+          "codename": null,
+          "label": "Series 9",
+          "releaseDate": "2023-09-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": true,
+          "discontinuedFrom": "2024-09-12",
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "10 - 26"
+          }
+        },
+        {
+          "name": "ultra-1",
+          "codename": null,
+          "label": "Ultra",
+          "releaseDate": "2022-09-23",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": true,
+          "discontinuedFrom": "2023-09-12",
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "9 - 26"
+          }
+        },
+        {
+          "name": "series-8",
+          "codename": null,
+          "label": "Series 8",
+          "releaseDate": "2022-09-16",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": true,
+          "discontinuedFrom": "2023-09-12",
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "9 - 26"
+          }
+        },
+        {
+          "name": "se-2",
+          "codename": null,
+          "label": "SE (2nd generation)",
+          "releaseDate": "2022-09-16",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": true,
+          "discontinuedFrom": "2025-09-19",
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "9 - 26"
+          }
+        },
+        {
+          "name": "series-7",
+          "codename": null,
+          "label": "Series 7",
+          "releaseDate": "2021-10-15",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": true,
+          "discontinuedFrom": "2022-09-07",
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "8 - 26"
+          }
+        },
+        {
+          "name": "series-6",
+          "codename": null,
+          "label": "Series 6",
+          "releaseDate": "2020-09-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": null,
+          "isDiscontinued": true,
+          "discontinuedFrom": "2021-10-14",
+          "isMaintained": true,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "7 - 26"
+          }
+        },
+        {
+          "name": "se-1",
+          "codename": null,
+          "label": "SE (1st generation)",
+          "releaseDate": "2020-09-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-09-16",
+          "isDiscontinued": true,
+          "discontinuedFrom": "2022-09-07",
+          "isMaintained": false,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "7 - 10"
+          }
+        },
+        {
+          "name": "series-5",
+          "codename": null,
+          "label": "Series 5",
+          "releaseDate": "2019-09-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-09-16",
+          "isDiscontinued": true,
+          "discontinuedFrom": "2020-09-15",
+          "isMaintained": false,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "6 - 10"
+          }
+        },
+        {
+          "name": "series-4",
+          "codename": null,
+          "label": "Series 4",
+          "releaseDate": "2018-09-21",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-09-16",
+          "isDiscontinued": true,
+          "discontinuedFrom": "2019-09-10",
+          "isMaintained": false,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "5 - 10"
+          }
+        },
+        {
+          "name": "series-3",
+          "codename": null,
+          "label": "Series 3",
+          "releaseDate": "2017-09-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2022-09-13",
+          "isDiscontinued": true,
+          "discontinuedFrom": "2022-09-07",
+          "isMaintained": false,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "4 - 8"
+          }
+        },
+        {
+          "name": "series-2",
+          "codename": null,
+          "label": "Series 2",
+          "releaseDate": "2016-09-16",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2020-09-15",
+          "isDiscontinued": true,
+          "discontinuedFrom": "2017-09-12",
+          "isMaintained": false,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "3 - 6"
+          }
+        },
+        {
+          "name": "series-1",
+          "codename": null,
+          "label": "Series 1",
+          "releaseDate": "2016-09-12",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2020-09-15",
+          "isDiscontinued": true,
+          "discontinuedFrom": "2018-09-12",
+          "isMaintained": false,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "3 - 6"
+          }
+        },
+        {
+          "name": "1",
+          "codename": null,
+          "label": "1st generation",
+          "releaseDate": "2015-04-24",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2018-09-17",
+          "isDiscontinued": true,
+          "discontinuedFrom": "2016-09-07",
+          "isMaintained": false,
+          "latest": null,
+          "custom": {
+            "supportedWatchOsVersions": "1 - 4"
+          }
+        }
+      ]
+    },
+    {
+      "name": "confluence",
+      "aliases": [
+        "atlassian-confluence"
+      ],
+      "label": "Confluence",
+      "category": "server-app",
+      "tags": [
+        "atlassian",
+        "java-runtime",
+        "server-app"
+      ],
+      "versionCommand": null,
+      "identifiers": [
+        {
+          "type": "cpe",
+          "id": "cpe:/a:atlassian:confluence"
+        },
+        {
+          "type": "cpe",
+          "id": "cpe:2.3:a:atlassian:confluence"
+        },
+        {
+          "type": "repology",
+          "id": "atlassian-confluence"
+        }
+      ],
+      "labels": {
+        "eoas": null,
+        "discontinued": null,
+        "eol": "Support",
+        "eoes": null
+      },
+      "links": {
+        "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/confluence.svg",
+        "html": "https://endoflife.date/confluence",
+        "releasePolicy": "https://confluence.atlassian.com/enterprise/atlassian-enterprise-releases-948227420.html#LongTermSupportreleases-Policyanddetails"
+      },
+      "releases": [
+        {
+          "name": "10.2",
+          "codename": null,
+          "label": "10.2 (LTS)",
+          "releaseDate": "2025-12-02",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": "2027-12-02",
+          "isMaintained": true,
+          "latest": {
+            "name": "10.2.18",
+            "date": "2026-09-08",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+10.2+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "10.1",
+          "codename": null,
+          "label": "10.1",
+          "releaseDate": "2025-10-07",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": "2027-10-07",
+          "isMaintained": true,
+          "latest": {
+            "name": "10.1.2",
+            "date": "2025-12-01",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+10.1+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "10.0",
+          "codename": null,
+          "label": "10.0",
+          "releaseDate": "2025-08-05",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": "2027-08-05",
+          "isMaintained": true,
+          "latest": {
+            "name": "10.0.3",
+            "date": "2025-09-03",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+10.0+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "9.5",
+          "codename": null,
+          "label": "9.5",
+          "releaseDate": "2025-06-04",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": "2027-06-04",
+          "isMaintained": true,
+          "latest": {
+            "name": "9.5.4",
+            "date": "2025-09-03",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+9.5+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "9.4",
+          "codename": null,
+          "label": "9.4",
+          "releaseDate": "2025-03-31",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": "2027-04-01",
+          "isMaintained": true,
+          "latest": {
+            "name": "9.4.1",
+            "date": "2025-05-04",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+9.4+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "9.3",
+          "codename": null,
+          "label": "9.3",
+          "releaseDate": "2025-02-04",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": "2027-02-04",
+          "isMaintained": true,
+          "latest": {
+            "name": "9.3.2",
+            "date": "2025-03-03",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+9.3+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "9.2",
+          "codename": null,
+          "label": "9.2 (LTS)",
+          "releaseDate": "2024-12-09",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": "2026-12-10",
+          "isMaintained": true,
+          "latest": {
+            "name": "9.2.25",
+            "date": "2026-09-08",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+9.2+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "9.1",
+          "codename": null,
+          "label": "9.1",
+          "releaseDate": "2024-10-03",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": false,
+          "eolFrom": "2026-10-03",
+          "isMaintained": true,
+          "latest": {
+            "name": "9.1.1",
+            "date": "2024-11-04",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+9.1+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "9.0",
+          "codename": null,
+          "label": "9.0",
+          "releaseDate": "2024-07-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2026-07-30",
+          "isMaintained": false,
+          "latest": {
+            "name": "9.0.3",
+            "date": "2024-09-03",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+9.0+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.9",
+          "codename": null,
+          "label": "8.9",
+          "releaseDate": "2024-04-01",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2026-04-02",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.9.8",
+            "date": "2024-11-04",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.9+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.8",
+          "codename": null,
+          "label": "8.8",
+          "releaseDate": "2024-02-08",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2026-02-08",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.8.1",
+            "date": "2024-03-05",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.8+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.7",
+          "codename": null,
+          "label": "8.7",
+          "releaseDate": "2023-12-05",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2025-12-06",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.7.2",
+            "date": "2024-01-16",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.7+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.6",
+          "codename": null,
+          "label": "8.6",
+          "releaseDate": "2023-10-04",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2025-10-05",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.6.2",
+            "date": "2023-12-05",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.6+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.5",
+          "codename": null,
+          "label": "8.5 (LTS)",
+          "releaseDate": "2023-08-21",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2025-12-15",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.5.31",
+            "date": "2025-12-16",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.5+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.4",
+          "codename": null,
+          "label": "8.4",
+          "releaseDate": "2023-07-05",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2025-07-06",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.4.5",
+            "date": "2023-12-05",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.4+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.3",
+          "codename": null,
+          "label": "8.3",
+          "releaseDate": "2023-05-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2025-05-23",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.3.4",
+            "date": "2023-10-30",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.3+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.2",
+          "codename": null,
+          "label": "8.2",
+          "releaseDate": "2023-03-28",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2025-03-29",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.2.3",
+            "date": "2023-05-15",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.2+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.1",
+          "codename": null,
+          "label": "8.1",
+          "releaseDate": "2023-02-13",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2025-02-14",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.1.4",
+            "date": "2023-04-04",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.1+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.0",
+          "codename": null,
+          "label": "8.0",
+          "releaseDate": "2022-11-28",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-11-29",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.0.4",
+            "date": "2023-02-12",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+8.0+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.20",
+          "codename": null,
+          "label": "7.20",
+          "releaseDate": "2022-10-03",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-10-04",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.20.3",
+            "date": "2022-12-12",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.20+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.19",
+          "codename": null,
+          "label": "7.19 (LTS)",
+          "releaseDate": "2022-07-27",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-12-13",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.19.30",
+            "date": "2024-12-02",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.19+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.18",
+          "codename": null,
+          "label": "7.18",
+          "releaseDate": "2022-05-28",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-05-30",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.18.3",
+            "date": "2022-07-10",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.18+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.17",
+          "codename": null,
+          "label": "7.17",
+          "releaseDate": "2022-03-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-03-22",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.17.5",
+            "date": "2022-06-20",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.17+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.16",
+          "codename": null,
+          "label": "7.16",
+          "releaseDate": "2022-01-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2024-01-31",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.16.5",
+            "date": "2022-07-04",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.16+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.15",
+          "codename": null,
+          "label": "7.15",
+          "releaseDate": "2021-11-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2023-11-24",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.15.3",
+            "date": "2022-06-22",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.15+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.14",
+          "codename": null,
+          "label": "7.14",
+          "releaseDate": "2021-10-10",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2023-10-12",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.14.4",
+            "date": "2022-06-22",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.14+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.13",
+          "codename": null,
+          "label": "7.13 (LTS)",
+          "releaseDate": "2021-08-15",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2023-08-17",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.13.20",
+            "date": "2023-08-01",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.13+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.4",
+          "codename": null,
+          "label": "7.4 (LTS)",
+          "releaseDate": "2020-04-18",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2022-04-21",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.4.18",
+            "date": "2022-07-03",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+7.4+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "6.13",
+          "codename": null,
+          "label": "6.13 (LTS)",
+          "releaseDate": "2018-12-02",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2020-12-04",
+          "isMaintained": false,
+          "latest": {
+            "name": "6.13.23",
+            "date": "2021-08-22",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+6.13+Release+Notes"
+          },
+          "custom": null
+        },
+        {
+          "name": "6.6",
+          "codename": null,
+          "label": "6.6 (LTS)",
+          "releaseDate": "2017-12-10",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEol": true,
+          "eolFrom": "2019-12-12",
+          "isMaintained": false,
+          "latest": {
+            "name": "6.6.17",
+            "date": "2019-11-06",
+            "link": "https://confluence.atlassian.com/display/DOC/Confluence+6.6+Release+Notes"
+          },
+          "custom": null
+        }
+      ]
+    },
+    {
+      "name": "fortios",
+      "aliases": [],
+      "label": "FortiOS",
+      "category": "os",
+      "tags": [
+        "fortinet",
+        "os"
+      ],
+      "versionCommand": "get system status",
+      "identifiers": [
+        {
+          "type": "cpe",
+          "id": "cpe:2.3:o:fortinet:fortios"
+        }
+      ],
+      "labels": {
+        "eoas": "End of Engineering Support",
+        "discontinued": null,
+        "eol": "End of Support",
+        "eoes": null
+      },
+      "links": {
+        "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/fortinet.svg",
+        "html": "https://endoflife.date/fortios",
+        "releasePolicy": null
+      },
+      "releases": [
+        {
+          "name": "8.0",
+          "codename": null,
+          "label": "8.0",
+          "releaseDate": "2026-04-21",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2029-04-21",
+          "isEol": false,
+          "eolFrom": "2030-10-21",
+          "isMaintained": true,
+          "latest": null,
+          "custom": null
+        },
+        {
+          "name": "7.6",
+          "codename": null,
+          "label": "7.6",
+          "releaseDate": "2024-07-25",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2028-07-25",
+          "isEol": false,
+          "eolFrom": "2030-01-25",
+          "isMaintained": true,
+          "latest": null,
+          "custom": null
+        },
+        {
+          "name": "7.4",
+          "codename": null,
+          "label": "7.4",
+          "releaseDate": "2023-05-11",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2027-05-11",
+          "isEol": false,
+          "eolFrom": "2028-11-11",
+          "isMaintained": true,
+          "latest": null,
+          "custom": null
+        },
+        {
+          "name": "7.2",
+          "codename": null,
+          "label": "7.2",
+          "releaseDate": "2022-03-31",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2025-03-31",
+          "isEol": true,
+          "eolFrom": "2026-09-30",
+          "isMaintained": false,
+          "latest": null,
+          "custom": null
+        },
+        {
+          "name": "7.0",
+          "codename": null,
+          "label": "7.0",
+          "releaseDate": "2021-03-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2024-03-30",
+          "isEol": true,
+          "eolFrom": "2025-09-30",
+          "isMaintained": false,
+          "latest": null,
+          "custom": null
+        },
+        {
+          "name": "6.4",
+          "codename": null,
+          "label": "6.4",
+          "releaseDate": "2020-03-31",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2023-03-31",
+          "isEol": true,
+          "eolFrom": "2024-09-30",
+          "isMaintained": false,
+          "latest": null,
+          "custom": null
+        },
+        {
+          "name": "6.2",
+          "codename": null,
+          "label": "6.2",
+          "releaseDate": "2019-03-28",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-03-28",
+          "isEol": true,
+          "eolFrom": "2023-09-28",
+          "isMaintained": false,
+          "latest": null,
+          "custom": null
+        },
+        {
+          "name": "6.0",
+          "codename": null,
+          "label": "6.0",
+          "releaseDate": "2018-03-29",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2021-03-29",
+          "isEol": true,
+          "eolFrom": "2022-09-29",
+          "isMaintained": false,
+          "latest": null,
+          "custom": null
+        }
+      ]
+    },
+    {
+      "name": "mssqlserver",
+      "aliases": [
+        "mssql",
+        "microsoftsqlserver"
+      ],
+      "label": "Microsoft SQL Server",
+      "category": "database",
+      "tags": [
+        "database",
+        "microsoft"
+      ],
+      "versionCommand": "select @@version",
+      "identifiers": [
+        {
+          "type": "cpe",
+          "id": "cpe:/a:microsoft:sql_server"
+        },
+        {
+          "type": "cpe",
+          "id": "cpe:2.3:a:microsoft:sql_server"
+        }
+      ],
+      "labels": {
+        "eoas": "Active Support",
+        "discontinued": null,
+        "eol": "Security Support",
+        "eoes": "Extended Security Updates"
+      },
+      "links": {
+        "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/microsoftsqlserver.svg",
+        "html": "https://endoflife.date/mssqlserver",
+        "releasePolicy": "https://learn.microsoft.com/lifecycle/products/?terms=SQL%20Server"
+      },
+      "releases": [
+        {
+          "name": "17.0",
+          "codename": "SQL25",
+          "label": "2025",
+          "releaseDate": "2025-11-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2031-01-06",
+          "isEol": false,
+          "eolFrom": "2036-01-06",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "17.0.5005.3 CU9",
+            "date": "2026-09-15",
+            "link": "https://support.microsoft.com/help/5122048"
+          },
+          "custom": {
+            "latestGdr": "17.0.1135.8",
+            "latestGdrLink": "https://support.microsoft.com/help/5122770"
+          }
+        },
+        {
+          "name": "16.0",
+          "codename": "Dallas",
+          "label": "2022 'Dallas'",
+          "releaseDate": "2022-11-16",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2028-01-11",
+          "isEol": false,
+          "eolFrom": "2033-01-11",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "16.0.4295.3 CU27",
+            "date": "2026-09-15",
+            "link": "https://support.microsoft.com/help/5104824"
+          },
+          "custom": {
+            "latestGdr": "16.0.1200.5",
+            "latestGdrLink": "https://support.microsoft.com/help/5122771"
+          }
+        },
+        {
+          "name": "13.0-sp3-acp",
+          "codename": "SQL16",
+          "label": "2016 SP3 Azure Connect Pack",
+          "releaseDate": "2022-05-19",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2026-07-14",
+          "isEol": true,
+          "eolFrom": "2026-07-14",
+          "isEoes": false,
+          "eoesFrom": "2029-07-17",
+          "isMaintained": true,
+          "latest": {
+            "name": "13.0.7095.1 Azure Connect pack+GDR",
+            "date": "2026-07-14",
+            "link": "https://support.microsoft.com/help/5102339"
+          },
+          "custom": {
+            "latestGdr": "13.0.7095.1",
+            "latestGdrLink": "https://support.microsoft.com/help/5102339"
+          }
+        },
+        {
+          "name": "13.0-sp3",
+          "codename": "SQL16",
+          "label": "2016 SP3",
+          "releaseDate": "2021-09-15",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2026-07-14",
+          "isEol": true,
+          "eolFrom": "2026-07-14",
+          "isEoes": false,
+          "eoesFrom": "2029-07-17",
+          "isMaintained": true,
+          "latest": {
+            "name": "13.0.6500.1 GDR",
+            "date": "2026-07-14",
+            "link": "https://support.microsoft.com/help/5102340"
+          },
+          "custom": {
+            "latestGdr": "13.0.6500.1",
+            "latestGdrLink": "https://support.microsoft.com/help/5102340"
+          }
+        },
+        {
+          "name": "15.0",
+          "codename": "Aris/Seattle",
+          "label": "2019 'Aris/Seattle'",
+          "releaseDate": "2019-11-04",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2025-02-28",
+          "isEol": false,
+          "eolFrom": "2030-01-08",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "15.0.4490.9 CU32+GDR",
+            "date": "2026-09-08",
+            "link": "https://support.microsoft.com/help/5122772"
+          },
+          "custom": {
+            "latestGdr": "15.0.2190.7",
+            "latestGdrLink": "https://support.microsoft.com/help/5122773"
+          }
+        },
+        {
+          "name": "12.0-sp3",
+          "codename": "Hekaton",
+          "label": "2014 'Hekaton' SP3",
+          "releaseDate": "2018-10-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2019-07-09",
+          "isEol": true,
+          "eolFrom": "2024-07-09",
+          "isEoes": false,
+          "eoesFrom": "2027-07-12",
+          "isMaintained": true,
+          "latest": {
+            "name": "12.0.6449.1 CU4+GDR",
+            "date": "2023-10-10",
+            "link": "https://support.microsoft.com/help/5029185"
+          },
+          "custom": {
+            "latestGdr": "12.0.6179.1",
+            "latestGdrLink": "https://support.microsoft.com/help/5029184"
+          }
+        },
+        {
+          "name": "13.0-sp2",
+          "codename": "SQL16",
+          "label": "2016 SP2",
+          "releaseDate": "2018-04-24",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-10-11",
+          "isEol": true,
+          "eolFrom": "2022-10-11",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "13.0.5893.48 CU17+GDR",
+            "date": "2022-06-14",
+            "link": "https://support.microsoft.com/help/5014351"
+          },
+          "custom": {
+            "latestGdr": "13.0.5108.50",
+            "latestGdrLink": "https://support.microsoft.com/help/5014365"
+          }
+        },
+        {
+          "name": "11.0-sp4",
+          "codename": "Denali",
+          "label": "2012 'Denali' SP4",
+          "releaseDate": "2017-10-05",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-07-12",
+          "isEol": true,
+          "eolFrom": "2022-07-12",
+          "isEoes": true,
+          "eoesFrom": "2025-07-08",
+          "isMaintained": false,
+          "latest": {
+            "name": "11.0.7512.11 GDR",
+            "date": "2023-02-14",
+            "link": "https://support.microsoft.com/help/5021123"
+          },
+          "custom": {
+            "latestGdr": "11.0.7512.11",
+            "latestGdrLink": "https://support.microsoft.com/help/5021123"
+          }
+        },
+        {
+          "name": "14.0",
+          "codename": "Helsinki",
+          "label": "2017 'Helsinki'",
+          "releaseDate": "2017-09-29",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-10-11",
+          "isEol": false,
+          "eolFrom": "2027-10-12",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "14.0.3550.4 CU31+GDR",
+            "date": "2026-09-08",
+            "link": "https://support.microsoft.com/help/5122774"
+          },
+          "custom": {
+            "latestGdr": "14.0.2130.4",
+            "latestGdrLink": "https://support.microsoft.com/help/5122775"
+          }
+        },
+        {
+          "name": "13.0-sp1",
+          "codename": "SQL16",
+          "label": "2016 SP1",
+          "releaseDate": "2016-11-16",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2019-07-09",
+          "isEol": true,
+          "eolFrom": "2019-07-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "13.0.4604.0 CU15+GDR",
+            "date": "2019-07-09",
+            "link": "https://support.microsoft.com/help/4505221"
+          },
+          "custom": {
+            "latestGdr": "13.0.4259.0",
+            "latestGdrLink": "https://support.microsoft.com/help/4505219"
+          }
+        },
+        {
+          "name": "12.0-sp2",
+          "codename": "Hekaton",
+          "label": "2014 'Hekaton' SP2",
+          "releaseDate": "2016-07-14",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2020-01-14",
+          "isEol": true,
+          "eolFrom": "2020-01-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "12.0.5687.1 CU18",
+            "date": "2019-07-29",
+            "link": "https://support.microsoft.com/help/4500180"
+          },
+          "custom": {
+            "latestGdr": "12.0.5223.6",
+            "latestGdrLink": "https://support.microsoft.com/help/4505217"
+          }
+        },
+        {
+          "name": "13.0",
+          "codename": "SQL16",
+          "label": "2016",
+          "releaseDate": "2016-06-01",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-01-09",
+          "isEol": true,
+          "eolFrom": "2018-01-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "13.0.2218.0 CU9+GDR",
+            "date": "2018-01-06",
+            "link": "https://support.microsoft.com/help/4058559"
+          },
+          "custom": {
+            "latestGdr": "13.0.1745.2",
+            "latestGdrLink": "https://support.microsoft.com/help/4058560"
+          }
+        },
+        {
+          "name": "11.0-sp3",
+          "codename": "Denali",
+          "label": "2012 'Denali' SP3",
+          "releaseDate": "2015-12-01",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-10-09",
+          "isEol": true,
+          "eolFrom": "2018-10-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "11.0.6614.2 CU10+QFE",
+            "date": "2018-01-16",
+            "link": "https://support.microsoft.com/help/4057121"
+          },
+          "custom": {
+            "latestGdr": "11.0.6260.1",
+            "latestGdrLink": "https://support.microsoft.com/help/4057115"
+          }
+        },
+        {
+          "name": "12.0-sp1",
+          "codename": "Hekaton",
+          "label": "2014 'Hekaton' SP1",
+          "releaseDate": "2015-04-14",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2017-10-10",
+          "isEol": true,
+          "eolFrom": "2017-10-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "12.0.4522.0 CU13",
+            "date": "2017-08-08",
+            "link": "https://support.microsoft.com/help/4019099"
+          },
+          "custom": {
+            "latestGdr": "12.0.4237.0",
+            "latestGdrLink": "https://support.microsoft.com/help/4019091"
+          }
+        },
+        {
+          "name": "10.50-sp3",
+          "codename": "Kilimanjaro",
+          "label": "2008 R2 'Kilimanjaro' SP3",
+          "releaseDate": "2014-07-07",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2014-07-08",
+          "isEol": true,
+          "eolFrom": "2019-07-09",
+          "isEoes": true,
+          "eoesFrom": "2022-07-12",
+          "isMaintained": false,
+          "latest": {
+            "name": "10.50.6785.2 GDR",
+            "date": "2023-02-14",
+            "link": "https://support.microsoft.com/help/5021112"
+          },
+          "custom": {
+            "latestGdr": "10.50.6785.2",
+            "latestGdrLink": "https://support.microsoft.com/help/5021112"
+          }
+        },
+        {
+          "name": "10.0-sp4",
+          "codename": "Katmai",
+          "label": "2008 'Katmai' SP4",
+          "releaseDate": "2014-07-07",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2014-07-08",
+          "isEol": true,
+          "eolFrom": "2019-07-09",
+          "isEoes": true,
+          "eoesFrom": "2022-07-12",
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.6814.4 CU17+GDR",
+            "date": "2023-02-14",
+            "link": "https://support.microsoft.com/help/5020863"
+          },
+          "custom": {
+            "latestGdr": "10.0.6814.4",
+            "latestGdrLink": "https://support.microsoft.com/help/5020863"
+          }
+        },
+        {
+          "name": "11.0-sp2",
+          "codename": "Denali",
+          "label": "2012 'Denali' SP2",
+          "releaseDate": "2014-06-10",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2017-01-10",
+          "isEol": true,
+          "eolFrom": "2017-01-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "11.0.5678.0 CU16",
+            "date": "2016-11-17",
+            "link": "https://support.microsoft.com/help/3205054"
+          },
+          "custom": {
+            "latestGdr": "11.0.5388.0",
+            "latestGdrLink": "https://support.microsoft.com/help/3194719"
+          }
+        },
+        {
+          "name": "12.0",
+          "codename": "Hekaton",
+          "label": "2014 'Hekaton'",
+          "releaseDate": "2014-06-05",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2016-07-12",
+          "isEol": true,
+          "eolFrom": "2016-07-12",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "12.0.2569.0 CU14",
+            "date": "2016-06-20",
+            "link": "https://support.microsoft.com/help/3158271"
+          },
+          "custom": {
+            "latestGdr": "12.0.2269.0",
+            "latestGdrLink": "https://support.microsoft.com/help/3045324"
+          }
+        },
+        {
+          "name": "11.0-sp1",
+          "codename": "Denali",
+          "label": "2012 'Denali' SP1",
+          "releaseDate": "2012-11-07",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2015-07-14",
+          "isEol": true,
+          "eolFrom": "2015-07-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "11.0.3513.0 CU13+QFE",
+            "date": "2015-07-14",
+            "link": "https://support.microsoft.com/help/3045317"
+          },
+          "custom": {
+            "latestGdr": "11.0.3156.0",
+            "latestGdrLink": "https://support.microsoft.com/help/3045318"
+          }
+        },
+        {
+          "name": "10.50-sp2",
+          "codename": "Kilimanjaro",
+          "label": "2008 R2 'Kilimanjaro' SP2",
+          "releaseDate": "2012-07-26",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2015-10-13",
+          "isEol": true,
+          "eolFrom": "2015-10-13",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.50.4339.0 CU13+QFE",
+            "date": "2015-07-14",
+            "link": "https://support.microsoft.com/help/3045312"
+          },
+          "custom": {
+            "latestGdr": "10.50.4042.0",
+            "latestGdrLink": "https://support.microsoft.com/help/3045313"
+          }
+        },
+        {
+          "name": "11.0",
+          "codename": "Denali",
+          "label": "2012 'Denali'",
+          "releaseDate": "2012-05-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2014-01-14",
+          "isEol": true,
+          "eolFrom": "2014-01-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "11.0.2424.0 CU11",
+            "date": "2012-12-16",
+            "link": "https://support.microsoft.com/help/2908007"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "10.00-sp3",
+          "codename": "Katmai",
+          "label": "2008 'Katmai' SP3",
+          "releaseDate": "2011-10-06",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2015-10-13",
+          "isEol": true,
+          "eolFrom": "2015-10-13",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.00.5861 CU16+QFE",
+            "date": "2015-07-14",
+            "link": "https://support.microsoft.com/help/3045303"
+          },
+          "custom": {
+            "latestGdr": "10.0.5500.0",
+            "latestGdrLink": "https://support.microsoft.com/help/3045305"
+          }
+        },
+        {
+          "name": "10.50-sp1",
+          "codename": "Kilimanjaro",
+          "label": "2008 R2 'Kilimanjaro' SP1",
+          "releaseDate": "2011-07-12",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2013-10-08",
+          "isEol": true,
+          "eolFrom": "2013-10-08",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.50.2881.0 CU14",
+            "date": "2013-08-08",
+            "link": "https://support.microsoft.com/help/2868244"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "9.0-sp4",
+          "codename": "Yukon",
+          "label": "2005 'Yukon' SP4",
+          "releaseDate": "2010-12-13",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2011-04-12",
+          "isEol": true,
+          "eolFrom": "2016-04-12",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "9.0.5324.0 QFE",
+            "date": "2012-10-09",
+            "link": "https://support.microsoft.com/help/2716427"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "10.00-sp2",
+          "codename": "Katmai",
+          "label": "2008 'Katmai' SP2",
+          "releaseDate": "2010-09-24",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2012-10-09",
+          "isEol": true,
+          "eolFrom": "2012-10-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.00.4371 CU10+QFE",
+            "date": "2012-10-09",
+            "link": "https://support.microsoft.com/help/2716433"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "10.50-r2",
+          "codename": "Kilimanjaro",
+          "label": "2008 'Kilimanjaro' R2",
+          "releaseDate": "2010-07-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2012-07-10",
+          "isEol": true,
+          "eolFrom": "2012-07-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.50.1815.0 CU13",
+            "date": "2012-04-16",
+            "link": "https://support.microsoft.com/help/2679366"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "10.00-sp1",
+          "codename": "Katmai",
+          "label": "2008 'Katmai' SP1",
+          "releaseDate": "2009-03-31",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2011-10-11",
+          "isEol": true,
+          "eolFrom": "2011-10-11",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.00.2850 CU16",
+            "date": "2011-09-19",
+            "link": "https://support.microsoft.com/help/2582282"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "9.00-sp3",
+          "codename": "Yukon",
+          "label": "2005 'Yukon' SP3",
+          "releaseDate": "2008-12-15",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2012-01-10",
+          "isEol": true,
+          "eolFrom": "2012-01-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "9.00.4309 CU11",
+            "date": "2010-08-16",
+            "link": "https://support.microsoft.com/help/2258854"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "10.00",
+          "codename": "Katmai",
+          "label": "2008 'Katmai'",
+          "releaseDate": "2008-11-06",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2010-04-13",
+          "isEol": true,
+          "eolFrom": "2010-04-13",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.00.1835 CU10",
+            "date": "2010-03-15",
+            "link": "https://support.microsoft.com/help/979064"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "9.00-sp2",
+          "codename": "Yukon",
+          "label": "2005 'Yukon' SP2",
+          "releaseDate": "2007-02-19",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2010-01-12",
+          "isEol": true,
+          "eolFrom": "2010-01-12",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "9.00.3325 CU13",
+            "date": "2009-04-20",
+            "link": "https://support.microsoft.com/help/967908"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "9.0-sp1",
+          "codename": "Yukon",
+          "label": "2005 'Yukon' SP1",
+          "releaseDate": "2006-04-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2008-04-08",
+          "isEol": true,
+          "eolFrom": "2008-04-08",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "9.0.2233",
+            "date": "2007-05-16",
+            "link": "https://www.betaarchive.com/wiki/index.php?title=Microsoft_KB_Archive/937545"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "9.0",
+          "codename": "Yukon",
+          "label": "2005 'Yukon'",
+          "releaseDate": "2006-01-14",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2007-07-10",
+          "isEol": true,
+          "eolFrom": "2007-07-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "9.0.1399",
+            "date": "2006-01-14",
+            "link": "https://learn.microsoft.com/lifecycle/products/microsoft-sql-server-2005"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "8.0-sp4",
+          "codename": "Shiloh",
+          "label": "2000 'Shiloh' SP4",
+          "releaseDate": "2005-05-06",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2008-04-08",
+          "isEol": true,
+          "eolFrom": "2013-04-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "8.0.2305 QFE",
+            "date": "2012-08-14",
+            "link": "https://support.microsoft.com/help/983811"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "7.0-sp4",
+          "codename": "Sphinx",
+          "label": "7.0 'Sphinx' SP4",
+          "releaseDate": "2002-04-26",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2005-12-31",
+          "isEol": true,
+          "eolFrom": "2011-01-11",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "7.0.1152",
+            "date": "2012-05-09",
+            "link": "https://support.microsoft.com/help/941203"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "6.50-sp5a",
+          "codename": "Hydra",
+          "label": "6.5 'Hydra' SP5a",
+          "releaseDate": "1998-12-24",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2002-01-01",
+          "isEol": true,
+          "eolFrom": "2002-01-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "6.50.480",
+            "date": "2005-10-07",
+            "link": "https://www.betaarchive.com/wiki/index.php?title=Microsoft_KB_Archive/238621"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        },
+        {
+          "name": "6.0-sp3",
+          "codename": "SQL95",
+          "label": "6.0 'SQL95' SP3",
+          "releaseDate": "1995-06-13",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "1999-03-31",
+          "isEol": true,
+          "eolFrom": "1999-03-31",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "6.0.151",
+            "date": "2000-12-22",
+            "link": "https://www.betaarchive.com/wiki/index.php?title=Microsoft_KB_Archive/152616"
+          },
+          "custom": {
+            "latestGdr": null,
+            "latestGdrLink": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "nodejs",
+      "aliases": [
+        "node"
+      ],
+      "label": "Node.js",
+      "category": "framework",
+      "tags": [
+        "framework",
+        "herodevs",
+        "javascript-runtime",
+        "linux-foundation"
+      ],
+      "versionCommand": "node --version",
+      "identifiers": [
+        {
+          "type": "purl",
+          "id": "pkg:generic/node"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:docker/circleci/node"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:docker/library/node"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:docker/cimg/node"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:docker/bitnami/node"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:rpm/redhat/nodejs"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:rpm/redhat/nodejs24"
+        },
+        {
+          "type": "cpe",
+          "id": "cpe:2.3:a:nodejs:node.js"
+        },
+        {
+          "type": "repology",
+          "id": "nodejs"
+        }
+      ],
+      "labels": {
+        "eoas": "Active Support",
+        "discontinued": null,
+        "eol": "Security Support",
+        "eoes": "Commercial Support"
+      },
+      "links": {
+        "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/nodedotjs.svg",
+        "html": "https://endoflife.date/nodejs",
+        "releasePolicy": "https://nodejs.org/en/about/previous-releases"
+      },
+      "releases": [
+        {
+          "name": "26",
+          "codename": null,
+          "label": "26 (Upcoming LTS)",
+          "releaseDate": "2026-05-05",
+          "isLts": false,
+          "ltsFrom": "2026-10-28",
+          "isEoas": false,
+          "eoasFrom": "2027-10-27",
+          "isEol": false,
+          "eolFrom": "2029-04-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "26.10.0",
+            "date": "2026-09-22",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V26.md#26.10.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "25",
+          "codename": null,
+          "label": "25",
+          "releaseDate": "2025-10-15",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2026-04-01",
+          "isEol": true,
+          "eolFrom": "2026-06-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "25.9.0",
+            "date": "2026-04-01",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V25.md#25.9.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "24",
+          "codename": null,
+          "label": "24 (LTS)",
+          "releaseDate": "2025-05-06",
+          "isLts": true,
+          "ltsFrom": "2025-10-28",
+          "isEoas": false,
+          "eoasFrom": "2026-10-20",
+          "isEol": false,
+          "eolFrom": "2028-04-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "24.21.0",
+            "date": "2026-09-08",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V24.md#24.21.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "23",
+          "codename": null,
+          "label": "23",
+          "releaseDate": "2024-10-16",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2025-04-01",
+          "isEol": true,
+          "eolFrom": "2025-06-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "23.11.1",
+            "date": "2025-05-14",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V23.md#23.11.1"
+          },
+          "custom": null
+        },
+        {
+          "name": "22",
+          "codename": null,
+          "label": "22 (LTS)",
+          "releaseDate": "2024-04-24",
+          "isLts": true,
+          "ltsFrom": "2024-10-29",
+          "isEoas": true,
+          "eoasFrom": "2025-10-21",
+          "isEol": false,
+          "eolFrom": "2027-04-30",
+          "isEoes": false,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "22.23.3",
+            "date": "2026-09-23",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V22.md#22.23.3"
+          },
+          "custom": null
+        },
+        {
+          "name": "21",
+          "codename": null,
+          "label": "21",
+          "releaseDate": "2023-10-17",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2024-04-01",
+          "isEol": true,
+          "eolFrom": "2024-06-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "21.7.3",
+            "date": "2024-04-10",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V21.md#21.7.3"
+          },
+          "custom": null
+        },
+        {
+          "name": "20",
+          "codename": null,
+          "label": "20 (LTS)",
+          "releaseDate": "2023-04-18",
+          "isLts": true,
+          "ltsFrom": "2023-10-24",
+          "isEoas": true,
+          "eoasFrom": "2024-10-22",
+          "isEol": true,
+          "eolFrom": "2026-04-30",
+          "isEoes": false,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "20.20.2",
+            "date": "2026-03-24",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V20.md#20.20.2"
+          },
+          "custom": null
+        },
+        {
+          "name": "19",
+          "codename": null,
+          "label": "19",
+          "releaseDate": "2022-10-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2023-04-01",
+          "isEol": true,
+          "eolFrom": "2023-06-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "19.9.0",
+            "date": "2023-04-10",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V19.md#19.9.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "18",
+          "codename": null,
+          "label": "18 (LTS)",
+          "releaseDate": "2022-04-19",
+          "isLts": true,
+          "ltsFrom": "2022-10-25",
+          "isEoas": true,
+          "eoasFrom": "2023-10-18",
+          "isEol": true,
+          "eolFrom": "2025-04-30",
+          "isEoes": false,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "18.20.8",
+            "date": "2025-03-27",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V18.md#18.20.8"
+          },
+          "custom": null
+        },
+        {
+          "name": "17",
+          "codename": null,
+          "label": "17",
+          "releaseDate": "2021-10-19",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-04-01",
+          "isEol": true,
+          "eolFrom": "2022-06-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "17.9.1",
+            "date": "2022-06-01",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V17.md#17.9.1"
+          },
+          "custom": null
+        },
+        {
+          "name": "16",
+          "codename": null,
+          "label": "16 (LTS)",
+          "releaseDate": "2021-04-20",
+          "isLts": true,
+          "ltsFrom": "2021-10-26",
+          "isEoas": true,
+          "eoasFrom": "2022-10-18",
+          "isEol": true,
+          "eolFrom": "2023-09-11",
+          "isEoes": false,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "16.20.2",
+            "date": "2023-08-09",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V16.md#16.20.2"
+          },
+          "custom": null
+        },
+        {
+          "name": "15",
+          "codename": null,
+          "label": "15",
+          "releaseDate": "2020-10-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2021-04-01",
+          "isEol": true,
+          "eolFrom": "2021-06-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "15.14.0",
+            "date": "2021-04-06",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V15.md#15.14.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "14",
+          "codename": null,
+          "label": "14 (LTS)",
+          "releaseDate": "2020-04-21",
+          "isLts": true,
+          "ltsFrom": "2020-10-27",
+          "isEoas": true,
+          "eoasFrom": "2021-10-19",
+          "isEol": true,
+          "eolFrom": "2023-04-30",
+          "isEoes": false,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "14.21.3",
+            "date": "2023-02-16",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V14.md#14.21.3"
+          },
+          "custom": null
+        },
+        {
+          "name": "13",
+          "codename": null,
+          "label": "13",
+          "releaseDate": "2019-10-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2020-04-01",
+          "isEol": true,
+          "eolFrom": "2020-06-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "13.14.0",
+            "date": "2020-04-29",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V13.md#13.14.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "12",
+          "codename": null,
+          "label": "12 (LTS)",
+          "releaseDate": "2019-04-23",
+          "isLts": true,
+          "ltsFrom": "2019-10-21",
+          "isEoas": true,
+          "eoasFrom": "2020-10-20",
+          "isEol": true,
+          "eolFrom": "2022-04-30",
+          "isEoes": false,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "12.22.12",
+            "date": "2022-04-05",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V12.md#12.22.12"
+          },
+          "custom": null
+        },
+        {
+          "name": "11",
+          "codename": null,
+          "label": "11",
+          "releaseDate": "2018-10-23",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2019-04-01",
+          "isEol": true,
+          "eolFrom": "2019-06-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "11.15.0",
+            "date": "2019-04-30",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V11.md#11.15.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "10",
+          "codename": null,
+          "label": "10 (LTS)",
+          "releaseDate": "2018-04-24",
+          "isLts": true,
+          "ltsFrom": "2018-10-30",
+          "isEoas": true,
+          "eoasFrom": "2020-05-19",
+          "isEol": true,
+          "eolFrom": "2021-04-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.24.1",
+            "date": "2021-04-06",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V10.md#10.24.1"
+          },
+          "custom": null
+        },
+        {
+          "name": "9",
+          "codename": null,
+          "label": "9",
+          "releaseDate": "2017-10-31",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-06-30",
+          "isEol": true,
+          "eolFrom": "2018-06-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "9.11.2",
+            "date": "2018-06-12",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V9.md#9.11.2"
+          },
+          "custom": null
+        },
+        {
+          "name": "8",
+          "codename": null,
+          "label": "8 (LTS)",
+          "releaseDate": "2017-05-30",
+          "isLts": true,
+          "ltsFrom": "2017-10-31",
+          "isEoas": true,
+          "eoasFrom": "2019-01-01",
+          "isEol": true,
+          "eolFrom": "2019-12-31",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "8.17.0",
+            "date": "2019-12-17",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V8.md#8.17.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "7",
+          "codename": null,
+          "label": "7",
+          "releaseDate": "2016-10-25",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2017-06-30",
+          "isEol": true,
+          "eolFrom": "2017-06-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "7.10.1",
+            "date": "2017-07-11",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V7.md#7.10.1"
+          },
+          "custom": null
+        },
+        {
+          "name": "6",
+          "codename": null,
+          "label": "6 (LTS)",
+          "releaseDate": "2016-04-26",
+          "isLts": true,
+          "ltsFrom": "2016-10-18",
+          "isEoas": true,
+          "eoasFrom": "2018-04-30",
+          "isEol": true,
+          "eolFrom": "2019-04-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "6.17.1",
+            "date": "2019-04-03",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V6.md#6.17.1"
+          },
+          "custom": null
+        },
+        {
+          "name": "5",
+          "codename": null,
+          "label": "5",
+          "releaseDate": "2015-10-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2016-06-30",
+          "isEol": true,
+          "eolFrom": "2016-06-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "5.12.0",
+            "date": "2016-06-23",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V5.md#5.12.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "4",
+          "codename": null,
+          "label": "4 (LTS)",
+          "releaseDate": "2015-09-09",
+          "isLts": true,
+          "ltsFrom": "2015-10-01",
+          "isEoas": true,
+          "eoasFrom": "2017-04-01",
+          "isEol": true,
+          "eolFrom": "2018-04-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "4.9.1",
+            "date": "2018-03-29",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_V4.md#4.9.1"
+          },
+          "custom": null
+        },
+        {
+          "name": "3",
+          "codename": null,
+          "label": "3",
+          "releaseDate": "2015-08-04",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": null,
+          "isEol": true,
+          "eolFrom": null,
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "3.3.1",
+            "date": "2015-09-15",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_IOJS.md#3.3.1"
+          },
+          "custom": null
+        },
+        {
+          "name": "2",
+          "codename": null,
+          "label": "2",
+          "releaseDate": "2015-05-04",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": null,
+          "isEol": true,
+          "eolFrom": null,
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "2.5.0",
+            "date": "2015-07-28",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_IOJS.md#2.5.0"
+          },
+          "custom": null
+        },
+        {
+          "name": "1",
+          "codename": null,
+          "label": "1",
+          "releaseDate": "2015-01-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": null,
+          "isEol": true,
+          "eolFrom": null,
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "1.8.4",
+            "date": "2015-07-09",
+            "link": "https://github.com/nodejs/node/blob/main/doc/changelogs/CHANGELOG_IOJS.md#1.8.4"
+          },
+          "custom": null
+        }
+      ]
+    },
+    {
+      "name": "php",
+      "aliases": [],
+      "label": "PHP",
+      "category": "lang",
+      "tags": [
+        "lang"
+      ],
+      "versionCommand": "php --version",
+      "identifiers": [
+        {
+          "type": "purl",
+          "id": "pkg:deb/ubuntu/php"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:deb/debian/php"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:generic/php"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:generic/php-cli"
+        },
+        {
+          "type": "purl",
+          "id": "pkg:generic/php-fpm"
+        },
+        {
+          "type": "repology",
+          "id": "php"
+        },
+        {
+          "type": "cpe",
+          "id": "cpe:2.3:a:php:php"
+        },
+        {
+          "type": "cpe",
+          "id": "cpe:/a:php:php"
+        }
+      ],
+      "labels": {
+        "eoas": "Active Support",
+        "discontinued": null,
+        "eol": "Security Support",
+        "eoes": null
+      },
+      "links": {
+        "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/php.svg",
+        "html": "https://endoflife.date/php",
+        "releasePolicy": "https://www.php.net/supported-versions.php"
+      },
+      "releases": [
+        {
+          "name": "8.5",
+          "codename": null,
+          "label": "8.5",
+          "releaseDate": "2025-11-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2027-12-31",
+          "isEol": false,
+          "eolFrom": "2029-12-31",
+          "isMaintained": true,
+          "latest": {
+            "name": "8.5.11",
+            "date": "2026-09-24",
+            "link": "https://www.php.net/ChangeLog-8.php#8.5.11"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.4",
+          "codename": null,
+          "label": "8.4",
+          "releaseDate": "2024-11-21",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2026-12-31",
+          "isEol": false,
+          "eolFrom": "2028-12-31",
+          "isMaintained": true,
+          "latest": {
+            "name": "8.4.26",
+            "date": "2026-09-24",
+            "link": "https://www.php.net/ChangeLog-8.php#8.4.26"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.3",
+          "codename": null,
+          "label": "8.3",
+          "releaseDate": "2023-11-23",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2025-12-31",
+          "isEol": false,
+          "eolFrom": "2027-12-31",
+          "isMaintained": true,
+          "latest": {
+            "name": "8.3.35",
+            "date": "2026-09-24",
+            "link": "https://www.php.net/ChangeLog-8.php#8.3.35"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.2",
+          "codename": null,
+          "label": "8.2",
+          "releaseDate": "2022-12-08",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2024-12-31",
+          "isEol": false,
+          "eolFrom": "2026-12-31",
+          "isMaintained": true,
+          "latest": {
+            "name": "8.2.34",
+            "date": "2026-09-24",
+            "link": "https://www.php.net/ChangeLog-8.php#8.2.34"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.1",
+          "codename": null,
+          "label": "8.1",
+          "releaseDate": "2021-11-25",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2023-11-25",
+          "isEol": true,
+          "eolFrom": "2025-12-31",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.1.34",
+            "date": "2025-12-18",
+            "link": "https://www.php.net/ChangeLog-8.php#8.1.34"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.0",
+          "codename": null,
+          "label": "8.0",
+          "releaseDate": "2020-11-26",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-11-26",
+          "isEol": true,
+          "eolFrom": "2023-11-26",
+          "isMaintained": false,
+          "latest": {
+            "name": "8.0.30",
+            "date": "2023-08-03",
+            "link": "https://www.php.net/ChangeLog-8.php#8.0.30"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.4",
+          "codename": null,
+          "label": "7.4",
+          "releaseDate": "2019-11-28",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2021-11-28",
+          "isEol": true,
+          "eolFrom": "2022-11-28",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.4.33",
+            "date": "2022-11-03",
+            "link": "https://www.php.net/ChangeLog-7.php#7.4.33"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.3",
+          "codename": null,
+          "label": "7.3",
+          "releaseDate": "2018-12-06",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2020-12-06",
+          "isEol": true,
+          "eolFrom": "2021-12-06",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.3.33",
+            "date": "2021-11-18",
+            "link": "https://www.php.net/ChangeLog-7.php#7.3.33"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.2",
+          "codename": null,
+          "label": "7.2",
+          "releaseDate": "2017-11-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2019-11-30",
+          "isEol": true,
+          "eolFrom": "2020-11-30",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.2.34",
+            "date": "2020-10-01",
+            "link": "https://www.php.net/ChangeLog-7.php#7.2.34"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.1",
+          "codename": null,
+          "label": "7.1",
+          "releaseDate": "2016-12-01",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-12-01",
+          "isEol": true,
+          "eolFrom": "2019-12-01",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.1.33",
+            "date": "2019-10-24",
+            "link": "https://www.php.net/ChangeLog-7.php#7.1.33"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.0",
+          "codename": null,
+          "label": "7.0",
+          "releaseDate": "2015-12-03",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-01-04",
+          "isEol": true,
+          "eolFrom": "2019-01-10",
+          "isMaintained": false,
+          "latest": {
+            "name": "7.0.33",
+            "date": "2019-01-10",
+            "link": "https://www.php.net/ChangeLog-7.php#7.0.33"
+          },
+          "custom": null
+        },
+        {
+          "name": "5.6",
+          "codename": null,
+          "label": "5.6",
+          "releaseDate": "2014-08-28",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2017-01-19",
+          "isEol": true,
+          "eolFrom": "2018-12-31",
+          "isMaintained": false,
+          "latest": {
+            "name": "5.6.40",
+            "date": "2019-01-10",
+            "link": "https://www.php.net/ChangeLog-5.php#5.6.40"
+          },
+          "custom": null
+        },
+        {
+          "name": "5.5",
+          "codename": null,
+          "label": "5.5",
+          "releaseDate": "2013-06-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2015-07-10",
+          "isEol": true,
+          "eolFrom": "2016-07-21",
+          "isMaintained": false,
+          "latest": {
+            "name": "5.5.38",
+            "date": "2016-07-21",
+            "link": "https://www.php.net/ChangeLog-5.php#5.5.38"
+          },
+          "custom": null
+        },
+        {
+          "name": "5.4",
+          "codename": null,
+          "label": "5.4",
+          "releaseDate": "2012-03-01",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2014-09-14",
+          "isEol": true,
+          "eolFrom": "2015-09-14",
+          "isMaintained": false,
+          "latest": {
+            "name": "5.4.45",
+            "date": "2015-09-03",
+            "link": "https://www.php.net/ChangeLog-5.php#5.4.45"
+          },
+          "custom": null
+        },
+        {
+          "name": "5.3",
+          "codename": null,
+          "label": "5.3",
+          "releaseDate": "2009-06-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2011-06-30",
+          "isEol": true,
+          "eolFrom": "2014-08-14",
+          "isMaintained": false,
+          "latest": {
+            "name": "5.3.29",
+            "date": "2014-08-14",
+            "link": "https://www.php.net/ChangeLog-5.php#5.3.29"
+          },
+          "custom": null
+        },
+        {
+          "name": "5.2",
+          "codename": null,
+          "label": "5.2",
+          "releaseDate": "2006-11-02",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2008-11-02",
+          "isEol": true,
+          "eolFrom": "2011-01-06",
+          "isMaintained": false,
+          "latest": {
+            "name": "5.2.17",
+            "date": "2011-01-06",
+            "link": "https://www.php.net/ChangeLog-5.php#5.2.17"
+          },
+          "custom": null
+        },
+        {
+          "name": "5.1",
+          "codename": null,
+          "label": "5.1",
+          "releaseDate": "2005-11-24",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2006-08-24",
+          "isEol": true,
+          "eolFrom": "2006-08-24",
+          "isMaintained": false,
+          "latest": {
+            "name": "5.1.6",
+            "date": "2006-08-24",
+            "link": "https://www.php.net/ChangeLog-5.php#5.1.6"
+          },
+          "custom": null
+        },
+        {
+          "name": "5.0",
+          "codename": null,
+          "label": "5.0",
+          "releaseDate": "2004-07-13",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2005-09-05",
+          "isEol": true,
+          "eolFrom": "2005-09-05",
+          "isMaintained": false,
+          "latest": {
+            "name": "5.0.5",
+            "date": "2005-09-05",
+            "link": "https://www.php.net/ChangeLog-5.php#5.0.5"
+          },
+          "custom": null
+        }
+      ]
+    },
+    {
+      "name": "ubuntu",
+      "aliases": [
+        "ubuntu-linux"
+      ],
+      "label": "Ubuntu",
+      "category": "os",
+      "tags": [
+        "linux-distribution",
+        "os"
+      ],
+      "versionCommand": "cat /etc/os-release",
+      "identifiers": [
+        {
+          "type": "cpe",
+          "id": "cpe:2.3:o:canonical:ubuntu_linux"
+        },
+        {
+          "type": "cpe",
+          "id": "cpe:/o:canonical:ubuntu_linux"
+        }
+      ],
+      "labels": {
+        "eoas": "Hardware & Maintenance",
+        "discontinued": null,
+        "eol": "Maintenance & Security Support",
+        "eoes": "Expanded Security Maintenance"
+      },
+      "links": {
+        "icon": "https://cdn.jsdelivr.net/npm/simple-icons/icons/ubuntu.svg",
+        "html": "https://endoflife.date/ubuntu",
+        "releasePolicy": "https://ubuntu.com/project/docs/release-team/list-of-releases/"
+      },
+      "releases": [
+        {
+          "name": "26.04",
+          "codename": "Resolute Raccoon",
+          "label": "26.04 'Resolute Raccoon' (LTS)",
+          "releaseDate": "2026-04-23",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2031-05-29",
+          "isEol": false,
+          "eolFrom": "2031-05-29",
+          "isEoes": false,
+          "eoesFrom": "2036-04-23",
+          "isMaintained": true,
+          "latest": {
+            "name": "26.04.1",
+            "date": "2026-08-31",
+            "link": "https://wiki.ubuntu.com/ResoluteRaccoon/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "25.10",
+          "codename": "Questing Quokka",
+          "label": "25.10 'Questing Quokka'",
+          "releaseDate": "2025-10-09",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2026-07-01",
+          "isEol": true,
+          "eolFrom": "2026-07-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "25.10",
+            "date": "2025-10-09",
+            "link": "https://wiki.ubuntu.com/QuestingQuokka/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "25.04",
+          "codename": "Plucky Puffin",
+          "label": "25.04 'Plucky Puffin'",
+          "releaseDate": "2025-04-17",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2026-01-17",
+          "isEol": true,
+          "eolFrom": "2026-01-17",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "25.04",
+            "date": "2025-04-17",
+            "link": "https://wiki.ubuntu.com/PluckyPuffin/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "24.10",
+          "codename": "Oracular Oriole",
+          "label": "24.10 'Oracular Oriole'",
+          "releaseDate": "2024-10-10",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2025-07-10",
+          "isEol": true,
+          "eolFrom": "2025-07-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "24.10",
+            "date": "2024-10-10",
+            "link": "https://wiki.ubuntu.com/OracularOriole/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "24.04",
+          "codename": "Noble Numbat",
+          "label": "24.04 'Noble Numbat' (LTS)",
+          "releaseDate": "2024-04-25",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2029-05-31",
+          "isEol": false,
+          "eolFrom": "2029-05-31",
+          "isEoes": false,
+          "eoesFrom": "2034-04-25",
+          "isMaintained": true,
+          "latest": {
+            "name": "24.04.5",
+            "date": "2026-09-30",
+            "link": "https://wiki.ubuntu.com/NobleNumbat/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "23.10",
+          "codename": "Mantic Minotaur",
+          "label": "23.10 'Mantic Minotaur'",
+          "releaseDate": "2023-10-12",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2024-07-12",
+          "isEol": true,
+          "eolFrom": "2024-07-12",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "23.10",
+            "date": "2023-10-12",
+            "link": "https://wiki.ubuntu.com/ManticMinotaur/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "23.04",
+          "codename": "Lunar Lobster",
+          "label": "23.04 'Lunar Lobster'",
+          "releaseDate": "2023-04-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2024-01-20",
+          "isEol": true,
+          "eolFrom": "2024-01-20",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "23.04",
+            "date": "2023-04-20",
+            "link": "https://wiki.ubuntu.com/LunarLobster/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "22.10",
+          "codename": "Kinetic Kudu",
+          "label": "22.10 'Kinetic Kudu'",
+          "releaseDate": "2022-10-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2023-07-20",
+          "isEol": true,
+          "eolFrom": "2023-07-20",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "22.10",
+            "date": "2022-10-20",
+            "link": "https://wiki.ubuntu.com/KineticKudu/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "22.04",
+          "codename": "Jammy Jellyfish",
+          "label": "22.04 'Jammy Jellyfish' (LTS)",
+          "releaseDate": "2022-04-21",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2024-09-30",
+          "isEol": false,
+          "eolFrom": "2027-06-01",
+          "isEoes": false,
+          "eoesFrom": "2032-04-21",
+          "isMaintained": true,
+          "latest": {
+            "name": "22.04.5",
+            "date": "2024-09-12",
+            "link": "https://wiki.ubuntu.com/JammyJellyfish/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "21.10",
+          "codename": "Impish Indri",
+          "label": "21.10 'Impish Indri'",
+          "releaseDate": "2021-10-14",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-07-14",
+          "isEol": true,
+          "eolFrom": "2022-07-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "21.10",
+            "date": "2021-10-14",
+            "link": "https://wiki.ubuntu.com/ImpishIndri/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "21.04",
+          "codename": "Hirsute Hippo",
+          "label": "21.04 'Hirsute Hippo'",
+          "releaseDate": "2021-04-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-01-20",
+          "isEol": true,
+          "eolFrom": "2022-01-20",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "21.04",
+            "date": "2021-04-22",
+            "link": "https://wiki.ubuntu.com/HirsuteHippo/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "20.10",
+          "codename": "Groovy Gorilla",
+          "label": "20.10 'Groovy Gorilla'",
+          "releaseDate": "2020-10-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2021-07-22",
+          "isEol": true,
+          "eolFrom": "2021-07-22",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "20.10",
+            "date": "2020-10-22",
+            "link": "https://wiki.ubuntu.com/GroovyGorilla/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "20.04",
+          "codename": "Focal Fossa",
+          "label": "20.04 'Focal Fossa' (LTS)",
+          "releaseDate": "2020-04-23",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-10-01",
+          "isEol": true,
+          "eolFrom": "2025-05-31",
+          "isEoes": false,
+          "eoesFrom": "2030-04-23",
+          "isMaintained": true,
+          "latest": {
+            "name": "20.04.6",
+            "date": "2023-03-23",
+            "link": "https://wiki.ubuntu.com/FocalFossa/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "19.10",
+          "codename": "Eoan Ermine",
+          "label": "19.10 'Eoan Ermine'",
+          "releaseDate": "2019-10-17",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2020-07-06",
+          "isEol": true,
+          "eolFrom": "2020-07-06",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "19.10",
+            "date": "2019-10-17",
+            "link": "https://wiki.ubuntu.com/EoanErmine/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "19.04",
+          "codename": "Disco Dingo",
+          "label": "19.04 'Disco Dingo'",
+          "releaseDate": "2019-04-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2020-01-23",
+          "isEol": true,
+          "eolFrom": "2020-01-23",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "19.04",
+            "date": "2019-04-18",
+            "link": "https://wiki.ubuntu.com/DiscoDingo/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "18.10",
+          "codename": "Cosmic Cuttlefish",
+          "label": "18.10 'Cosmic Cuttlefish'",
+          "releaseDate": "2018-10-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2019-07-18",
+          "isEol": true,
+          "eolFrom": "2019-07-18",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "18.10",
+            "date": "2018-10-18",
+            "link": "https://wiki.ubuntu.com/CosmicCuttlefish/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "18.04",
+          "codename": "Bionic Beaver",
+          "label": "18.04 'Bionic Beaver' (LTS)",
+          "releaseDate": "2018-04-26",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2023-05-31",
+          "isEol": true,
+          "eolFrom": "2023-05-31",
+          "isEoes": false,
+          "eoesFrom": "2028-04-26",
+          "isMaintained": true,
+          "latest": {
+            "name": "18.04.6",
+            "date": "2021-09-17",
+            "link": "https://wiki.ubuntu.com/BionicBeaver/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "17.10",
+          "codename": "Artful Aardvark",
+          "label": "17.10 'Artful Aardvark'",
+          "releaseDate": "2017-10-19",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-07-19",
+          "isEol": true,
+          "eolFrom": "2018-07-19",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "17.10",
+            "date": "2017-10-19",
+            "link": "https://wiki.ubuntu.com/ArtfulAardvark/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "17.04",
+          "codename": "Zesty Zapus",
+          "label": "17.04 'Zesty Zapus'",
+          "releaseDate": "2017-04-13",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-01-13",
+          "isEol": true,
+          "eolFrom": "2018-01-13",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "17.04",
+            "date": "2017-04-13",
+            "link": "https://wiki.ubuntu.com/ZestyZapus/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "16.10",
+          "codename": "Yakkety Yak",
+          "label": "16.10 'Yakkety Yak'",
+          "releaseDate": "2016-10-13",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2017-07-20",
+          "isEol": true,
+          "eolFrom": "2017-07-20",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "16.10",
+            "date": "2016-10-13",
+            "link": "https://wiki.ubuntu.com/YakketyYak/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "16.04",
+          "codename": "Xenial Xerus",
+          "label": "16.04 'Xenial Xerus' (LTS)",
+          "releaseDate": "2016-04-21",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2021-04-02",
+          "isEol": true,
+          "eolFrom": "2021-04-02",
+          "isEoes": true,
+          "eoesFrom": "2026-04-02",
+          "isMaintained": false,
+          "latest": {
+            "name": "16.04.7",
+            "date": "2020-08-13",
+            "link": "https://wiki.ubuntu.com/XenialXerus/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "15.10",
+          "codename": "Wily Werewolf",
+          "label": "15.10 'Wily Werewolf'",
+          "releaseDate": "2015-10-22",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2016-07-28",
+          "isEol": true,
+          "eolFrom": "2016-07-28",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "15.10",
+            "date": "2015-10-22",
+            "link": "https://wiki.ubuntu.com/WilyWerewolf/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "15.04",
+          "codename": "Vivid Vervet",
+          "label": "15.04 'Vivid Vervet'",
+          "releaseDate": "2015-04-23",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2016-02-04",
+          "isEol": true,
+          "eolFrom": "2016-02-04",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "15.04",
+            "date": "2015-04-23",
+            "link": "https://wiki.ubuntu.com/VividVervet/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "14.10",
+          "codename": "Utopic Unicorn",
+          "label": "14.10 'Utopic Unicorn'",
+          "releaseDate": "2014-10-23",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2015-07-23",
+          "isEol": true,
+          "eolFrom": "2015-07-23",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "14.10",
+            "date": "2014-10-23",
+            "link": "https://wiki.ubuntu.com/UtopicUnicorn/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "14.04",
+          "codename": "Trusty Tahr",
+          "label": "14.04 'Trusty Tahr' (LTS)",
+          "releaseDate": "2014-04-17",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2019-04-02",
+          "isEol": true,
+          "eolFrom": "2019-04-02",
+          "isEoes": true,
+          "eoesFrom": "2024-04-02",
+          "isMaintained": false,
+          "latest": {
+            "name": "14.04.6",
+            "date": "2019-03-07",
+            "link": "https://wiki.ubuntu.com/TrustyTahr/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "13.10",
+          "codename": "Saucy Salamander",
+          "label": "13.10 'Saucy Salamander'",
+          "releaseDate": "2013-10-17",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2014-07-17",
+          "isEol": true,
+          "eolFrom": "2014-07-17",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "13.10",
+            "date": "2013-10-17",
+            "link": "https://wiki.ubuntu.com/SaucySalamander/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "13.04",
+          "codename": "Raring Ringtail",
+          "label": "13.04 'Raring Ringtail'",
+          "releaseDate": "2013-04-25",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2014-01-27",
+          "isEol": true,
+          "eolFrom": "2014-01-27",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "13.04",
+            "date": "2013-04-25",
+            "link": "https://wiki.ubuntu.com/RaringRingtail/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "12.10",
+          "codename": "Quantal Quetzal",
+          "label": "12.10 'Quantal Quetzal'",
+          "releaseDate": "2012-10-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2014-05-16",
+          "isEol": true,
+          "eolFrom": "2014-05-16",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "12.10",
+            "date": "2012-10-18",
+            "link": "https://wiki.ubuntu.com/QuantalQuetzal/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "12.04",
+          "codename": "Precise Pangolin",
+          "label": "12.04 'Precise Pangolin' (LTS)",
+          "releaseDate": "2012-04-26",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2017-04-28",
+          "isEol": true,
+          "eolFrom": "2017-04-28",
+          "isEoes": true,
+          "eoesFrom": "2019-04-26",
+          "isMaintained": false,
+          "latest": {
+            "name": "12.04.5",
+            "date": "2014-08-07",
+            "link": "https://wiki.ubuntu.com/PrecisePangolin/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "11.10",
+          "codename": "Oneiric Ocelot",
+          "label": "11.10 'Oneiric Ocelot'",
+          "releaseDate": "2011-10-13",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2013-05-09",
+          "isEol": true,
+          "eolFrom": "2013-05-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "11.10",
+            "date": "2011-10-13",
+            "link": "https://wiki.ubuntu.com/OneiricOcelot/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "11.04",
+          "codename": "Natty Narwhal",
+          "label": "11.04 'Natty Narwhal'",
+          "releaseDate": "2011-04-28",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2012-10-28",
+          "isEol": true,
+          "eolFrom": "2012-10-28",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "11.04",
+            "date": "2011-04-28",
+            "link": "https://wiki.ubuntu.com/NattyNarwhal/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "10.10",
+          "codename": "Maverick Meerkat",
+          "label": "10.10 'Maverick Meerkat'",
+          "releaseDate": "2010-10-10",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2012-04-10",
+          "isEol": true,
+          "eolFrom": "2012-04-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.10",
+            "date": "2010-10-10",
+            "link": "https://wiki.ubuntu.com/MaverickMeerkat/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "10.04",
+          "codename": "Lucid Lynx",
+          "label": "10.04 'Lucid Lynx' (LTS)",
+          "releaseDate": "2010-04-29",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2013-05-09",
+          "isEol": true,
+          "eolFrom": "2013-05-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.04.4",
+            "date": "2012-02-16",
+            "link": "https://wiki.ubuntu.com/LucidLynx/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "9.10",
+          "codename": "Karmic Koala",
+          "label": "9.10 'Karmic Koala'",
+          "releaseDate": "2009-10-29",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2011-04-30",
+          "isEol": true,
+          "eolFrom": "2011-04-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "9.10",
+            "date": "2009-10-29",
+            "link": "https://wiki.ubuntu.com/KarmicKoala/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "9.04",
+          "codename": "Jaunty Jackalope",
+          "label": "9.04 'Jaunty Jackalope'",
+          "releaseDate": "2009-04-23",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2010-10-23",
+          "isEol": true,
+          "eolFrom": "2010-10-23",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "9.04",
+            "date": "2009-04-23",
+            "link": "https://wiki.ubuntu.com/JauntyJackalope/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "8.10",
+          "codename": "Intrepid Ibex",
+          "label": "8.10 'Intrepid Ibex'",
+          "releaseDate": "2008-10-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2010-04-30",
+          "isEol": true,
+          "eolFrom": "2010-04-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "8.10",
+            "date": "2008-10-30",
+            "link": null
+          },
+          "custom": null
+        },
+        {
+          "name": "8.04",
+          "codename": "Hardy Heron",
+          "label": "8.04 'Hardy Heron' (LTS)",
+          "releaseDate": "2008-04-24",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2013-05-09",
+          "isEol": true,
+          "eolFrom": "2013-05-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "8.04.4",
+            "date": "2010-01-28",
+            "link": null
+          },
+          "custom": null
+        },
+        {
+          "name": "7.10",
+          "codename": "Gutsy Gibbon",
+          "label": "7.10 'Gutsy Gibbon'",
+          "releaseDate": "2007-10-18",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2009-04-18",
+          "isEol": true,
+          "eolFrom": "2009-04-18",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "7.10",
+            "date": "2007-10-18",
+            "link": "https://wiki.ubuntu.com/GutsyGibbon/ReleaseNotes/"
+          },
+          "custom": null
+        },
+        {
+          "name": "7.04",
+          "codename": "Feisty Fawn",
+          "label": "7.04 'Feisty Fawn'",
+          "releaseDate": "2007-04-19",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2008-10-19",
+          "isEol": true,
+          "eolFrom": "2008-10-19",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "7.04",
+            "date": "2007-04-19",
+            "link": null
+          },
+          "custom": null
+        },
+        {
+          "name": "6.10",
+          "codename": "Edgy Eft",
+          "label": "6.10 'Edgy Eft'",
+          "releaseDate": "2006-10-26",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2006-10-26",
+          "isEol": true,
+          "eolFrom": "2008-04-26",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "6.10",
+            "date": "2006-10-26",
+            "link": null
+          },
+          "custom": null
+        },
+        {
+          "name": "6.06",
+          "codename": "Dapper Drake",
+          "label": "6.06 'Dapper Drake' (LTS)",
+          "releaseDate": "2006-06-01",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2011-06-01",
+          "isEol": true,
+          "eolFrom": "2011-06-01",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "6.06.2",
+            "date": "2008-01-21",
+            "link": null
+          },
+          "custom": null
+        },
+        {
+          "name": "5.10",
+          "codename": "Breezy Badger",
+          "label": "5.10 'Breezy Badger'",
+          "releaseDate": "2005-10-12",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2007-04-13",
+          "isEol": true,
+          "eolFrom": "2007-04-13",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "5.10",
+            "date": "2005-10-12",
+            "link": null
+          },
+          "custom": null
+        },
+        {
+          "name": "5.04",
+          "codename": "Hoary Hedgehog",
+          "label": "5.04 'Hoary Hedgehog'",
+          "releaseDate": "2005-04-08",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2006-10-31",
+          "isEol": true,
+          "eolFrom": "2006-10-31",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "5.04",
+            "date": "2005-04-08",
+            "link": null
+          },
+          "custom": null
+        },
+        {
+          "name": "4.10",
+          "codename": "Warty Warthog",
+          "label": "4.10 'Warty Warthog'",
+          "releaseDate": "2004-10-26",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2004-10-26",
+          "isEol": true,
+          "eolFrom": "2006-04-30",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "4.10",
+            "date": "2004-10-26",
+            "link": null
+          },
+          "custom": null
+        }
+      ]
+    },
+    {
+      "name": "windows-server",
+      "aliases": [
+        "windowsserver"
+      ],
+      "label": "Microsoft Windows Server",
+      "category": "os",
+      "tags": [
+        "microsoft",
+        "os",
+        "windows"
+      ],
+      "versionCommand": "winver",
+      "identifiers": [],
+      "labels": {
+        "eoas": "Active Support",
+        "discontinued": null,
+        "eol": "Security Support",
+        "eoes": "Extended Security Updates"
+      },
+      "links": {
+        "icon": null,
+        "html": "https://endoflife.date/windows-server",
+        "releasePolicy": "https://learn.microsoft.com/lifecycle/products/?terms=Windows%20Server"
+      },
+      "releases": [
+        {
+          "name": "2025",
+          "codename": null,
+          "label": "Windows Server 2025 (LTSC)",
+          "releaseDate": "2024-11-01",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2029-11-13",
+          "isEol": false,
+          "eolFrom": "2034-11-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "10.0.26100",
+            "date": null,
+            "link": "https://learn.microsoft.com/windows/release-health/windows-server-release-info"
+          },
+          "custom": null
+        },
+        {
+          "name": "23h2-ac",
+          "codename": null,
+          "label": "Windows Server 23H2 AC",
+          "releaseDate": "2023-10-24",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2026-05-12",
+          "isEol": true,
+          "eolFrom": "2026-05-12",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.25398",
+            "date": null,
+            "link": "https://support.microsoft.com/servicing/os/windows-server/2026/05/end-of-updates-statement"
+          },
+          "custom": null
+        },
+        {
+          "name": "2022",
+          "codename": null,
+          "label": "Windows Server 2022 (LTSC)",
+          "releaseDate": "2021-08-18",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": false,
+          "eoasFrom": "2026-10-13",
+          "isEol": false,
+          "eolFrom": "2031-10-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "10.0.20348",
+            "date": null,
+            "link": "https://learn.microsoft.com/windows/release-health/windows-server-release-info"
+          },
+          "custom": null
+        },
+        {
+          "name": "20h2-sac",
+          "codename": null,
+          "label": "Windows Server 20H2 SAC",
+          "releaseDate": "2020-10-20",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-08-09",
+          "isEol": true,
+          "eolFrom": "2022-08-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.19042",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/announcements/windows-server-20h2-retiring"
+          },
+          "custom": null
+        },
+        {
+          "name": "2004-sac",
+          "codename": null,
+          "label": "Windows Server 2004 SAC",
+          "releaseDate": "2020-05-27",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2021-12-14",
+          "isEol": true,
+          "eolFrom": "2021-12-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.19041",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/announcements/windows-server-version-2004-end-of-servicing"
+          },
+          "custom": null
+        },
+        {
+          "name": "1909-sac",
+          "codename": null,
+          "label": "Windows Server 1909 SAC",
+          "releaseDate": "2019-11-12",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2021-05-11",
+          "isEol": true,
+          "eolFrom": "2021-05-11",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.18363",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/announcements/windows-server-1909-end-of-servicing"
+          },
+          "custom": null
+        },
+        {
+          "name": "1903-sac",
+          "codename": null,
+          "label": "Windows Server 1903 SAC",
+          "releaseDate": "2019-05-21",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2020-12-08",
+          "isEol": true,
+          "eolFrom": "2020-12-08",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.18362",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/products/windows-server-semiannual-channel"
+          },
+          "custom": null
+        },
+        {
+          "name": "1809-sac",
+          "codename": null,
+          "label": "Windows Server 1809 SAC",
+          "releaseDate": "2018-11-13",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2020-11-10",
+          "isEol": true,
+          "eolFrom": "2020-11-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.17763",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/announcements/windows-server-1809-end-of-servicing"
+          },
+          "custom": null
+        },
+        {
+          "name": "2019",
+          "codename": null,
+          "label": "Windows Server 2019 (LTSC)",
+          "releaseDate": "2018-11-13",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2024-01-09",
+          "isEol": false,
+          "eolFrom": "2029-01-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": true,
+          "latest": {
+            "name": "10.0.17763",
+            "date": null,
+            "link": "https://learn.microsoft.com/windows/release-health/windows-server-release-info"
+          },
+          "custom": null
+        },
+        {
+          "name": "1803-sac",
+          "codename": null,
+          "label": "Windows Server 1803 SAC",
+          "releaseDate": "2018-04-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2019-11-12",
+          "isEol": true,
+          "eolFrom": "2019-11-12",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.17134",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/announcements/windows-server-1803-end-of-servicing"
+          },
+          "custom": null
+        },
+        {
+          "name": "1709-sac",
+          "codename": null,
+          "label": "Windows Server 1709 SAC",
+          "releaseDate": "2017-10-17",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2019-04-09",
+          "isEol": true,
+          "eolFrom": "2019-04-09",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "10.0.16299",
+            "date": null,
+            "link": "https://techcommunity.microsoft.com/discussions/windows-server-for-developers/windows-server-version-1709-lifecycle-announcement/379766"
+          },
+          "custom": null
+        },
+        {
+          "name": "2016",
+          "codename": null,
+          "label": "Windows Server 2016 (LTSC)",
+          "releaseDate": "2016-10-15",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2022-01-11",
+          "isEol": false,
+          "eolFrom": "2027-01-12",
+          "isEoes": false,
+          "eoesFrom": "2030-01-12",
+          "isMaintained": true,
+          "latest": {
+            "name": "10.0.14393",
+            "date": null,
+            "link": "https://learn.microsoft.com/windows/release-health/windows-server-release-info"
+          },
+          "custom": null
+        },
+        {
+          "name": "2012-r2",
+          "codename": null,
+          "label": "Windows Server 2012 R2 (LTSC)",
+          "releaseDate": "2013-11-25",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-10-09",
+          "isEol": true,
+          "eolFrom": "2023-10-10",
+          "isEoes": false,
+          "eoesFrom": "2026-10-13",
+          "isMaintained": true,
+          "latest": {
+            "name": "6.3.9600",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/products/windows-server-2012-r2"
+          },
+          "custom": null
+        },
+        {
+          "name": "2012",
+          "codename": null,
+          "label": "Windows Server 2012 (LTSC)",
+          "releaseDate": "2012-10-30",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2018-10-09",
+          "isEol": true,
+          "eolFrom": "2023-10-10",
+          "isEoes": false,
+          "eoesFrom": "2026-10-13",
+          "isMaintained": true,
+          "latest": {
+            "name": "6.2.9200",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/products/windows-server-2012"
+          },
+          "custom": null
+        },
+        {
+          "name": "2008-r2-sp1",
+          "codename": null,
+          "label": "Windows Server 2008 R2 SP1 (LTSC)",
+          "releaseDate": "2011-02-22",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2015-01-13",
+          "isEol": true,
+          "eolFrom": "2020-01-14",
+          "isEoes": true,
+          "eoesFrom": "2023-01-10",
+          "isMaintained": false,
+          "latest": {
+            "name": "6.1.7601",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/products/windows-server-2008-r2"
+          },
+          "custom": null
+        },
+        {
+          "name": "2008-sp2",
+          "codename": null,
+          "label": "Windows Server 2008 SP2 (LTSC)",
+          "releaseDate": "2009-04-29",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2015-01-13",
+          "isEol": true,
+          "eolFrom": "2020-01-14",
+          "isEoes": true,
+          "eoesFrom": "2023-01-10",
+          "isMaintained": false,
+          "latest": {
+            "name": "6.0.6003",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/products/windows-server-2008"
+          },
+          "custom": null
+        },
+        {
+          "name": "2003-sp2",
+          "codename": null,
+          "label": "Windows Server 2003 SP2 (LTSC)",
+          "releaseDate": "2007-03-13",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2010-07-13",
+          "isEol": true,
+          "eolFrom": "2015-07-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "5.2.3790",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/products/windows-server-2003-"
+          },
+          "custom": null
+        },
+        {
+          "name": "2003-sp1",
+          "codename": null,
+          "label": "Windows Server 2003 SP1",
+          "releaseDate": "2005-03-30",
+          "isLts": false,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2009-04-14",
+          "isEol": true,
+          "eolFrom": "2009-04-14",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "5.2.3790",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/products/windows-server-2003-"
+          },
+          "custom": null
+        },
+        {
+          "name": "2003",
+          "codename": null,
+          "label": "Windows Server 2003 (LTSC)",
+          "releaseDate": "2003-04-24",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2007-04-10",
+          "isEol": true,
+          "eolFrom": "2007-04-10",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "5.2.3790",
+            "date": null,
+            "link": "https://learn.microsoft.com/lifecycle/products/windows-server-2003-"
+          },
+          "custom": null
+        },
+        {
+          "name": "2000",
+          "codename": null,
+          "label": "Windows Server 2000 (LTSC)",
+          "releaseDate": "2000-02-17",
+          "isLts": true,
+          "ltsFrom": null,
+          "isEoas": true,
+          "eoasFrom": "2005-06-30",
+          "isEol": true,
+          "eolFrom": "2010-07-13",
+          "isEoes": null,
+          "eoesFrom": null,
+          "isMaintained": false,
+          "latest": {
+            "name": "5.0.2195",
+            "date": null,
+            "link": null
+          },
+          "custom": null
+        }
+      ]
+    }
+  ]
+}
