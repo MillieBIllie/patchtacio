@@ -13,7 +13,7 @@ import (
 func run(t *testing.T, args ...string) (string, error) {
 	t.Helper()
 	var buf bytes.Buffer
-	cmd := newRootCmd()
+	cmd := newRootCmd(defaultApp())
 	cmd.SetOut(&buf)
 	cmd.SetErr(&buf)
 	cmd.SetArgs(args)

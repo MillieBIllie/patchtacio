@@ -11,11 +11,10 @@ import (
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	err := newRootCmd().ExecuteContext(ctx)
+	err := newRootCmd(defaultApp()).ExecuteContext(ctx)
 	stop()
-	code := exitCodeFor(err)
-	if code == exitToolError {
+	if err != nil && !isOutcome(err) {
 		fmt.Fprintln(os.Stderr, "Error:", err)
 	}
-	os.Exit(code)
+	os.Exit(exitCodeFor(err))
 }
