@@ -8,10 +8,13 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 
 	"github.com/milliebillie/patchtacio/internal/feeds"
+	"github.com/milliebillie/patchtacio/internal/logging"
 )
 
 func newFeedsCmd(a *app) *cobra.Command {
@@ -109,6 +112,7 @@ func (a *app) reportResult(out, warn io.Writer, r feeds.Result, offline bool) in
 		if st.Via == feeds.ViaMirror && r.Outcome == feeds.Updated {
 			_, _ = fmt.Fprintf(warn, "Note: %s was downloaded from its official GitHub mirror because the main site did not answer.\n", st.Title)
 		}
+		a.warnState(warn, st) // e.g. an old copy from a mirror
 		return stateCode(st.State)
 	}
 
@@ -122,11 +126,11 @@ func (a *app) reportResult(out, warn io.Writer, r feeds.Result, offline bool) in
 
 	// Not refreshed: say why, then what the user is left with.
 	reason := ""
-	if r.Err != nil {
+	switch {
+	case r.Err != nil: // this run's error, not an older stored one
+		reason = " Reason: " + firstLine(logging.RedactString(r.Err.Error()))
+	case st.LastError != "":
 		reason = " Reason: " + firstLine(st.LastError)
-		if st.LastError == "" {
-			reason = " Reason: " + firstLine(r.Err.Error())
-		}
 	}
 	if st.State == feeds.Missing {
 		_, _ = fmt.Fprintf(warn, "Warning: %s could not be downloaded and there is no saved copy, so this data is not available.%s\n"+
@@ -145,8 +149,21 @@ func (a *app) reportResult(out, warn io.Writer, r feeds.Result, offline bool) in
 func (a *app) warnState(w io.Writer, st feeds.Status) {
 	switch st.State {
 	case feeds.Stale:
-		_, _ = fmt.Fprintf(w, "Warning: %s data is out of date: last checked %s. Anything published since then is not included.\n"+
-			"  Run `patchtacio feeds update` when you are online.\n", st.Title, a.when(st.CheckedAt))
+		reason := st.StaleReason
+		if reason == "" {
+			reason = "it has not been checked recently"
+		}
+		_, _ = fmt.Fprintf(w, "Warning: %s data is out of date because %s. Last checked %s. "+
+			"Anything published since then is not included.\n", st.Title, reason, a.when(st.CheckedAt))
+		if st.LastError != "" {
+			_, _ = fmt.Fprintf(w, "  Last problem: %s\n", firstLine(st.LastError))
+		}
+		_, _ = fmt.Fprintln(w, "  Run `patchtacio feeds update` when you are online.")
+	case feeds.Fresh:
+		if st.LastUpdateFailed {
+			_, _ = fmt.Fprintf(w, "Note: the last update attempt for %s (%s) failed: %s\n"+
+				"  The saved copy is still recent enough to use.\n", st.Title, a.when(st.AttemptedAt), firstLine(st.LastError))
+		}
 	case feeds.Missing:
 		_, _ = fmt.Fprintf(w, "Warning: there is no saved copy of %s, so this data is not available.\n"+
 			"  Run `patchtacio feeds update` when you are online.\n", st.Title)
@@ -173,7 +190,7 @@ func (a *app) printStatusTable(w io.Writer, sts []feeds.Status) {
 func (a *app) describe(st feeds.Status) string {
 	parts := []string{fmt.Sprintf("%s %s", thousands(st.Count), unitFor(st.Name))}
 	if st.Name == "kev" && st.Version != "" {
-		parts = append(parts, "catalog "+st.Version)
+		parts = append(parts, "catalog "+clean(st.Version))
 	}
 	if !st.PublishedAt.IsZero() {
 		parts = append(parts, "published "+a.date(st.PublishedAt))
@@ -296,11 +313,25 @@ func thousands(n int) string {
 	return s
 }
 
+// firstLine returns the first line of s, cleaned and cut to a readable length
+// on a character boundary.
 func firstLine(s string) string {
 	s, _, _ = strings.Cut(s, "\n")
+	s = clean(s)
 	const limit = 300
-	if len(s) > limit {
-		s = s[:limit] + "…"
+	if utf8.RuneCountInString(s) > limit {
+		s = string([]rune(s)[:limit]) + "…"
 	}
 	return s
+}
+
+// clean drops control characters from text that came from a feed or a
+// server, so it cannot move the cursor, recolor or retitle the terminal.
+func clean(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return -1
+		}
+		return r
+	}, s)
 }

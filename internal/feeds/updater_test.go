@@ -10,6 +10,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/milliebillie/patchtacio/internal/httpcache"
 	"github.com/milliebillie/patchtacio/internal/store"
@@ -164,6 +165,9 @@ func TestFailureKeepsCacheAndGoesStale(t *testing.T) {
 	if strings.Contains(r.Status.LastError, "s3cret") {
 		t.Errorf("stored error leaks a secret: %q", r.Status.LastError)
 	}
+	if !r.Status.LastUpdateFailed {
+		t.Errorf("a failed attempt must be flagged even while the copy is fresh")
+	}
 
 	h.clock = h.clock.Add(48 * time.Hour)
 	r = h.update(t, false)
@@ -198,7 +202,82 @@ func TestRejectedDataKeepsCache(t *testing.T) {
 			if h.cached(t) != body(100, day1) || r.Status.Count != 100 {
 				t.Errorf("cache replaced by rejected data")
 			}
+			// The source has newer data we refused: the saved copy is known to be behind.
+			if r.Status.State != Stale || !strings.Contains(r.Status.StaleReason, "rejected") {
+				t.Errorf("rejected update must make the copy stale: %+v", r.Status)
+			}
 		})
+	}
+}
+
+func TestRejectionClearedBySuccess(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{body: body(50, day2)}, fakeResp{body: body(101, day2)})
+	h.update(t, false)
+	if r := h.update(t, false); r.Status.State != Stale {
+		t.Fatalf("after rejection: %+v", r.Status)
+	}
+	if r := h.update(t, false); r.Outcome != Updated || r.Status.State != Fresh || r.Status.LastUpdateFailed {
+		t.Fatalf("after a good update: %+v", r)
+	}
+}
+
+func TestOldMirrorCopyIsStale(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1), via: ViaMirror}, fakeResp{notModified: true, via: ViaMirror})
+	if r := h.update(t, false); r.Status.State != Fresh {
+		t.Fatalf("recent mirror copy: %+v", r.Status)
+	}
+	// The mirror keeps answering, but its copy is now 8 days old by its own date.
+	h.clock = h.clock.Add(8 * 24 * time.Hour)
+	r := h.update(t, false)
+	if r.Status.State != Stale || !strings.Contains(r.Status.StaleReason, "mirror") {
+		t.Fatalf("old mirror copy must be stale: %+v", r.Status)
+	}
+	if h.src.gotPrev[1] != (httpcache.Validators{}) {
+		t.Errorf("mirror validators were reused: %+v", h.src.gotPrev[1])
+	}
+}
+
+func TestWipedCacheStillBlocksOlderData(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{body: body(100, day0)})
+	h.update(t, false)
+	if err := os.Remove(filepath.Join(h.u.CacheDir, "fake.json")); err != nil {
+		t.Fatal(err)
+	}
+	r := h.update(t, false)
+	if r.Outcome != Failed || !errors.Is(r.Err, ErrRejected) {
+		t.Fatalf("older data accepted after the cache was wiped: %+v", r)
+	}
+	if h.src.gotPrev[1] != (httpcache.Validators{}) {
+		t.Errorf("validators sent without a cached copy: %+v", h.src.gotPrev[1])
+	}
+}
+
+func TestFutureCheckTimeIsStale(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)})
+	h.update(t, false)
+	h.clock = h.clock.Add(-24 * time.Hour) // the clock was ahead and has been corrected
+	sts, err := h.u.Statuses(context.Background())
+	if err != nil || sts[0].State != Stale || !strings.Contains(sts[0].StaleReason, "clock") {
+		t.Fatalf("Statuses = %+v, %v", sts, err)
+	}
+}
+
+func TestStoredErrorIsBounded(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{err: errors.New(strings.Repeat("é", 10_000))})
+	h.update(t, false)
+	r := h.update(t, false)
+	if len(r.Status.LastError) > maxErrorLen+len("…") || !utf8.ValidString(r.Status.LastError) {
+		t.Errorf("stored error is %d bytes (valid UTF-8: %v)", len(r.Status.LastError), utf8.ValidString(r.Status.LastError))
+	}
+}
+
+func TestJoinFirst(t *testing.T) {
+	errs := make([]error, 25)
+	for i := range errs {
+		errs[i] = errors.New("e")
+	}
+	if got := JoinFirst(errs, 10).Error(); strings.Count(got, "e\n") != 10 || !strings.HasSuffix(got, "and 15 more") {
+		t.Errorf("JoinFirst = %q", got)
 	}
 }
 

@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/milliebillie/patchtacio/internal/httpcache"
@@ -86,6 +87,15 @@ func Validate(prev *Summary, next Summary) error {
 			ErrRejected, next.PublishedAt.UTC().Format(time.RFC3339), prev.PublishedAt.UTC().Format(time.RFC3339))
 	}
 	return nil
+}
+
+// JoinFirst joins at most n errors and says how many more there were, so one
+// broken document cannot produce an unbounded error message.
+func JoinFirst(errs []error, n int) error {
+	if len(errs) <= n {
+		return errors.Join(errs...)
+	}
+	return errors.Join(append(slices.Clone(errs[:n]), fmt.Errorf("and %d more", len(errs)-n))...)
 }
 
 var validName = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,31}$`)

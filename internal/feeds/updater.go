@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"unicode/utf8"
 
 	"github.com/milliebillie/patchtacio/internal/httpcache"
 	"github.com/milliebillie/patchtacio/internal/logging"
@@ -107,7 +108,11 @@ func (u *Updater) Update(ctx context.Context, offline bool) ([]Result, error) {
 			u.logger().Warn("could not release update lock", "err", err)
 		}
 	}()
-	stopBeat := u.heartbeat(ctx, owner)
+	// If the lock is taken over (we stalled past its TTL), stop: another run
+	// is now updating and two writers must not interleave.
+	ctx, cancelUpdate := context.WithCancelCause(ctx)
+	defer cancelUpdate(nil)
+	stopBeat := u.heartbeat(ctx, owner, cancelUpdate)
 	defer stopBeat()
 
 	results := make([]Result, 0, len(u.Sources))
@@ -161,8 +166,12 @@ func (u *Updater) acquire(ctx context.Context, owner string) (waited bool, err e
 	}
 }
 
-// heartbeat keeps the lock alive during long downloads.
-func (u *Updater) heartbeat(ctx context.Context, owner string) (stop func()) {
+// errLockLost cancels an update whose lock another process took over.
+var errLockLost = errors.New("the update lock was taken over by another patchtacio run")
+
+// heartbeat keeps the lock alive during long downloads, and calls lost if the
+// lock has been taken over.
+func (u *Updater) heartbeat(ctx context.Context, owner string, lost context.CancelCauseFunc) (stop func()) {
 	ctx, cancel := context.WithCancel(ctx)
 	done := make(chan struct{})
 	go func() {
@@ -174,8 +183,14 @@ func (u *Updater) heartbeat(ctx context.Context, owner string) (stop func()) {
 			case <-ctx.Done():
 				return
 			case <-t.C:
-				if ok, err := u.Store.HeartbeatLock(ctx, lockName, owner); err != nil || !ok {
-					u.logger().Warn("update lock heartbeat failed", "held", ok, "err", err)
+				ok, err := u.Store.HeartbeatLock(ctx, lockName, owner)
+				switch {
+				case err != nil:
+					u.logger().Warn("update lock heartbeat failed", "err", err)
+				case !ok:
+					u.logger().Warn("update lock was taken over; stopping this update")
+					lost(errLockLost)
+					return
 				}
 			}
 		}
@@ -203,10 +218,17 @@ func (u *Updater) updateOne(ctx context.Context, src Source) (Result, error) {
 	meta.Name = src.Name()
 	cacheOK := u.cacheValid(src, meta)
 
+	// Compare against what we last accepted even if the cache file has since
+	// been deleted: a wiped cache must not let an older or shrunken copy in.
 	var prev *Summary
-	var validators httpcache.Validators
-	if cacheOK {
+	if meta.RecordCount > 0 {
 		prev = &Summary{Count: meta.RecordCount, Version: meta.Version, PublishedAt: meta.PublishedAt}
+	}
+	// Validators are only meaningful to the server that issued them, and a
+	// 304 is only useful if we still have the bytes. Mirror validators are
+	// never sent to the primary.
+	var validators httpcache.Validators
+	if cacheOK && meta.Via != ViaMirror {
 		validators = httpcache.Validators{ETag: meta.ETag, LastModified: meta.LastModified}
 	}
 
@@ -223,9 +245,9 @@ func (u *Updater) updateOne(ctx context.Context, src Source) (Result, error) {
 		if !cacheOK {
 			return u.fail(ctx, src, meta, errors.New("server reported no change, but there is no valid cached copy"))
 		}
-		meta.CheckedAt = now
+		meta.CheckedAt, meta.Via = now, f.Via
 		meta.ETag, meta.LastModified = f.ETag, f.LastModified
-		meta.LastError = ""
+		meta.LastError, meta.Rejected = "", false
 		if err := u.Store.PutFeed(ctx, meta); err != nil {
 			return Result{}, fmt.Errorf("save %s metadata: %w", src.Name(), err)
 		}
@@ -249,7 +271,7 @@ func (u *Updater) updateOne(ctx context.Context, src Source) (Result, error) {
 	meta.ETag, meta.LastModified = f.ETag, f.LastModified
 	meta.CacheFile, meta.SHA256 = name, hex.EncodeToString(digest[:])
 	meta.RecordCount, meta.Version, meta.PublishedAt = sum.Count, sum.Version, sum.PublishedAt
-	meta.FetchedAt, meta.CheckedAt, meta.LastError = now, now, ""
+	meta.FetchedAt, meta.CheckedAt, meta.LastError, meta.Rejected = now, now, "", false
 	if err := u.Store.PutFeed(ctx, meta); err != nil {
 		return Result{}, fmt.Errorf("save %s metadata: %w", src.Name(), err)
 	}
@@ -259,7 +281,15 @@ func (u *Updater) updateOne(ctx context.Context, src Source) (Result, error) {
 
 // fail records why src could not be refreshed and keeps the cached copy.
 func (u *Updater) fail(ctx context.Context, src Source, meta Feed, cause error) (Result, error) {
-	meta.LastError = logging.RedactString(cause.Error())
+	if c := context.Cause(ctx); errors.Is(c, errLockLost) {
+		cause = fmt.Errorf("%w: %w", c, cause)
+	}
+	meta.LastError = truncate(logging.RedactString(cause.Error()), maxErrorLen)
+	if errors.Is(cause, ErrRejected) {
+		// The source has newer data we refused: our copy is known to be behind.
+		// A plain network failure leaves this unchanged.
+		meta.Rejected = true
+	}
 	if err := u.Store.PutFeed(context.WithoutCancel(ctx), meta); err != nil {
 		return Result{}, fmt.Errorf("save %s metadata: %w", src.Name(), err)
 	}
@@ -327,6 +357,22 @@ func newOwner() (string, error) {
 		return "", fmt.Errorf("generate lock owner id: %w", err)
 	}
 	return fmt.Sprintf("%s:%d:%x", host, os.Getpid(), b), nil
+}
+
+// maxErrorLen bounds a stored error: a body with thousands of malformed
+// records must not produce a multi-megabyte database row or terminal line.
+const maxErrorLen = 2048
+
+// truncate cuts s to at most n bytes on a rune boundary.
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	cut := n
+	for cut > 0 && !utf8.RuneStart(s[cut]) {
+		cut--
+	}
+	return s[:cut] + "…"
 }
 
 func orDefault(d, def time.Duration) time.Duration {

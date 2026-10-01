@@ -15,7 +15,8 @@ CREATE TABLE feeds (
     fetched_at    TEXT,                        -- last 200 that replaced the cache
     checked_at    TEXT,                        -- last successful contact (200 or 304)
     attempted_at  TEXT,                        -- last attempt, successful or not
-    last_error    TEXT    NOT NULL DEFAULT ''  -- why the last attempt failed ('' = it didn't)
+    last_error    TEXT    NOT NULL DEFAULT '', -- why the last attempt failed ('' = it didn't)
+    rejected      INTEGER NOT NULL DEFAULT 0   -- 1 = the newest download was refused by validation
 ) STRICT;
 
 -- Cross-process locks (a scheduled check and a manual run can overlap).
