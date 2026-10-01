@@ -24,8 +24,9 @@ type Feed struct {
 	CheckedAt    time.Time
 	AttemptedAt  time.Time
 	LastError    string
-	// Rejected means the source offered newer data that failed validation, so
-	// the cached copy is known to be behind what the source now publishes.
+	// Rejected means the source's latest answer failed validation (newer
+	// data in a form we cannot accept, or a block page instead of data), so
+	// the cached copy is treated as behind what the source now publishes.
 	Rejected bool
 }
 
@@ -66,9 +67,47 @@ func (s *Store) ListFeeds(ctx context.Context) ([]Feed, error) {
 	return out, nil
 }
 
+// ErrLockNotHeld is returned by PutFeedLocked when the caller no longer holds
+// the lock (another process took it over).
+var ErrLockNotHeld = errors.New("lock not held")
+
 // PutFeed inserts or replaces the metadata row for f.Name.
 func (s *Store) PutFeed(ctx context.Context, f Feed) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO feeds (`+feedColumns+`)
+	return putFeed(ctx, s.db, f)
+}
+
+// PutFeedLocked is PutFeed, but only if owner still holds lockName, checked
+// in the same transaction. A process that lost its lock (for example after a
+// laptop slept mid-update) can then never overwrite the new owner's result.
+func (s *Store) PutFeedLocked(ctx context.Context, lockName, owner string, f Feed) error {
+	tx, err := s.db.BeginTx(ctx, nil) // BEGIN IMMEDIATE via _txlock
+	if err != nil {
+		return fmt.Errorf("save feed %s: %w", f.Name, err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	var one int
+	err = tx.QueryRowContext(ctx, `SELECT 1 FROM locks WHERE name = ? AND owner = ?`, lockName, owner).Scan(&one)
+	if errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("save feed %s: %w", f.Name, ErrLockNotHeld)
+	}
+	if err != nil {
+		return fmt.Errorf("save feed %s: %w", f.Name, err)
+	}
+	if err := putFeed(ctx, tx, f); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("save feed %s: %w", f.Name, err)
+	}
+	return nil
+}
+
+type execer interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
+func putFeed(ctx context.Context, db execer, f Feed) error {
+	_, err := db.ExecContext(ctx, `INSERT INTO feeds (`+feedColumns+`)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(name) DO UPDATE SET
 			url = excluded.url, via = excluded.via, etag = excluded.etag,

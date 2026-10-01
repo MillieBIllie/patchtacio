@@ -104,7 +104,7 @@ func (s *Source) Fetch(ctx context.Context, c *httpcache.Client, prev httpcache.
 	if s.MirrorURL == "" || ctx.Err() != nil {
 		return nil, err
 	}
-	c.Log().Info("CISA did not answer; trying the official GitHub mirror", "err", err)
+	c.Log().Info("no usable answer from CISA; trying the official GitHub mirror", "err", err)
 	// prev came from CISA (the Updater never keeps mirror validators); they
 	// mean nothing to GitHub, so ask the mirror for the full file.
 	mresp, merr := c.Get(ctx, s.MirrorURL, httpcache.Validators{})

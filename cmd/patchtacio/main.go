@@ -16,7 +16,7 @@ func main() {
 	err := newRootCmd(defaultApp()).ExecuteContext(ctx)
 	stop()
 	if err != nil && !isOutcome(err) {
-		fmt.Fprintln(os.Stderr, "Error:", logging.RedactString(err.Error()))
+		fmt.Fprintln(os.Stderr, "Error:", logging.Clean(logging.RedactString(err.Error())))
 	}
 	os.Exit(exitCodeFor(err))
 }

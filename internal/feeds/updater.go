@@ -117,6 +117,16 @@ func (u *Updater) Update(ctx context.Context, offline bool) ([]Result, error) {
 
 	results := make([]Result, 0, len(u.Sources))
 	for _, src := range u.Sources {
+		if c := context.Cause(ctx); errors.Is(c, errLockLost) {
+			// Another run owns the update now; report, but touch nothing.
+			meta, _, err := u.Store.GetFeed(context.WithoutCancel(ctx), src.Name())
+			if err != nil {
+				return nil, fmt.Errorf("read %s metadata: %w", src.Name(), err)
+			}
+			meta.Name = src.Name()
+			results = append(results, Result{Outcome: Failed, Err: c, Status: u.status(src, meta)})
+			continue
+		}
 		if waited {
 			meta, ok, err := u.Store.GetFeed(ctx, src.Name())
 			if err != nil {
@@ -127,7 +137,7 @@ func (u *Updater) Update(ctx context.Context, offline bool) ([]Result, error) {
 				continue
 			}
 		}
-		r, err := u.updateOne(ctx, src)
+		r, err := u.updateOne(ctx, src, owner)
 		if err != nil {
 			return nil, err
 		}
@@ -210,7 +220,10 @@ func (u *Updater) resultsWithoutFetching(ctx context.Context, o Outcome, cause e
 	return out, nil
 }
 
-func (u *Updater) updateOne(ctx context.Context, src Source) (Result, error) {
+// updateOne refreshes src. owner is this run's lock owner: every write checks
+// the lock is still ours, so a run that stalled past the lock TTL cannot
+// overwrite the result of the run that took over.
+func (u *Updater) updateOne(ctx context.Context, src Source, owner string) (Result, error) {
 	meta, _, err := u.Store.GetFeed(ctx, src.Name())
 	if err != nil {
 		return Result{}, fmt.Errorf("read %s metadata: %w", src.Name(), err)
@@ -239,17 +252,17 @@ func (u *Updater) updateOne(ctx context.Context, src Source) (Result, error) {
 
 	f, err := src.Fetch(ctx, u.Client, validators)
 	if err != nil {
-		return u.fail(ctx, src, meta, err)
+		return u.fail(ctx, src, meta, owner, err)
 	}
 	if f.NotModified {
 		if !cacheOK {
-			return u.fail(ctx, src, meta, errors.New("server reported no change, but there is no valid cached copy"))
+			return u.fail(ctx, src, meta, owner, errors.New("server reported no change, but there is no valid cached copy"))
 		}
 		meta.CheckedAt, meta.Via = now, f.Via
 		meta.ETag, meta.LastModified = f.ETag, f.LastModified
 		meta.LastError, meta.Rejected = "", false
-		if err := u.Store.PutFeed(ctx, meta); err != nil {
-			return Result{}, fmt.Errorf("save %s metadata: %w", src.Name(), err)
+		if err := u.save(ctx, owner, meta); err != nil {
+			return u.lockLostOr(ctx, src, err)
 		}
 		log.Info("not modified")
 		return Result{Outcome: Unchanged, Status: u.status(src, meta)}, nil
@@ -257,10 +270,19 @@ func (u *Updater) updateOne(ctx context.Context, src Source) (Result, error) {
 
 	sum, err := src.Parse(f.Body)
 	if err != nil {
-		return u.fail(ctx, src, meta, fmt.Errorf("%w: %w", ErrRejected, err))
+		return u.fail(ctx, src, meta, owner, fmt.Errorf("%w: %w", ErrRejected, err))
 	}
 	if err := Validate(prev, sum); err != nil {
-		return u.fail(ctx, src, meta, err)
+		return u.fail(ctx, src, meta, owner, err)
+	}
+	// Last check before touching the shared cache file. The remaining window
+	// (milliseconds, against a 5-minute TTL) fails safe: a mismatched file
+	// reads as Missing and the next update downloads it again.
+	if held, err := u.Store.HeartbeatLock(context.WithoutCancel(ctx), lockName, owner); err != nil || !held {
+		if err == nil {
+			err = errLockLost
+		}
+		return u.lockLostOr(ctx, src, err)
 	}
 	name := cacheFileName(src)
 	if err := writeFileAtomic(u.CacheDir, name, f.Body); err != nil {
@@ -272,30 +294,59 @@ func (u *Updater) updateOne(ctx context.Context, src Source) (Result, error) {
 	meta.CacheFile, meta.SHA256 = name, hex.EncodeToString(digest[:])
 	meta.RecordCount, meta.Version, meta.PublishedAt = sum.Count, sum.Version, sum.PublishedAt
 	meta.FetchedAt, meta.CheckedAt, meta.LastError, meta.Rejected = now, now, "", false
-	if err := u.Store.PutFeed(ctx, meta); err != nil {
-		return Result{}, fmt.Errorf("save %s metadata: %w", src.Name(), err)
+	if err := u.save(ctx, owner, meta); err != nil {
+		return u.lockLostOr(ctx, src, err)
 	}
 	log.Info("updated", "records", sum.Count, "version", sum.Version, "via", f.Via)
 	return Result{Outcome: Updated, Status: u.status(src, meta)}, nil
 }
 
 // fail records why src could not be refreshed and keeps the cached copy.
-func (u *Updater) fail(ctx context.Context, src Source, meta Feed, cause error) (Result, error) {
+func (u *Updater) fail(ctx context.Context, src Source, meta Feed, owner string, cause error) (Result, error) {
 	if c := context.Cause(ctx); errors.Is(c, errLockLost) {
-		cause = fmt.Errorf("%w: %w", c, cause)
+		return u.lockLostOr(ctx, src, c) // the new owner's record wins; write nothing
 	}
 	meta.LastError = truncate(logging.RedactString(cause.Error()), maxErrorLen)
 	if errors.Is(cause, ErrRejected) {
-		// The source has newer data we refused: our copy is known to be behind.
+		// The source offered data that failed validation (newer data in a
+		// form we cannot accept, or a block page): treat our copy as behind.
 		// A plain network failure leaves this unchanged.
 		meta.Rejected = true
 	}
-	if err := u.Store.PutFeed(context.WithoutCancel(ctx), meta); err != nil {
-		return Result{}, fmt.Errorf("save %s metadata: %w", src.Name(), err)
+	if err := u.save(ctx, owner, meta); err != nil {
+		return u.lockLostOr(ctx, src, err)
 	}
 	// Info, not Warn: the CLI prints its own plain-language warning for this.
 	u.logger().Info("could not refresh", "source", src.Name(), "err", cause)
 	return Result{Outcome: Failed, Err: cause, Status: u.status(src, meta)}, nil
+}
+
+// save stores meta only if this run still holds the update lock. Writes are
+// not cancelled by ctx, so Ctrl-C cannot leave a cache file without metadata.
+func (u *Updater) save(ctx context.Context, owner string, meta Feed) error {
+	err := u.Store.PutFeedLocked(context.WithoutCancel(ctx), lockName, owner, meta)
+	if errors.Is(err, store.ErrLockNotHeld) {
+		return errLockLost
+	}
+	if err != nil {
+		return fmt.Errorf("save %s metadata: %w", meta.Name, err)
+	}
+	return nil
+}
+
+// lockLostOr turns a lost lock into a Failed result reported from the stored
+// (new owner's) state; any other error is a local failure.
+func (u *Updater) lockLostOr(ctx context.Context, src Source, err error) (Result, error) {
+	if !errors.Is(err, errLockLost) {
+		return Result{}, err
+	}
+	meta, _, gerr := u.Store.GetFeed(context.WithoutCancel(ctx), src.Name())
+	if gerr != nil {
+		return Result{}, fmt.Errorf("read %s metadata: %w", src.Name(), gerr)
+	}
+	meta.Name = src.Name()
+	u.logger().Warn("stopped: another patchtacio run took over the update", "source", src.Name())
+	return Result{Outcome: Failed, Err: errLockLost, Status: u.status(src, meta)}, nil
 }
 
 // Feed is the stored metadata row for a source.

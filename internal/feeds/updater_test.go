@@ -23,6 +23,7 @@ type fakeSource struct {
 	responses []fakeResp
 	calls     int
 	gotPrev   []httpcache.Validators
+	onFetch   func() // runs during Fetch, e.g. to simulate another process
 }
 
 type fakeResp struct {
@@ -40,6 +41,9 @@ func (f *fakeSource) Fetch(_ context.Context, _ *httpcache.Client, prev httpcach
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.gotPrev = append(f.gotPrev, prev)
+	if f.onFetch != nil {
+		f.onFetch()
+	}
 	r := f.responses[min(f.calls, len(f.responses)-1)]
 	f.calls++
 	if r.err != nil {
@@ -373,7 +377,7 @@ func TestWaitsForConcurrentRunAndReusesItsResult(t *testing.T) {
 	other := &Updater{Store: h.u.Store, CacheDir: h.u.CacheDir, Sources: h.u.Sources, Now: time.Now}
 	go func() {
 		time.Sleep(50 * time.Millisecond)
-		if _, err := other.updateOne(ctx, h.src); err != nil {
+		if _, err := other.updateOne(ctx, h.src, "other"); err != nil {
 			t.Error(err)
 		}
 		_ = h.u.Store.ReleaseLock(ctx, lockName, "other")
@@ -385,6 +389,39 @@ func TestWaitsForConcurrentRunAndReusesItsResult(t *testing.T) {
 	}
 	if h.src.calls != 1 {
 		t.Errorf("feed fetched %d times, want once (by the other run)", h.src.calls)
+	}
+}
+
+func TestLostLockWritesNothing(t *testing.T) {
+	for name, next := range map[string]fakeResp{
+		"new data":     {body: body(120, day2)},
+		"fetch failed": {err: errors.New("connection reset")},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, fakeResp{body: body(100, day1)}, next)
+			h.update(t, false)
+			ctx := context.Background()
+			// Mid-download, this run stalls past the lock TTL (a laptop sleeps);
+			// another run takes the lock over and records its own result.
+			h.src.onFetch = func() {
+				if ok, err := h.u.Store.AcquireLock(ctx, lockName, "new-owner", 0); err != nil || !ok {
+					t.Errorf("take over lock: %v, %v", ok, err)
+				}
+				if err := h.u.Store.PutFeedLocked(ctx, lockName, "new-owner", store.Feed{Name: "fake", Version: "new-owner"}); err != nil {
+					t.Error(err)
+				}
+			}
+			r := h.update(t, false)
+			if r.Outcome != Failed || !errors.Is(r.Err, errLockLost) {
+				t.Fatalf("got %+v", r)
+			}
+			if got, _, _ := h.u.Store.GetFeed(ctx, "fake"); got.Version != "new-owner" {
+				t.Errorf("the run that lost the lock overwrote the new owner's record: %+v", got)
+			}
+			if h.cached(t) != body(100, day1) {
+				t.Errorf("the run that lost the lock replaced the cache file")
+			}
+		})
 	}
 }
 

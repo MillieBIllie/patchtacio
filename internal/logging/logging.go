@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 // Redacted is what every redacted value renders as.
@@ -126,6 +127,18 @@ func RedactString(s string) string {
 		}
 		return RedactURL(u)
 	})
+}
+
+// Clean drops control characters and bidirectional-override characters from
+// text that came from a feed, a server or a file, so printing it cannot move
+// the cursor, recolor or retitle the terminal, or visually reorder a line.
+func Clean(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) || unicode.Is(unicode.Bidi_Control, r) {
+			return -1
+		}
+		return r
+	}, s)
 }
 
 // RedactURL drops userinfo, query and fragment, keeping scheme, host and path.

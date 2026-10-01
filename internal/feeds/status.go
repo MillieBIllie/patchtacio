@@ -79,7 +79,7 @@ func (u *Updater) status(src Source, meta Feed) Status {
 		AttemptedAt: meta.AttemptedAt,
 		LastError:   meta.LastError,
 
-		LastUpdateFailed: meta.LastError != "" && !meta.AttemptedAt.Before(meta.CheckedAt),
+		LastUpdateFailed: meta.LastError != "", // every successful contact clears it
 	}
 	now := u.now()
 	st.State = Stale
