@@ -33,11 +33,18 @@ type recorder struct {
 	url     string
 	outFile string
 	trim    func(raw []byte) ([]byte, error)
+	parse   func(raw []byte) error
 }
 
 var recorders = map[string]recorder{
-	"kev": {kev.PrimaryURL, filepath.Join("testdata", "feeds", "kev", "known_exploited_vulnerabilities.json"), trimKEV},
-	"eol": {eol.ProductsFullURL, filepath.Join("testdata", "feeds", "eol", "products_full.json"), trimEOL},
+	"kev": {
+		kev.PrimaryURL, filepath.Join("testdata", "feeds", "kev", "known_exploited_vulnerabilities.json"), trimKEV,
+		func(b []byte) error { _, err := kev.ParseCatalog(b); return err },
+	},
+	"eol": {
+		eol.ProductsFullURL, filepath.Join("testdata", "feeds", "eol", "products_full.json"), trimEOL,
+		func(b []byte) error { _, err := eol.ParseCatalog(b); return err },
+	},
 }
 
 func main() {
@@ -77,17 +84,25 @@ func run() error {
 		}
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("get %s data: %w", flag.Arg(0), err)
+	}
+	// Never record something our own parser rejects (a bot-challenge page,
+	// a truncated body): it would make every test validate garbage.
+	if err := rec.parse(raw); err != nil {
+		return fmt.Errorf("refusing to record a response that does not parse: %w", err)
 	}
 	out, err := rec.trim(raw)
 	if err != nil {
-		return err
+		return fmt.Errorf("trim: %w", err)
+	}
+	if err := rec.parse(out); err != nil {
+		return fmt.Errorf("trimmed fixture does not parse: %w", err)
 	}
 	if err := os.MkdirAll(filepath.Dir(rec.outFile), 0o750); err != nil {
-		return err
+		return fmt.Errorf("create fixture dir: %w", err)
 	}
 	if err := os.WriteFile(rec.outFile, out, 0o600); err != nil {
-		return err
+		return fmt.Errorf("write fixture: %w", err)
 	}
 	fmt.Printf("wrote %s (%d bytes)\n", rec.outFile, len(out))
 	return nil

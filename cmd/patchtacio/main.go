@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+
+	"github.com/milliebillie/patchtacio/internal/logging"
 )
 
 func main() {
@@ -14,7 +16,7 @@ func main() {
 	err := newRootCmd(defaultApp()).ExecuteContext(ctx)
 	stop()
 	if err != nil && !isOutcome(err) {
-		fmt.Fprintln(os.Stderr, "Error:", err)
+		fmt.Fprintln(os.Stderr, "Error:", logging.RedactString(err.Error()))
 	}
 	os.Exit(exitCodeFor(err))
 }

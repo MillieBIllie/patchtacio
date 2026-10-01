@@ -286,6 +286,7 @@ func TestParseRetryAfter(t *testing.T) {
 		{"", 0, false},
 		{"5", 5 * time.Second, true},
 		{"-1", 0, false},
+		{"99999999999999999", 24 * time.Hour, true},
 		{"Thu, 01 Oct 2026 12:00:30 GMT", 30 * time.Second, true},
 		{"Thu, 01 Oct 2026 11:00:00 GMT", 0, true},
 		{"soon", 0, false},
