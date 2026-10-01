@@ -239,6 +239,7 @@ func TestFeedsAcceptShrink(t *testing.T) {
 	out, errOut, code = e.exec(t, "feeds", "update", "--accept-shrink", "eol")
 	requireCode(t, code, exitOK, out, errOut)
 	requireContains(t, out, "endoflife.date: updated. 1 products")
+	requireContains(t, errOut, "accepted a smaller endoflife.date dataset as you asked with --accept-shrink: 9 -> 1 products")
 
 	out, errOut, code = e.exec(t, "feeds", "update", "--accept-shrink", "kve")
 	requireCode(t, code, exitToolError, out, errOut)

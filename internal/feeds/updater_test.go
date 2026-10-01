@@ -433,21 +433,77 @@ func TestAcceptShrink(t *testing.T) {
 	if !errors.Is(r.Err, ErrShrunk) || !errors.Is(r.Err, ErrRejected) {
 		t.Fatalf("without the flag: want ErrShrunk+ErrRejected, got %+v", r)
 	}
+	if got, _, _ := h.u.Store.GetFeed(context.Background(), "fake"); got.ShrunkCount != 50 {
+		t.Errorf("rejected count not recorded: ShrunkCount = %d", got.ShrunkCount)
+	}
 	h.u.AcceptShrink = []string{"fake"}
-	if r := h.update(t, false); r.Outcome != Updated || r.Status.Count != 50 || r.Status.State != Fresh {
+	r = h.update(t, false)
+	if r.Outcome != Updated || r.Status.Count != 50 || r.Status.State != Fresh || r.ShrankFrom != 100 {
 		t.Fatalf("with --accept-shrink: %+v", r)
+	}
+	if got, _, _ := h.u.Store.GetFeed(context.Background(), "fake"); got.ShrunkCount != 0 {
+		t.Errorf("approval must be used up: ShrunkCount = %d", got.ShrunkCount)
+	}
+}
+
+func TestAcceptShrinkOnlyApprovesTheShownReduction(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(1400, day1)}, fakeResp{body: body(1000, day2)}, fakeResp{body: body(3, day2)})
+	h.update(t, false)
+	h.update(t, false) // rejected: the user is shown 1,000 records
+
+	h.u.AcceptShrink = []string{"fake"}
+	r := h.update(t, false) // but the server now returns 3
+	if r.Outcome != Failed || !errors.Is(r.Err, ErrShrunk) || !strings.Contains(r.Err.Error(), "approved the download with 1000 records") {
+		t.Fatalf("a different reduction must not be accepted: %+v", r)
+	}
+	if got, _, _ := h.u.Store.GetFeed(context.Background(), "fake"); got.RecordCount != 1400 {
+		t.Errorf("saved copy replaced: %+v", got)
+	}
+}
+
+func TestAcceptShrinkWithoutEarlierRejectionDoesNothing(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{body: body(50, day2)})
+	h.update(t, false)
+	h.u.AcceptShrink = []string{"fake"}
+	r := h.update(t, false)
+	if r.Outcome != Failed || !strings.Contains(r.Err.Error(), "there was none") {
+		t.Fatalf("got %+v", r)
 	}
 }
 
 func TestAcceptShrinkKeepsOtherChecks(t *testing.T) {
-	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{body: body(50, day0)}, fakeResp{body: body(0, day2)})
+	h := newHarness(t, fakeResp{body: body(100, day1)}, fakeResp{body: body(50, day2)},
+		fakeResp{body: body(50, day0)}, fakeResp{body: body(0, day2)})
 	h.update(t, false)
+	h.update(t, false) // shown: 50 records
 	h.u.AcceptShrink = []string{"fake"}
 	if r := h.update(t, false); !errors.Is(r.Err, ErrRejected) || errors.Is(r.Err, ErrShrunk) {
 		t.Errorf("older data must still be rejected: %+v", r)
 	}
 	if r := h.update(t, false); !errors.Is(r.Err, ErrRejected) {
 		t.Errorf("an empty feed must still be rejected: %+v", r)
+	}
+}
+
+func TestLeftoverTempFilesCleaned(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)})
+	old := filepath.Join(h.u.CacheDir, "fake.json.tmp-crashed")
+	recent := filepath.Join(h.u.CacheDir, "fake.json.tmp-inprogress")
+	for _, f := range []string{old, recent} {
+		if err := os.WriteFile(f, []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	past := time.Now().Add(-time.Hour)
+	if err := os.Chtimes(old, past, past); err != nil {
+		t.Fatal(err)
+	}
+	h.update(t, false)
+	if _, err := os.Stat(old); !os.IsNotExist(err) {
+		t.Errorf("leftover temp file not removed: %v", err)
+	}
+	if _, err := os.Stat(recent); err != nil {
+		t.Errorf("a recent temp file (maybe another run's) was removed: %v", err)
 	}
 }
 

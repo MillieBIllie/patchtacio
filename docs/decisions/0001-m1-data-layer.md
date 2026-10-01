@@ -81,6 +81,9 @@ A scheduled check and a manual run can overlap.
   - After that, the same checks plus: the record count must not drop by more than 10%.
     A user who has confirmed a real reduction can override this one check, once, with
     `feeds update --accept-shrink <source>`; the warning suggests it only for this case.
+    It approves only the reduction the user was shown (a download within 10% of the rejected
+    record count), never "anything smaller". It is never persisted, never read from env or
+    config, and scheduled runs (M4) must never pass it.
   - On failure, keep the old cache, mark the feed stale, warn, and exit 3. A truncated body or
     an HTML error page must never become an empty "all clear".
 

@@ -28,10 +28,14 @@ type Feed struct {
 	// data in a form we cannot accept, or a block page instead of data), so
 	// the cached copy is treated as behind what the source now publishes.
 	Rejected bool
+	// ShrunkCount is the record count of the last download refused only
+	// because it shrank too much: the reduction the user was shown, and the
+	// only one --accept-shrink may accept. 0 means none.
+	ShrunkCount int
 }
 
 const feedColumns = `name, url, via, etag, last_modified, cache_file, sha256, record_count,
-	version, published_at, fetched_at, checked_at, attempted_at, last_error, rejected`
+	version, published_at, fetched_at, checked_at, attempted_at, last_error, rejected, shrunk_count`
 
 // GetFeed returns the metadata for name; ok is false if there is none.
 func (s *Store) GetFeed(ctx context.Context, name string) (f Feed, ok bool, err error) {
@@ -108,7 +112,7 @@ type execer interface {
 
 func putFeed(ctx context.Context, db execer, f Feed) error {
 	_, err := db.ExecContext(ctx, `INSERT INTO feeds (`+feedColumns+`)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(name) DO UPDATE SET
 			url = excluded.url, via = excluded.via, etag = excluded.etag,
 			last_modified = excluded.last_modified, cache_file = excluded.cache_file,
@@ -116,10 +120,10 @@ func putFeed(ctx context.Context, db execer, f Feed) error {
 			version = excluded.version, published_at = excluded.published_at,
 			fetched_at = excluded.fetched_at, checked_at = excluded.checked_at,
 			attempted_at = excluded.attempted_at, last_error = excluded.last_error,
-			rejected = excluded.rejected`,
+			rejected = excluded.rejected, shrunk_count = excluded.shrunk_count`,
 		f.Name, f.URL, f.Via, f.ETag, f.LastModified, f.CacheFile, f.SHA256, f.RecordCount,
 		f.Version, timeArg(f.PublishedAt), timeArg(f.FetchedAt), timeArg(f.CheckedAt),
-		timeArg(f.AttemptedAt), f.LastError, f.Rejected)
+		timeArg(f.AttemptedAt), f.LastError, f.Rejected, f.ShrunkCount)
 	if err != nil {
 		return fmt.Errorf("save feed %s: %w", f.Name, err)
 	}
@@ -132,7 +136,7 @@ func scanFeed(sc scanner) (Feed, error) {
 	var f Feed
 	var published, fetched, checked, attempted sql.NullString
 	if err := sc.Scan(&f.Name, &f.URL, &f.Via, &f.ETag, &f.LastModified, &f.CacheFile, &f.SHA256,
-		&f.RecordCount, &f.Version, &published, &fetched, &checked, &attempted, &f.LastError, &f.Rejected); err != nil {
+		&f.RecordCount, &f.Version, &published, &fetched, &checked, &attempted, &f.LastError, &f.Rejected, &f.ShrunkCount); err != nil {
 		return Feed{}, err // callers wrap with context
 	}
 	var err error

@@ -51,6 +51,9 @@ type Result struct {
 	Outcome Outcome
 	Err     error // set when Outcome is Failed
 	Status  Status
+	// ShrankFrom is the previous record count when an --accept-shrink update
+	// replaced a larger saved copy (0 otherwise), so the CLI can say so.
+	ShrankFrom int
 }
 
 // Updater refreshes sources and reports their status.
@@ -140,6 +143,7 @@ func (u *Updater) Update(ctx context.Context, offline bool) ([]Result, error) {
 	defer cancelUpdate(nil)
 	stopBeat := u.heartbeat(ctx, owner, cancelUpdate)
 	defer stopBeat()
+	u.cleanTempFiles()
 
 	results := make([]Result, 0, len(u.Sources))
 	for _, src := range u.Sources {
@@ -289,7 +293,7 @@ func (u *Updater) updateOne(ctx context.Context, src Source, owner string) (Resu
 		}
 		meta.CheckedAt, meta.Via = now, f.Via
 		meta.ETag, meta.LastModified = f.ETag, f.LastModified
-		meta.LastError, meta.Rejected = "", false
+		meta.LastError, meta.Rejected, meta.ShrunkCount = "", false, 0
 		if err := u.save(ctx, owner, meta); err != nil {
 			return u.lockLostOr(ctx, src, err)
 		}
@@ -301,10 +305,21 @@ func (u *Updater) updateOne(ctx context.Context, src Source, owner string) (Resu
 	if err != nil {
 		return u.fail(ctx, src, meta, owner, fmt.Errorf("%w: %w", ErrRejected, err))
 	}
-	if err := validateFor(prev, sum, u.acceptsShrink(src)); err != nil {
+	// --accept-shrink approves the reduction the user was shown (recorded in
+	// ShrunkCount when it was rejected), not whatever the server says now.
+	approved := u.acceptsShrink(src) && approvedShrink(meta.ShrunkCount, sum.Count)
+	if err := validateFor(prev, sum, approved); err != nil {
+		if errors.Is(err, ErrShrunk) {
+			if u.acceptsShrink(src) {
+				err = shrinkNotApproved(err, meta.ShrunkCount, sum.Count)
+			}
+			meta.ShrunkCount = sum.Count // the reduction now shown to the user
+		}
 		return u.fail(ctx, src, meta, owner, err)
 	}
-	if u.acceptsShrink(src) && prev != nil && sum.Count < prev.Count {
+	shrankFrom := 0
+	if approved && prev != nil && sum.Count < prev.Count {
+		shrankFrom = prev.Count
 		log.Warn("accepting a smaller feed as requested", "from", prev.Count, "to", sum.Count)
 	}
 
@@ -336,11 +351,52 @@ func (u *Updater) updateOne(ctx context.Context, src Source, owner string) (Resu
 	meta.CacheFile, meta.SHA256 = name, hex.EncodeToString(digest[:])
 	meta.RecordCount, meta.Version, meta.PublishedAt = sum.Count, sum.Version, sum.PublishedAt
 	meta.FetchedAt, meta.CheckedAt, meta.LastError, meta.Rejected = now, now, "", false
+	meta.ShrunkCount = 0
 	if err := u.save(ctx, owner, meta); err != nil {
 		return u.lockLostOr(ctx, src, err)
 	}
 	log.Info("updated", "records", sum.Count, "version", sum.Version, "via", f.Via)
-	return Result{Outcome: Updated, Status: u.status(src, meta)}, nil
+	return Result{Outcome: Updated, Status: u.status(src, meta), ShrankFrom: shrankFrom}, nil
+}
+
+// approvedShrink reports whether a download of got records matches, within
+// MaxShrink, the shrunken download of shown records the user approved.
+func approvedShrink(shown, got int) bool {
+	if shown <= 0 {
+		return false
+	}
+	diff := got - shown
+	if diff < 0 {
+		diff = -diff
+	}
+	return float64(diff) <= MaxShrink*float64(shown)
+}
+
+func shrinkNotApproved(err error, shown, got int) error {
+	if shown <= 0 {
+		return fmt.Errorf("%w (--accept-shrink only accepts a reduction you were already warned about; "+
+			"there was none, so run `feeds update` without it first)", err)
+	}
+	return fmt.Errorf("%w (--accept-shrink approved the download with %d records, but this one has %d, "+
+		"so it was not accepted; check the source again)", err, shown, got)
+}
+
+// cleanTempFiles removes temp files left by a run that was killed between
+// writing and renaming. Only files older than the lock TTL are touched, so
+// a concurrent run's in-progress file is never removed.
+func (u *Updater) cleanTempFiles() {
+	matches, err := filepath.Glob(filepath.Join(u.CacheDir, "*.json.tmp-*"))
+	if err != nil {
+		return
+	}
+	cutoff := time.Now().Add(-orDefault(u.LockTTL, defaultLockTTL))
+	for _, m := range matches {
+		if fi, err := os.Stat(m); err == nil && fi.Mode().IsRegular() && fi.ModTime().Before(cutoff) {
+			if err := os.Remove(m); err == nil {
+				u.logger().Debug("removed leftover temp file", "file", filepath.Base(m))
+			}
+		}
+	}
 }
 
 // fail records why src could not be refreshed and keeps the cached copy.
