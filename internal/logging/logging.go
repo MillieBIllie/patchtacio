@@ -40,6 +40,12 @@ func (Secret) String() string { return Redacted }
 // GoString implements fmt.GoStringer so %#v cannot leak the value.
 func (Secret) GoString() string { return Redacted }
 
+// MarshalJSON implements json.Marshaler so encoding a struct cannot leak the value.
+func (Secret) MarshalJSON() ([]byte, error) { return []byte(`"` + Redacted + `"`), nil }
+
+// MarshalText implements encoding.TextMarshaler (YAML, map keys, flags).
+func (Secret) MarshalText() ([]byte, error) { return []byte(Redacted), nil }
+
 // Reveal returns the underlying value.
 func (s Secret) Reveal() string { return string(s) }
 

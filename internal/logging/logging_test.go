@@ -2,6 +2,7 @@ package logging
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -56,6 +57,10 @@ func TestSecretNeverLeaks(t *testing.T) {
 		if strings.Contains(out, raw) {
 			t.Errorf("secret leaked: %q", out)
 		}
+	}
+	js, err := json.Marshal(struct{ S Secret }{s})
+	if err != nil || strings.Contains(string(js), raw) {
+		t.Errorf("secret leaked through JSON: %s, %v", js, err)
 	}
 	if s.Reveal() != raw {
 		t.Errorf("Reveal() = %q", s.Reveal())

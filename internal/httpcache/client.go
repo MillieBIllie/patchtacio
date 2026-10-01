@@ -26,6 +26,8 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/milliebillie/patchtacio/internal/logging"
 )
 
 // Defaults agreed in docs/decisions/0001-m1-data-layer.md.
@@ -109,7 +111,7 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 		return fmt.Errorf("stopped after %d redirects", maxRedirects)
 	}
 	if req.URL.Scheme != "https" {
-		return fmt.Errorf("redirect to %s: %w", req.URL.Redacted(), ErrInsecureURL)
+		return fmt.Errorf("redirect to %s: %w", logging.RedactURL(req.URL), ErrInsecureURL)
 	}
 	return nil
 }
@@ -121,7 +123,7 @@ func (c *Client) Get(ctx context.Context, rawURL string, v Validators) (*Respons
 		return nil, fmt.Errorf("parse URL: %w", err)
 	}
 	if u.Scheme != "https" {
-		return nil, fmt.Errorf("%s: %w", u.Redacted(), ErrInsecureURL)
+		return nil, fmt.Errorf("%s: %w", logging.RedactURL(u), ErrInsecureURL)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, orDefault(c.TotalTimeout, DefaultTotalTimeout))
@@ -137,7 +139,7 @@ func (c *Client) Get(ctx context.Context, rawURL string, v Validators) (*Respons
 			wait := c.backoff(attempt, lastErr)
 			c.Log().Info("retrying", "url", u, "attempt", attempt+1, "wait", wait, "err", lastErr)
 			if err := c.wait(ctx, wait); err != nil {
-				return nil, fmt.Errorf("GET %s: %w (last error: %w)", u.Redacted(), err, lastErr)
+				return nil, fmt.Errorf("GET %s: %w (last error: %w)", logging.RedactURL(u), err, lastErr)
 			}
 		}
 		resp, err := c.attempt(ctx, u, v)
@@ -201,13 +203,13 @@ func (c *Client) attempt(ctx context.Context, u *url.URL, v Validators) (*Respon
 			err = ue.Err
 		}
 		if errors.Is(err, ErrInsecureURL) || ctx.Err() != nil {
-			return nil, fmt.Errorf("GET %s: %w", u.Redacted(), err)
+			return nil, fmt.Errorf("GET %s: %w", logging.RedactURL(u), err)
 		}
-		return nil, &transientError{fmt.Errorf("GET %s: %w", u.Redacted(), err)}
+		return nil, &transientError{fmt.Errorf("GET %s: %w", logging.RedactURL(u), err)}
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	final := resp.Request.URL.Redacted()
+	final := logging.RedactURL(resp.Request.URL)
 	switch resp.StatusCode {
 	case http.StatusNotModified:
 		return &Response{
@@ -276,7 +278,8 @@ func parseRetryAfter(h string, now time.Time) (time.Duration, bool) {
 		return 0, false
 	}
 	if secs, err := strconv.Atoi(h); err == nil && secs >= 0 {
-		return time.Duration(secs) * time.Second, true
+		const maxSecs = 24 * 60 * 60 // clamp before converting: huge values would overflow to negative
+		return time.Duration(min(secs, maxSecs)) * time.Second, true
 	}
 	if t, err := http.ParseTime(h); err == nil {
 		return max(t.Sub(now), 0), true
