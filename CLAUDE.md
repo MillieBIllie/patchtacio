@@ -14,6 +14,8 @@ Alerts are plain-language: what's affected, how urgent, and "patch to X or disab
 - **Phase 3:** precision and early warning: NVD version ranges, EPSS, vendor CSAF/PSIRT feeds, ENISA EUVD.
 
 Current milestone and task list: **docs/ROADMAP.md**. Read it at the start of each session.
+Accepted design decisions (exit codes, directories, storage, feeds): **docs/decisions/**. Follow them;
+change one only with a new decision record.
 Machine setup, MCP servers, and secrets: **docs/SETUP.md**.
 
 MCP servers available (see `.mcp.json`): `github` (issues/PRs/Actions/code scanning), `context7`
@@ -33,6 +35,8 @@ MCP servers available (see `.mcp.json`): `github` (issues/PRs/Actions/code scann
 ```
 cmd/patchtacio/        main + cobra commands (thin: parse flags, call internal packages)
 internal/feeds/        one sub-package per data source (kev, eol, nvd, epss, osv, vendor/*)
+internal/httpcache/    shared polite HTTP client: retries, conditional requests, size cap, cache files
+internal/paths/        config / cache / data directories per OS + env overrides
 internal/catalog/      loads + validates catalog/products/*.yaml
 internal/inventory/    user's ticked products, CSV import, local host scan, SBOM import
 internal/match/        inventory × feed data → findings
