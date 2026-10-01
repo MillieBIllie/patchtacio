@@ -425,6 +425,35 @@ func TestLostLockWritesNothing(t *testing.T) {
 	}
 }
 
+// secondSource is a fakeSource with a different name.
+type secondSource struct{ *fakeSource }
+
+func (secondSource) Name() string { return "second" }
+
+func TestLostLockSkipsRemainingSources(t *testing.T) {
+	h := newHarness(t, fakeResp{body: body(100, day1)})
+	second := secondSource{&fakeSource{responses: []fakeResp{{body: body(5, day1)}}}}
+	h.u.Sources = []Source{h.src, second}
+	ctx := context.Background()
+	h.src.onFetch = func() {
+		if ok, err := h.u.Store.AcquireLock(ctx, lockName, "new-owner", 0); err != nil || !ok {
+			t.Errorf("take over lock: %v, %v", ok, err)
+		}
+	}
+	rs, err := h.u.Update(ctx, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, r := range rs {
+		if r.Outcome != Failed || !errors.Is(r.Err, errLockLost) {
+			t.Errorf("result %d: %+v", i, r)
+		}
+	}
+	if second.calls != 0 {
+		t.Errorf("second source was downloaded %d times after the lock was lost", second.calls)
+	}
+}
+
 func TestReadCache(t *testing.T) {
 	h := newHarness(t, fakeResp{body: body(100, day1)})
 	ctx := context.Background()

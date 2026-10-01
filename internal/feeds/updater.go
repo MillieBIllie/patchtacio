@@ -141,6 +141,9 @@ func (u *Updater) Update(ctx context.Context, offline bool) ([]Result, error) {
 		if err != nil {
 			return nil, err
 		}
+		if errors.Is(r.Err, errLockLost) {
+			cancelUpdate(errLockLost) // don't download the remaining sources for nothing
+		}
 		results = append(results, r)
 	}
 	return results, nil
