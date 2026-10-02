@@ -26,6 +26,6 @@ func newRootCmd(a *app) *cobra.Command {
 	cmd.PersistentFlags().BoolVarP(&a.quiet, "quiet", "q", false, "print only warnings and errors")
 	cmd.MarkFlagsMutuallyExclusive("verbose", "quiet")
 
-	cmd.AddCommand(newVersionCmd(), newFeedsCmd(a))
+	cmd.AddCommand(newVersionCmd(), newFeedsCmd(a), newCatalogCmd(a))
 	return cmd
 }

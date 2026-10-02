@@ -1,0 +1,16 @@
+id: fortinet-fortios
+display: "Fortinet FortiOS (FortiGate firewalls)"
+vendor: "Fortinet"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "Fortinet", product: "FortiOS" }
+  - { vendor: "Fortinet", product: "FortiOS and FortiADC" }
+  - { vendor: "Fortinet", product: "FortiOS and FortiProxy" }
+  - { vendor: "Fortinet", product: "FortiOS and FortiProxy SSL-VPN" }
+  - { vendor: "Fortinet", product: "Multiple Products", mentions: ["FortiOS"] }
+cpe_prefixes:
+  - "cpe:2.3:o:fortinet:fortios"
+eol_slug: fortios
+aliases_search: ["FortiGate", "Fortinet firewall", "SSL-VPN"]
+notes: ""
+verified: 2026-10-02
