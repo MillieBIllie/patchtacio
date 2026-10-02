@@ -1,0 +1,74 @@
+[
+  {
+    "Product": "citrix-netscaler",
+    "CVE": "CVE-2026-88772",
+    "Added": "2026-09-27",
+    "Alias": "Citrix / NetScaler"
+  },
+  {
+    "Product": "fortinet-fortios",
+    "CVE": "CVE-2025-25249",
+    "Added": "2026-09-09",
+    "Alias": "Fortinet / Multiple Products"
+  },
+  {
+    "Product": "citrix-netscaler",
+    "CVE": "CVE-2026-8452",
+    "Added": "2026-08-26",
+    "Alias": "Citrix / NetScaler ADC and NetScaler Gateway"
+  },
+  {
+    "Product": "fortinet-fortios",
+    "CVE": "CVE-2025-68686",
+    "Added": "2026-07-27",
+    "Alias": "Fortinet / FortiOS"
+  },
+  {
+    "Product": "fortinet-fortios",
+    "CVE": "CVE-2026-24858",
+    "Added": "2026-01-27",
+    "Alias": "Fortinet / Multiple Products"
+  },
+  {
+    "Product": "fortinet-fortios",
+    "CVE": "CVE-2025-59718",
+    "Added": "2025-12-16",
+    "Alias": "Fortinet / Multiple Products"
+  },
+  {
+    "Product": "citrix-netscaler",
+    "CVE": "CVE-2025-5777",
+    "Added": "2025-07-10",
+    "Alias": "Citrix / NetScaler ADC and Gateway"
+  },
+  {
+    "Product": "fortinet-fortios",
+    "CVE": "CVE-2025-24472",
+    "Added": "2025-03-18",
+    "Alias": "Fortinet / FortiOS and FortiProxy"
+  },
+  {
+    "Product": "fortinet-fortios",
+    "CVE": "CVE-2023-27997",
+    "Added": "2023-06-13",
+    "Alias": "Fortinet / FortiOS and FortiProxy SSL-VPN"
+  },
+  {
+    "Product": "citrix-netscaler",
+    "CVE": "CVE-2022-27518",
+    "Added": "2022-12-13",
+    "Alias": "Citrix / Application Delivery Controller (ADC) and Gateway"
+  },
+  {
+    "Product": "fortinet-fortios",
+    "CVE": "CVE-2018-13374",
+    "Added": "2022-09-08",
+    "Alias": "Fortinet / FortiOS and FortiADC"
+  },
+  {
+    "Product": "citrix-netscaler",
+    "CVE": "CVE-2020-8193",
+    "Added": "2021-11-03",
+    "Alias": "Citrix / Application Delivery Controller (ADC), Gateway, and SD-WAN WANOP Appliance"
+  }
+]
