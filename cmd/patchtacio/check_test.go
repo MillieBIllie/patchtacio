@@ -71,6 +71,10 @@ func TestCheckSince(t *testing.T) {
 	_, errOut, code = e.exec(t, "check", "--since", "1 Sep")
 	requireCode(t, code, exitToolError, "", errOut)
 	requireContains(t, errOut, "want YYYY-MM-DD")
+	// A typo in the year must not turn into "nothing matched".
+	_, errOut, code = e.exec(t, "check", "--since", "2062-09-01")
+	requireCode(t, code, exitToolError, "", errOut)
+	requireContains(t, errOut, "is in the future")
 }
 
 func TestCheckNoFindingsIsNotAnAllClear(t *testing.T) {

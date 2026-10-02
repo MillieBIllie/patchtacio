@@ -33,6 +33,11 @@ func TestInitWithProductsFlag(t *testing.T) {
 	if !slices.Equal(c.IDs(), []string{"fortinet-fortios", "citrix-netscaler"}) {
 		t.Errorf("saved %v", c.IDs())
 	}
+
+	// Replacing the list says what is no longer watched.
+	out, errOut, code = e.exec(t, "init", "--products", "citrix-netscaler")
+	requireCode(t, code, exitOK, out, errOut)
+	requireContains(t, errOut, "Note: no longer watching fortinet-fortios.")
 }
 
 func TestInitRejectsUnknownProducts(t *testing.T) {

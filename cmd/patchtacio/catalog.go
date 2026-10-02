@@ -16,6 +16,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/feeds/eol"
 	"github.com/milliebillie/patchtacio/internal/feeds/kev"
+	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/match"
 )
 
@@ -51,7 +52,7 @@ func newCatalogListCmd() *cobra.Command {
 			tw := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			_, _ = fmt.Fprintln(tw, "ID\tPRODUCT\tCATEGORY")
 			for _, p := range ps {
-				_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\n", p.ID, p.Display, p.Category)
+				_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\n", clean(p.ID), clean(p.Display), clean(p.Category))
 			}
 			return tw.Flush()
 		},
@@ -185,14 +186,14 @@ func (a *app) catalogReferences(ctx context.Context, warn io.Writer) (*catalog.R
 	defer closeFn()
 	refs := &catalog.References{}
 	if kc, _, err := a.loadKEV(ctx, u); err != nil {
-		_, _ = fmt.Fprintf(warn, "Note: skipping the checks against KEV: %s. Run `patchtacio feeds update` to enable them.\n", firstLine(err.Error()))
+		_, _ = fmt.Fprintf(warn, "Note: skipping the checks against KEV: %s. Run `patchtacio feeds update` to enable them.\n", firstLine(logging.RedactString(err.Error())))
 	} else {
 		refs.KEV = kevEntries(kc)
 	}
 	if raw, _, err := u.ReadCache(ctx, "eol"); err != nil {
-		_, _ = fmt.Fprintf(warn, "Note: skipping the checks against endoflife.date: %s. Run `patchtacio feeds update` to enable them.\n", firstLine(err.Error()))
+		_, _ = fmt.Fprintf(warn, "Note: skipping the checks against endoflife.date: %s. Run `patchtacio feeds update` to enable them.\n", firstLine(logging.RedactString(err.Error())))
 	} else if ec, err := eol.ParseCatalog(raw); err != nil {
-		_, _ = fmt.Fprintf(warn, "Note: skipping the checks against endoflife.date: the saved copy could not be read: %s\n", firstLine(err.Error()))
+		_, _ = fmt.Fprintf(warn, "Note: skipping the checks against endoflife.date: the saved copy could not be read: %s\n", firstLine(logging.RedactString(err.Error())))
 	} else {
 		refs.EOLSlugs = map[string]bool{}
 		for _, p := range ec.Products {

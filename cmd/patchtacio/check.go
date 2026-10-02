@@ -18,6 +18,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/catalog"
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/feeds"
+	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/match"
 )
 
@@ -42,6 +43,9 @@ func newCheckCmd(a *app) *cobra.Command {
 					return fmt.Errorf("--since: %w", err)
 				}
 				sinceDate = d
+				if now := a.now().In(a.loc); d.After(time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)) {
+					return fmt.Errorf("--since %s is in the future", since)
+				}
 			}
 			cat, err := catalog.Embedded()
 			if err != nil {
@@ -72,9 +76,10 @@ func newCheckCmd(a *app) *cobra.Command {
 			}
 			kc, st, err := a.loadKEV(cmd.Context(), u)
 			if err != nil {
-				_, _ = fmt.Fprintf(warn, "Cannot check your products: %s\n", firstLine(err.Error()))
+				_, _ = fmt.Fprintf(warn, "Cannot check your products: %s\n", firstLine(logging.RedactString(err.Error())))
 				return outcome(exitToolError)
 			}
+			code = worse(code, stateCode(st.State)) // in case a source reported no result
 			stale := code != exitOK
 
 			findings := match.New(cat).KEV(kc.Vulnerabilities, cfg.IDs())
@@ -127,7 +132,7 @@ func (a *app) loadConfig(cat *catalog.Catalog, warn io.Writer) (*config.Config, 
 	if len(cfg.Products) == 0 {
 		return nil, fmt.Errorf("%s lists no products: run `patchtacio init` to choose them", path)
 	}
-	return cfg, nil
+	return cfg.Resolve(cat), nil
 }
 
 // checkReport is check's output; its JSON form is a public format.
@@ -164,7 +169,7 @@ type checkFinding struct {
 	DateAdded         feeds.Date `json:"dateAdded"`
 	DueDate           feeds.Date `json:"dueDate"`
 	DuePassed         bool       `json:"duePassed"`
-	KnownRansomware   bool       `json:"knownRansomwareCampaignUse"`
+	RansomwareUse     string     `json:"ransomwareUse"` // "known" or "unknown", as CISA states it; never "no"
 	ShortDescription  string     `json:"shortDescription"`
 	RequiredAction    string     `json:"requiredAction"`
 	Notes             []string   `json:"notes"` // KEV notes: usually the vendor advisory link first
@@ -205,7 +210,7 @@ func (a *app) newCheckReport(cat *catalog.Catalog, cfg *config.Config, kevVersio
 			DateAdded:         v.DateAdded,
 			DueDate:           v.DueDate,
 			DuePassed:         !v.DueDate.IsZero() && v.DueDate.Before(rep.today),
-			KnownRansomware:   v.KnownRansomware,
+			RansomwareUse:     ransomwareUse(v.KnownRansomware),
 			ShortDescription:  v.ShortDescription,
 			RequiredAction:    v.RequiredAction,
 			Notes:             v.Notes,
@@ -267,8 +272,8 @@ func (a *app) printCheck(w io.Writer, rep checkReport) {
 		if f.DuePassed {
 			due += " (passed)"
 		}
-		ransomware := "unknown"
-		if f.KnownRansomware {
+		ransomware := f.RansomwareUse
+		if ransomware == "known" {
 			ransomware = "known use"
 		}
 		_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\n",
@@ -277,6 +282,15 @@ func (a *app) printCheck(w io.Writer, rep checkReport) {
 	_ = tw.Flush()
 	_, _ = fmt.Fprintln(w, "\nCISA due dates are deadlines for US federal agencies; use them as a guide to urgency.")
 	_, _ = fmt.Fprintln(w, "For CISA's required action and the vendor advisory link for each entry, run: patchtacio check --json")
+}
+
+// ransomwareUse renders KEV's knownRansomwareCampaignUse. CISA says "Known" or
+// "Unknown"; "Unknown" does not mean ransomware gangs are not using it.
+func ransomwareUse(known bool) string {
+	if known {
+		return "known"
+	}
+	return "unknown"
 }
 
 // kevEntryCount is "1 KEV entry" or "12 KEV entries".

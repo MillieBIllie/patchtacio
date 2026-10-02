@@ -83,10 +83,21 @@ func newInitCmd(a *app) *cobra.Command {
 				return err
 			}
 			out := cmd.OutOrStdout()
-			_, _ = fmt.Fprintf(out, "Saved %s to %s:\n", plural(len(ids), "product"), path)
+			_, _ = fmt.Fprintf(out, "Saved %s to %s:\n", plural(len(ids), "product"), clean(path))
 			for _, id := range ids {
 				p, _ := cat.Get(id)
-				_, _ = fmt.Fprintf(out, "  - %s\n", p.Display)
+				_, _ = fmt.Fprintf(out, "  - %s\n", clean(p.Display))
+			}
+			// Say what is no longer watched, so a scripted --products run
+			// cannot quietly reduce coverage. Comments in the file are not kept.
+			var dropped []string
+			for _, id := range existing.IDs() {
+				if !slices.Contains(ids, id) {
+					dropped = append(dropped, clean(id))
+				}
+			}
+			if len(dropped) > 0 {
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Note: no longer watching %s.\n", strings.Join(dropped, ", "))
 			}
 			_, _ = fmt.Fprintln(out, "\nNext: run `patchtacio check` to see known exploited vulnerabilities for these products.")
 			return nil
