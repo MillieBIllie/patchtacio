@@ -1,0 +1,9 @@
+# Example configuration used in docs and tests.
+version: 1
+products:
+  - id: fortinet-fortios
+    version: "7.2.8"
+    notes: "head office firewall"
+  - id: citrix-netscaler
+  - id: microsoft-exchange-server
+  - id: vmware-vcenter
