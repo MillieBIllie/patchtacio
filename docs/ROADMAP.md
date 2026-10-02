@@ -26,13 +26,14 @@ Design decisions: [docs/decisions/0001-m1-data-layer.md](decisions/0001-m1-data-
 **Done when:** `feeds update` works offline from cache and reports staleness honestly.
 
 ### M2: Catalog + matching
-- [ ] Catalog YAML schema + `patchtacio catalog lint`
-- [ ] Seed ~30 products, edge devices first: Fortinet FortiOS/FortiProxy, Ivanti Connect Secure,
+- [x] Catalog YAML schema + `patchtacio catalog lint`
+- [x] Seed ~30 products, edge devices first: Fortinet FortiOS/FortiProxy, Ivanti Connect Secure,
       Palo Alto PAN-OS, SonicWall SonicOS/SMA, Citrix NetScaler, Cisco ASA/FTD, Microsoft Exchange,
       Windows Server, VMware ESXi/vCenter, Atlassian Confluence, MOVEit, etc.
-- [ ] Coverage report: % of KEV entries from the last 2 years that map to a catalog product
-- [ ] Matcher: KEV → catalog product (version optional in v1)
-- [ ] `patchtacio init` (interactive picker) and `patchtacio check` (table + JSON output)
+- [x] Coverage report: % of KEV entries from the last 2 years that map to a catalog product
+      (`catalog coverage`; seed catalog vs KEV 2026.10.01: 169 of 547, 30.9%)
+- [x] Matcher: KEV → catalog product (version optional in v1)
+- [x] `patchtacio init` (interactive picker) and `patchtacio check` (table + JSON output)
 
 **Done when:** a fresh user can tick products and see relevant KEV findings in under 2 minutes.
 
