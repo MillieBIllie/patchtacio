@@ -27,6 +27,6 @@ func newRootCmd(a *app) *cobra.Command {
 	cmd.MarkFlagsMutuallyExclusive("verbose", "quiet")
 	cmd.PersistentFlags().StringVar(&a.configFile, "config", "", "configuration file (default: config.yaml in Patchtacio's config directory)")
 
-	cmd.AddCommand(newVersionCmd(), newFeedsCmd(a), newCatalogCmd(a), newInitCmd(a))
+	cmd.AddCommand(newVersionCmd(), newFeedsCmd(a), newCatalogCmd(a), newInitCmd(a), newCheckCmd(a))
 	return cmd
 }

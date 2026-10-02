@@ -1,0 +1,306 @@
+package main
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"io/fs"
+	"net/url"
+	"slices"
+	"strings"
+	"text/tabwriter"
+	"time"
+	"unicode/utf8"
+
+	"github.com/spf13/cobra"
+
+	"github.com/milliebillie/patchtacio/internal/catalog"
+	"github.com/milliebillie/patchtacio/internal/config"
+	"github.com/milliebillie/patchtacio/internal/feeds"
+	"github.com/milliebillie/patchtacio/internal/match"
+)
+
+func newCheckCmd(a *app) *cobra.Command {
+	var offline, asJSON bool
+	var since string
+	cmd := &cobra.Command{
+		Use:   "check",
+		Short: "Show known exploited vulnerabilities (CISA KEV) for the products you run",
+		Long: "Updates the CISA KEV catalog (using the saved copy if CISA cannot be reached), then lists every\n" +
+			"KEV entry that matches a product in your configuration, newest first.\n\n" +
+			"Matching is by product name: versions are not compared yet, so check each entry against the\n" +
+			"version you run.\n\n" +
+			"Exit codes: 1 at least one match; 0 no match and the data is up to date;\n" +
+			"3 no match, but the KEV data is out of date (warning printed); 2 error or no KEV data.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			var sinceDate feeds.Date
+			if since != "" {
+				d, err := feeds.ParseDate(since)
+				if err != nil {
+					return fmt.Errorf("--since: %w", err)
+				}
+				sinceDate = d
+			}
+			cat, err := catalog.Embedded()
+			if err != nil {
+				return err
+			}
+			cfg, err := a.loadConfig(cat, cmd.ErrOrStderr())
+			if err != nil {
+				return err
+			}
+
+			u, closeFn, err := a.openUpdater(cmd.Context())
+			if err != nil {
+				return err
+			}
+			defer closeFn()
+			// M2 checks KEV only, so it updates and reports on KEV only.
+			u.Sources = slices.DeleteFunc(u.Sources, func(s feeds.Source) bool { return s.Name() != "kev" })
+			results, err := u.Update(cmd.Context(), offline)
+			if err != nil {
+				return fmt.Errorf("update feeds: %w", err)
+			}
+			warn := cmd.ErrOrStderr()
+			code := exitOK
+			for _, r := range results {
+				// Success lines are for `feeds update`; check prints only what
+				// changes how far the result can be trusted.
+				code = worse(code, a.reportResult(io.Discard, warn, r, offline))
+			}
+			kc, st, err := a.loadKEV(cmd.Context(), u)
+			if err != nil {
+				_, _ = fmt.Fprintf(warn, "Cannot check your products: %s\n", firstLine(err.Error()))
+				return outcome(exitToolError)
+			}
+			stale := code != exitOK
+
+			findings := match.New(cat).KEV(kc.Vulnerabilities, cfg.IDs())
+			if !sinceDate.IsZero() {
+				findings = slices.DeleteFunc(findings, func(f match.Finding) bool { return f.Vuln.DateAdded.Before(sinceDate.Time) })
+			}
+			rep := a.newCheckReport(cat, cfg, kc.Version, kc.Released, st, stale, sinceDate, findings)
+			if asJSON {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				if err := enc.Encode(rep); err != nil {
+					return fmt.Errorf("encode findings: %w", err)
+				}
+			} else {
+				a.printCheck(cmd.OutOrStdout(), rep)
+			}
+			if len(findings) > 0 {
+				return outcome(exitFindings) // stale warnings, if any, are already printed
+			}
+			return outcome(code)
+		},
+	}
+	cmd.Flags().BoolVar(&offline, "offline", false, "do not use the network; check against the saved copy")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "print machine-readable JSON, with CISA's required action and links")
+	cmd.Flags().StringVar(&since, "since", "", "only show entries added to KEV on or after this date (YYYY-MM-DD)")
+	return cmd
+}
+
+// loadConfig reads and validates the configuration for commands that need
+// products. Warnings (deprecated IDs) go to warn.
+func (a *app) loadConfig(cat *catalog.Catalog, warn io.Writer) (*config.Config, error) {
+	path, err := a.configPath()
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := config.Load(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, fmt.Errorf("no products chosen yet (no configuration at %s): run `patchtacio init` first", path)
+	}
+	if err != nil {
+		return nil, err
+	}
+	warnings, err := cfg.Validate(cat)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", path, err)
+	}
+	for _, w := range warnings {
+		_, _ = fmt.Fprintf(warn, "Note: %s\n", clean(w))
+	}
+	if len(cfg.Products) == 0 {
+		return nil, fmt.Errorf("%s lists no products: run `patchtacio init` to choose them", path)
+	}
+	return cfg, nil
+}
+
+// checkReport is check's output; its JSON form is a public format.
+type checkReport struct {
+	CheckedAt        time.Time      `json:"checkedAt"`
+	KEVVersion       string         `json:"kevVersion"`
+	KEVReleased      time.Time      `json:"kevReleased"`
+	KEVEntries       int            `json:"-"`
+	Feed             feeds.Status   `json:"feed"`
+	Stale            bool           `json:"stale"`            // KEV could not be refreshed or is out of date
+	VersionsCompared bool           `json:"versionsCompared"` // always false until version matching exists
+	Since            feeds.Date     `json:"since,omitzero"`
+	Products         []checkProduct `json:"products"`
+	Findings         []checkFinding `json:"findings"`
+	today            time.Time      // for "passed" due dates
+	byProduct        map[string]int // finding count per product
+	newest           map[string]feeds.Date
+}
+
+type checkProduct struct {
+	ID       string `json:"id"`
+	Display  string `json:"display"`
+	Version  string `json:"version,omitempty"`
+	Findings int    `json:"findings"`
+}
+
+type checkFinding struct {
+	ProductID         string     `json:"productId"`
+	Product           string     `json:"product"`
+	CVEID             string     `json:"cveID"`
+	VulnerabilityName string     `json:"vulnerabilityName"`
+	KEVVendor         string     `json:"kevVendorProject"`
+	KEVProduct        string     `json:"kevProduct"`
+	DateAdded         feeds.Date `json:"dateAdded"`
+	DueDate           feeds.Date `json:"dueDate"`
+	DuePassed         bool       `json:"duePassed"`
+	KnownRansomware   bool       `json:"knownRansomwareCampaignUse"`
+	ShortDescription  string     `json:"shortDescription"`
+	RequiredAction    string     `json:"requiredAction"`
+	Notes             []string   `json:"notes"` // KEV notes: usually the vendor advisory link first
+	CWEs              []string   `json:"cwes"`
+	NVDURL            string     `json:"nvdURL"`
+}
+
+func (a *app) newCheckReport(cat *catalog.Catalog, cfg *config.Config, kevVersion string, released time.Time,
+	st feeds.Status, stale bool, since feeds.Date, findings []match.Finding) checkReport {
+	now := a.now().In(a.loc)
+	rep := checkReport{
+		CheckedAt:   a.now().UTC(),
+		KEVVersion:  kevVersion,
+		KEVReleased: released,
+		KEVEntries:  st.Count,
+		Feed:        st,
+		Stale:       stale,
+		Since:       since,
+		Products:    []checkProduct{},
+		Findings:    []checkFinding{},
+		today:       time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC),
+		byProduct:   map[string]int{},
+		newest:      map[string]feeds.Date{},
+	}
+	for _, f := range findings {
+		rep.byProduct[f.Product.ID]++
+		if f.Vuln.DateAdded.After(rep.newest[f.Product.ID].Time) {
+			rep.newest[f.Product.ID] = f.Vuln.DateAdded
+		}
+		v := f.Vuln
+		rep.Findings = append(rep.Findings, checkFinding{
+			ProductID:         f.Product.ID,
+			Product:           f.Product.Display,
+			CVEID:             v.CVEID,
+			VulnerabilityName: v.Name,
+			KEVVendor:         v.VendorProject,
+			KEVProduct:        v.Product,
+			DateAdded:         v.DateAdded,
+			DueDate:           v.DueDate,
+			DuePassed:         !v.DueDate.IsZero() && v.DueDate.Before(rep.today),
+			KnownRansomware:   v.KnownRansomware,
+			ShortDescription:  v.ShortDescription,
+			RequiredAction:    v.RequiredAction,
+			Notes:             v.Notes,
+			CWEs:              v.CWEs,
+			NVDURL:            "https://nvd.nist.gov/vuln/detail/" + url.PathEscape(v.CVEID),
+		})
+	}
+	for _, p := range cfg.Products {
+		cp, _ := cat.Get(p.ID)
+		rep.Products = append(rep.Products, checkProduct{ID: p.ID, Display: cp.Display, Version: p.Version, Findings: rep.byProduct[p.ID]})
+	}
+	return rep
+}
+
+func (a *app) printCheck(w io.Writer, rep checkReport) {
+	_, _ = fmt.Fprintf(w, "Checked %s against the CISA KEV catalog (%s entries, catalog %s, published %s).\n",
+		plural(len(rep.Products), "product"), thousands(rep.KEVEntries), clean(rep.KEVVersion), a.date(rep.KEVReleased))
+	scope := ""
+	if !rep.Since.IsZero() {
+		scope = " added since " + calDate(rep.Since)
+	}
+
+	if len(rep.Findings) == 0 {
+		_, _ = fmt.Fprintf(w, "\nNone of your products matched a KEV entry%s.\n", scope)
+		_, _ = fmt.Fprintln(w, "This is not an all clear: KEV lists only vulnerabilities known to be exploited, and Patchtacio\n"+
+			"matches by product name. Keep installing your vendors' security updates.")
+		if rep.Stale {
+			_, _ = fmt.Fprintln(w, "The KEV data is out of date (see the warning above), so recent entries may be missing.")
+		}
+		return
+	}
+
+	verb := "match"
+	if len(rep.Findings) == 1 {
+		verb = "matches"
+	}
+	_, _ = fmt.Fprintf(w, "\n%s%s %s your products. Attackers are already using these vulnerabilities.\n",
+		kevEntryCount(len(rep.Findings)), scope, verb)
+	_, _ = fmt.Fprintln(w, "Patchtacio matched them by product name and did not compare versions, so check each one\n"+
+		"against the version you run and follow the vendor's advice to update or mitigate.")
+
+	_, _ = fmt.Fprintln(w)
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	for _, p := range rep.Products {
+		n := rep.byProduct[p.ID]
+		summary := "no matching KEV entries"
+		if n > 0 {
+			summary = fmt.Sprintf("%s, newest added %s", kevEntryCount(n), calDate(rep.newest[p.ID]))
+		}
+		_, _ = fmt.Fprintf(tw, "  %s\t%s\n", clean(p.Display), summary)
+	}
+	_ = tw.Flush()
+
+	_, _ = fmt.Fprintln(w)
+	tw = tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	_, _ = fmt.Fprintln(tw, "PRODUCT\tCVE\tADDED TO KEV\tCISA DUE DATE\tRANSOMWARE\tVULNERABILITY")
+	for _, f := range rep.Findings {
+		due := calDate(f.DueDate)
+		if f.DuePassed {
+			due += " (passed)"
+		}
+		ransomware := "unknown"
+		if f.KnownRansomware {
+			ransomware = "known use"
+		}
+		_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\n",
+			clean(shortName(f.Product)), clean(f.CVEID), calDate(f.DateAdded), due, ransomware, clean(truncate(f.VulnerabilityName, 70)))
+	}
+	_ = tw.Flush()
+	_, _ = fmt.Fprintln(w, "\nCISA due dates are deadlines for US federal agencies; use them as a guide to urgency.")
+	_, _ = fmt.Fprintln(w, "For CISA's required action and the vendor advisory link for each entry, run: patchtacio check --json")
+}
+
+// kevEntryCount is "1 KEV entry" or "12 KEV entries".
+func kevEntryCount(n int) string {
+	if n == 1 {
+		return "1 KEV entry"
+	}
+	return thousands(n) + " KEV entries"
+}
+
+// shortName drops a display name's parenthetical: "Fortinet FortiOS (FortiGate
+// firewalls)" becomes "Fortinet FortiOS".
+func shortName(display string) string {
+	if i := strings.Index(display, " ("); i > 0 {
+		return display[:i]
+	}
+	return display
+}
+
+// truncate cuts s to n characters on a character boundary.
+func truncate(s string, n int) string {
+	s = strings.TrimSpace(s)
+	if utf8.RuneCountInString(s) <= n {
+		return s
+	}
+	return string([]rune(s)[:n-1]) + "…"
+}
