@@ -4,8 +4,9 @@ vendor: "Veeam"
 category: other
 kev_aliases:
   - { vendor: "Veeam", product: "Backup & Replication" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:veeam:veeam_backup_\\&_replication"
 eol_slug: veeam-backup-and-replication
 aliases_search: ["backup", "VBR"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

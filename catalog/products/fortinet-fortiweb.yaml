@@ -5,8 +5,9 @@ category: firewall-vpn
 kev_aliases:
   - { vendor: "Fortinet", product: "FortiWeb" }
   - { vendor: "Fortinet", product: "Multiple Products", mentions: ["FortiWeb"] }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:fortinet:fortiweb"
 eol_slug: null
 aliases_search: ["WAF"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

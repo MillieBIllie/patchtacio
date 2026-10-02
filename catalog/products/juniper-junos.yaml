@@ -4,8 +4,9 @@ vendor: "Juniper"
 category: firewall-vpn
 kev_aliases:
   - { vendor: "Juniper", product: "Junos OS" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:o:juniper:junos"
 eol_slug: null
 aliases_search: ["SRX", "Juniper firewall"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

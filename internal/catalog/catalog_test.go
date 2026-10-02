@@ -62,6 +62,8 @@ func TestLintProblems(t *testing.T) {
 		{"padded display", "acme-widget.yaml", strings.Replace(goodYAML, `"Acme Widget"`, `" Acme Widget"`, 1), "leading or trailing"},
 		{"bad cpe", "acme-widget.yaml", strings.Replace(goodYAML, "cpe:2.3:o:acme:widget", "cpe:/o:acme:widget", 1), "cpe_prefixes[0]"},
 		{"cpe with version", "acme-widget.yaml", strings.Replace(goodYAML, "cpe:2.3:o:acme:widget", "cpe:2.3:o:acme:widget:7.0", 1), "cpe_prefixes[0]"},
+		{"cpe unescaped punctuation", "acme-widget.yaml", strings.Replace(goodYAML, "cpe:2.3:o:acme:widget", "cpe:2.3:a:veeam:backup_&_replication", 1), "cpe_prefixes[0]"},
+		{"cpe uppercase", "acme-widget.yaml", strings.Replace(goodYAML, "cpe:2.3:o:acme:widget", "cpe:2.3:o:Acme:widget", 1), "cpe_prefixes[0]"},
 		{"bad slug", "acme-widget.yaml", strings.Replace(goodYAML, "eol_slug: acme-widget", "eol_slug: Acme Widget", 1), "eol_slug"},
 		{"bad date", "acme-widget.yaml", strings.Replace(goodYAML, "2026-10-02", "02/10/2026", 1), "YYYY-MM-DD"},
 		{"no date", "acme-widget.yaml", strings.Replace(goodYAML, "verified: 2026-10-02\n", "", 1), "verified is required"},
@@ -229,5 +231,29 @@ func TestLintRejectsSymlinksAndHugeFiles(t *testing.T) {
 	}
 	if !hasError(problems, "larger than 64 KB") {
 		t.Errorf("huge file not rejected: %v", problems)
+	}
+}
+
+func TestCPEPattern(t *testing.T) {
+	for _, ok := range []string{
+		"cpe:2.3:o:fortinet:fortios",
+		`cpe:2.3:a:veeam:veeam_backup_\&_replication`, // NVD escapes & with a backslash
+		"cpe:2.3:a:simple-help:simplehelp",
+		"cpe:2.3:o:sonicwall:sma_500v_firmware",
+	} {
+		if !cpePattern.MatchString(ok) {
+			t.Errorf("rejected valid CPE prefix %q", ok)
+		}
+	}
+	for _, bad := range []string{
+		"cpe:2.3:a:veeam:backup_&_replication", // unescaped
+		`cpe:2.3:a:veeam:backup_\a`,            // only punctuation may be escaped
+		"cpe:2.3:x:acme:widget",
+		"cpe:2.3:a:acme:widget:1.0",
+		"cpe:/a:acme:widget",
+	} {
+		if cpePattern.MatchString(bad) {
+			t.Errorf("accepted invalid CPE prefix %q", bad)
+		}
 	}
 }

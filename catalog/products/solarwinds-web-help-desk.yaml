@@ -4,8 +4,9 @@ vendor: "SolarWinds"
 category: web-app
 kev_aliases:
   - { vendor: "SolarWinds", product: "Web Help Desk" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:solarwinds:web_help_desk"
 eol_slug: null
 aliases_search: ["help desk", "ticketing", "WHD"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

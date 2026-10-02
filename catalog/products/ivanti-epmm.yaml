@@ -6,8 +6,9 @@ kev_aliases:
   - { vendor: "Ivanti", product: "Endpoint Manager Mobile (EPMM)" }
   - { vendor: "Ivanti", product: "Endpoint Manager Mobile (EPMM) and MobileIron Core" }
   - { vendor: "Ivanti", product: "MobileIron Multiple Products", mentions: ["MobileIron's Core"] }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:ivanti:endpoint_manager_mobile"
 eol_slug: null
 aliases_search: ["MobileIron", "MDM"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

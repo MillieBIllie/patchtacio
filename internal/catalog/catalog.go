@@ -285,8 +285,14 @@ var (
 	idPattern   = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)+$`)
 	slugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._+-]*$`)
 	// cpe:2.3:part:vendor:product, with no version: a prefix names a product.
-	cpePattern = regexp.MustCompile(`^cpe:2\.3:[aoh]:[a-z0-9._\-~%!]+:[a-z0-9._\-~%!]+$`)
+	// Other punctuation is escaped with a backslash, as in NVD's
+	// veeam_backup_\&_replication.
+	cpePattern = regexp.MustCompile(`^cpe:2\.3:[aoh]:` + cpeName + `:` + cpeName + `$`)
 )
+
+// cpeName is one CPE 2.3 vendor or product name: lowercase letters, digits
+// and . _ - ~, or a backslash-escaped punctuation character.
+const cpeName = `(?:[a-z0-9._~-]|\\[[:punct:]])+`
 
 const maxDisplay = 80
 

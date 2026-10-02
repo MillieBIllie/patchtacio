@@ -8,8 +8,10 @@ kev_aliases:
   - { vendor: "Citrix", product: "NetScaler ADC and NetScaler Gateway" }
   - { vendor: "Citrix", product: "Application Delivery Controller (ADC) and Gateway" }
   - { vendor: "Citrix", product: "Application Delivery Controller (ADC), Gateway, and SD-WAN WANOP Appliance" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:citrix:netscaler_application_delivery_controller"
+  - "cpe:2.3:a:citrix:netscaler_gateway"
 eol_slug: null
 aliases_search: ["Citrix ADC", "Citrix Gateway", "NetScaler"]
-notes: "NetScaler SD-WAN entries are a different product and are not included. TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: "NetScaler SD-WAN entries are a different product and are not included."
 verified: 2026-10-02

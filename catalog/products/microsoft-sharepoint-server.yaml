@@ -6,8 +6,9 @@ kev_aliases:
   - { vendor: "Microsoft", product: "SharePoint" }
   - { vendor: "Microsoft", product: "SharePoint Server" }
   - { vendor: "Microsoft", product: ".NET Framework, SharePoint, Visual Studio" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:microsoft:sharepoint_server"
 eol_slug: sharepoint
 aliases_search: ["SharePoint"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

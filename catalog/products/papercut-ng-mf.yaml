@@ -5,8 +5,10 @@ category: other
 kev_aliases:
   - { vendor: "PaperCut", product: "NG/MF" }
   - { vendor: "PaperCut", product: "MF/NG" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:papercut:papercut_mf"
+  - "cpe:2.3:a:papercut:papercut_ng"
 eol_slug: null
 aliases_search: ["printing", "print server"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02
