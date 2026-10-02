@@ -12,8 +12,13 @@ kev_aliases:
   - { vendor: "Microsoft", product: "Windows CNG Key Isolation Service" }
   - { vendor: "Microsoft", product: "Windows COM+ Event System Service" }
   - { vendor: "Microsoft", product: "Internet Key Exchange (IKE) Service Extensions" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:o:microsoft:windows_server_2012"
+  - "cpe:2.3:o:microsoft:windows_server_2016"
+  - "cpe:2.3:o:microsoft:windows_server_2019"
+  - "cpe:2.3:o:microsoft:windows_server_2022"
+  - "cpe:2.3:o:microsoft:windows_server_2025"
 eol_slug: windows-server
 aliases_search: ["Windows Server 2016", "Windows Server 2019", "Windows Server 2022", "Windows Server 2025", "domain controller"]
-notes: "KEV lists Windows flaws as \"Windows\" or by component (Win32k, SMBv1 server, ...) without saying whether desktop or server editions are affected, so these entries match both microsoft-windows and microsoft-windows-server. TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: "KEV lists Windows flaws as \"Windows\" or by component (Win32k, SMBv1 server, ...) without saying whether desktop or server editions are affected, so these entries match both microsoft-windows and microsoft-windows-server."
 verified: 2026-10-02

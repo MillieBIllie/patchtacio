@@ -4,8 +4,9 @@ vendor: "SimpleHelp"
 category: remote-access
 kev_aliases:
   - { vendor: "SimpleHelp", product: "SimpleHelp" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:simple-help:simplehelp"
 eol_slug: null
 aliases_search: ["remote support", "RMM"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

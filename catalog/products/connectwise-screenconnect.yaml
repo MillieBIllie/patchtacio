@@ -4,8 +4,9 @@ vendor: "ConnectWise"
 category: remote-access
 kev_aliases:
   - { vendor: "ConnectWise", product: "ScreenConnect" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:connectwise:screenconnect"
 eol_slug: null
 aliases_search: ["ConnectWise Control", "remote support"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

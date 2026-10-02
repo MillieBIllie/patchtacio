@@ -9,5 +9,5 @@ kev_aliases:
 cpe_prefixes: []
 eol_slug: null
 aliases_search: ["Quantum", "Check Point firewall", "Remote Access VPN"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: "TODO: verify CPE. NVD lists Check Point Gaia OS for these CVEs, which management servers run too, so it does not identify the gateway."
 verified: 2026-10-02

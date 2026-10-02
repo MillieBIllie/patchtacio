@@ -8,8 +8,9 @@ kev_aliases:
   - { vendor: "Cisco", product: "Adaptive Security Appliance and Firepower Threat Defense" }
   - { vendor: "Cisco", product: "Secure Firewall Adaptive Security Appliance (ASA) and Secure Firewall Threat Defense (FTD)" }
   - { vendor: "Cisco", product: "Secure Firewall Adaptive Security Appliance and Secure Firewall Threat Defense" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:o:cisco:adaptive_security_appliance_software"
 eol_slug: null
 aliases_search: ["ASA", "Cisco firewall", "AnyConnect VPN"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

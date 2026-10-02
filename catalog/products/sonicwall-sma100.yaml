@@ -7,8 +7,14 @@ kev_aliases:
   - { vendor: "SonicWall", product: "SMA100" }
   - { vendor: "SonicWall", product: "SMA100 Appliances" }
   - { vendor: "SonicWall", product: "SSLVPN SMA100" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:o:sonicwall:sma_200_firmware"
+  - "cpe:2.3:o:sonicwall:sma_210_firmware"
+  - "cpe:2.3:o:sonicwall:sma_400_firmware"
+  - "cpe:2.3:o:sonicwall:sma_410_firmware"
+  - "cpe:2.3:o:sonicwall:sma_500v_firmware"
+  - "cpe:2.3:a:sonicwall:sma_500v"
 eol_slug: null
 aliases_search: ["Secure Mobile Access", "SSL VPN"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

@@ -22,5 +22,5 @@ kev_aliases:
 cpe_prefixes: []
 eol_slug: null
 aliases_search: ["browser", "Chromium"]
-notes: "Edge is built on Chromium. KEV files those flaws under Google Chromium; they match here only when CISA's description names Microsoft Edge, which most do. Tick Google Chrome as well to see every Chromium entry. TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: "Edge is built on Chromium. KEV files those flaws under Google Chromium; they match here only when CISA's description names Microsoft Edge, which most do. Tick Google Chrome as well to see every Chromium entry. TODO: verify CPE. NVD files Chromium flaws under cpe:2.3:a:google:chrome, not under Edge."
 verified: 2026-10-02

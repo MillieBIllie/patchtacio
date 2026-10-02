@@ -6,8 +6,9 @@ kev_aliases:
   - { vendor: "Fortinet", product: "FortiOS and FortiProxy" }
   - { vendor: "Fortinet", product: "FortiOS and FortiProxy SSL-VPN" }
   - { vendor: "Fortinet", product: "Multiple Products", mentions: ["FortiProxy"] }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:fortinet:fortiproxy"
 eol_slug: null
 aliases_search: ["web proxy"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

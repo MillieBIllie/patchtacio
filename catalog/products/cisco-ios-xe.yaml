@@ -11,8 +11,9 @@ kev_aliases:
   - { vendor: "Cisco", product: "IOS Software and Cisco IOS XE Software" }
   - { vendor: "Cisco", product: "IOS, IOS XR, and IOS XE" }
   - { vendor: "Cisco", product: "IOS, XR, and XE Software" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:o:cisco:ios_xe"
 eol_slug: cisco-ios-xe
 aliases_search: ["Catalyst", "ISR", "router", "switch"]
-notes: "Classic Cisco IOS and IOS XR are different products and are not included. TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: "Classic Cisco IOS and IOS XR are different products and are not included."
 verified: 2026-10-02

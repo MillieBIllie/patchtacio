@@ -4,8 +4,9 @@ vendor: "SolarWinds"
 category: file-transfer
 kev_aliases:
   - { vendor: "SolarWinds", product: "Serv-U" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:solarwinds:serv-u"
 eol_slug: null
 aliases_search: ["FTP server", "SFTP", "managed file transfer"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

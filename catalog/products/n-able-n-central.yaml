@@ -4,8 +4,9 @@ vendor: "N-able"
 category: remote-access
 kev_aliases:
   - { vendor: "N-able", product: "N-central" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:n-able:n-central"
 eol_slug: null
 aliases_search: ["N-central", "RMM", "SolarWinds N-central"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

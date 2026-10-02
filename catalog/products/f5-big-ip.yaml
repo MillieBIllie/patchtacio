@@ -11,5 +11,5 @@ kev_aliases:
 cpe_prefixes: []
 eol_slug: big-ip
 aliases_search: ["load balancer", "APM", "LTM"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: "TODO: verify CPE. NVD lists BIG-IP per module (big-ip_access_policy_manager, ...); list every module before adding them."
 verified: 2026-10-02

@@ -4,8 +4,9 @@ vendor: "Palo Alto Networks"
 category: firewall-vpn
 kev_aliases:
   - { vendor: "Palo Alto Networks", product: "PAN-OS" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:o:paloaltonetworks:pan-os"
 eol_slug: panos
 aliases_search: ["Palo Alto firewall", "GlobalProtect"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02

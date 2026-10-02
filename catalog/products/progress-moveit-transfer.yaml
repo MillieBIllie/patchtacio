@@ -4,8 +4,9 @@ vendor: "Progress"
 category: file-transfer
 kev_aliases:
   - { vendor: "Progress", product: "MOVEit Transfer" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:progress:moveit_transfer"
 eol_slug: null
 aliases_search: ["MOVEit", "managed file transfer", "MFT"]
-notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+notes: ""
 verified: 2026-10-02
