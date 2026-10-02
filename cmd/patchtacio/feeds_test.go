@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -15,6 +17,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/milliebillie/patchtacio/internal/catalog"
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/feeds/eol"
 	"github.com/milliebillie/patchtacio/internal/feeds/kev"
@@ -98,6 +101,10 @@ func newTestEnv(t *testing.T) *testEnv {
 			c.HTTP.Transport = kevSrv.Client().Transport // httptest servers share one certificate
 			c.BaseBackoff = time.Millisecond
 			return c
+		},
+		isTerminal: func() bool { return false },
+		pick: func(context.Context, []catalog.Product, []string) ([]string, error) {
+			return nil, errors.New("test did not set a picker")
 		},
 		log: slog.New(slog.DiscardHandler),
 	}

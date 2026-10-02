@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -27,10 +28,15 @@ type app struct {
 	sources   func() []feeds.Source
 	newClient func(*slog.Logger) *httpcache.Client
 
+	// The product picker and whether it can run; fakes in tests.
+	pick       pickFunc
+	isTerminal func() bool
+
 	// Set from global flags before a command runs.
-	verbosity int
-	quiet     bool
-	log       *slog.Logger
+	verbosity  int
+	quiet      bool
+	configFile string // --config; "" means config.yaml in the config directory
+	log        *slog.Logger
 }
 
 func defaultApp() *app {
@@ -40,8 +46,10 @@ func defaultApp() *app {
 		sources: func() []feeds.Source {
 			return []feeds.Source{kev.New(), eol.New()}
 		},
-		newClient: func(l *slog.Logger) *httpcache.Client { return httpcache.New(version.UserAgent(), l) },
-		log:       slog.New(slog.DiscardHandler),
+		newClient:  func(l *slog.Logger) *httpcache.Client { return httpcache.New(version.UserAgent(), l) },
+		pick:       huhPicker(os.Stdin, os.Stdout, os.Getenv("ACCESSIBLE") != ""),
+		isTerminal: stdinIsTerminal,
+		log:        slog.New(slog.DiscardHandler),
 	}
 }
 
