@@ -1,7 +1,8 @@
 # Patchtacio
 
-> **Status: pre-alpha.** Patchtacio can download and cache its data (`patchtacio feeds update`)
-> but does not alert on anything yet. See [docs/ROADMAP.md](docs/ROADMAP.md) for what's coming.
+> **Status: pre-alpha.** Patchtacio can show the CISA KEV entries for the products you run
+> (`patchtacio init`, then `patchtacio check`), but does not send alerts or check end-of-life dates
+> yet. See [docs/ROADMAP.md](docs/ROADMAP.md) for what's coming.
 
 Patchtacio is a free, open source, **local-only** tool for small IT teams in schools, local
 government, and small businesses. You tick the products you run, and it tells you when one of them:
@@ -28,6 +29,27 @@ Release binaries for Linux, Windows, and macOS will be published once v0.1.0 is 
 ## Try it
 
 ```sh
+./patchtacio init                    # tick the products you run (type / to search)
+./patchtacio check                   # known exploited vulnerabilities for them, newest first
+./patchtacio check --json            # the same, with CISA's required action and advisory links
+```
+
+`check` matches KEV entries to your products **by name**; it does not compare versions yet, so
+check each entry against the version you run. It exits `1` when anything matches, `0` when nothing
+matches and the data is up to date, and `3` when nothing matches but the data is out of date
+(never `0`, because "nothing found" in old data is not an all clear).
+
+Without a terminal (scripts, Docker), pass the products directly. `patchtacio catalog list` shows
+the IDs:
+
+```sh
+./patchtacio init --products fortinet-fortios,microsoft-exchange-server
+./patchtacio check --config ./testdata/config/example.yaml   # use another configuration file
+```
+
+### Data feeds
+
+```sh
 ./patchtacio feeds update            # download the data (about 2 MB the first time, little after that)
 ./patchtacio feeds status            # how up to date the saved copies are
 ./patchtacio feeds update --offline  # no network: report on the saved copies only
@@ -40,7 +62,21 @@ It never treats missing or out-of-date data as "nothing to report". Exit codes: 
 up to date, `3` some data could not be updated or is out of date, `2` some data is not available.
 
 Proxies are honored through the usual `HTTPS_PROXY` / `NO_PROXY` environment variables.
-Data is stored per user; set `PATCHTACIO_CACHE_DIR` and `PATCHTACIO_DATA_DIR` to move it.
+Data is stored per user; set `PATCHTACIO_CONFIG_DIR`, `PATCHTACIO_CACHE_DIR` and
+`PATCHTACIO_DATA_DIR` to move it.
+
+### The product catalog
+
+`catalog/products/` maps each product to the names CISA KEV uses for it, its CPE prefixes and its
+endoflife.date slug. It ships inside the binary.
+
+```sh
+./patchtacio catalog list       # products and their IDs
+./patchtacio catalog lint       # check the catalog (and against saved feeds, if any)
+./patchtacio catalog coverage   # share of recent KEV entries the catalog can alert on
+```
+
+To add or fix a product, see the `add-catalog-product` skill in `.claude/skills/`.
 
 ## Data sources
 
