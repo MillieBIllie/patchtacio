@@ -25,7 +25,8 @@ func newRootCmd(a *app) *cobra.Command {
 	cmd.PersistentFlags().CountVarP(&a.verbosity, "verbose", "v", "show more detail on stderr (-v info, -vv debug)")
 	cmd.PersistentFlags().BoolVarP(&a.quiet, "quiet", "q", false, "print only warnings and errors")
 	cmd.MarkFlagsMutuallyExclusive("verbose", "quiet")
+	cmd.PersistentFlags().StringVar(&a.configFile, "config", "", "configuration file (default: config.yaml in Patchtacio's config directory)")
 
-	cmd.AddCommand(newVersionCmd(), newFeedsCmd(a), newCatalogCmd(a))
+	cmd.AddCommand(newVersionCmd(), newFeedsCmd(a), newCatalogCmd(a), newInitCmd(a))
 	return cmd
 }

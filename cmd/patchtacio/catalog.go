@@ -24,7 +24,39 @@ func newCatalogCmd(a *app) *cobra.Command {
 		Use:   "catalog",
 		Short: "Check the product catalog that maps products to KEV and endoflife.date",
 	}
-	cmd.AddCommand(newCatalogLintCmd(a), newCatalogCoverageCmd(a))
+	cmd.AddCommand(newCatalogListCmd(), newCatalogLintCmd(a), newCatalogCoverageCmd(a))
+	return cmd
+}
+
+func newCatalogListCmd() *cobra.Command {
+	var asJSON bool
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List the products Patchtacio knows, with the IDs `init --products` takes",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cat, err := catalog.Embedded()
+			if err != nil {
+				return err
+			}
+			ps := pickerProducts(cat)
+			if asJSON {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				if err := enc.Encode(ps); err != nil {
+					return fmt.Errorf("encode catalog: %w", err)
+				}
+				return nil
+			}
+			tw := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
+			_, _ = fmt.Fprintln(tw, "ID\tPRODUCT\tCATEGORY")
+			for _, p := range ps {
+				_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\n", p.ID, p.Display, p.Category)
+			}
+			return tw.Flush()
+		},
+	}
+	cmd.Flags().BoolVar(&asJSON, "json", false, "print machine-readable JSON, including every KEV alias")
 	return cmd
 }
 
