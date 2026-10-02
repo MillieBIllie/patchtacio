@@ -19,6 +19,8 @@ category: firewall-vpn            # firewall-vpn | email | os | hypervisor | web
 kev_aliases:                      # exact vendorProject/product strings as they appear in KEV
   - { vendor: "Fortinet", product: "FortiOS" }
   - { vendor: "Fortinet", product: "FortiOS and FortiProxy" }
+  # A broad pair matches only entries whose name or description names the product (whole word):
+  - { vendor: "Fortinet", product: "Multiple Products", mentions: ["FortiOS"] }
 cpe_prefixes:
   - "cpe:2.3:o:fortinet:fortios"
 eol_slug: fortios                 # endoflife.date product slug, or null if not tracked
@@ -32,21 +34,30 @@ verified: 2026-09-30              # date identifiers were last checked against t
 
 ## Procedure
 
-1. **Find every KEV spelling.** Using the cached KEV JSON (`patchtacio feeds update` first):
+1. **Find every KEV spelling.** Run `patchtacio feeds update`, then use the saved KEV copy
+   (`kev.json` in the cache dir, e.g. `~/.cache/patchtacio/cache/kev.json`; set
+   `PATCHTACIO_CACHE_DIR` to put it somewhere else):
    ```
    jq -r '.vulnerabilities[] | select(.vendorProject | test("forti"; "i")) | "\(.vendorProject)|\(.product)"' \
-     "$(patchtacio feeds path kev)" | sort | uniq -c
+     kev.json | sort | uniq -c
    ```
    KEV is free text and inconsistent: include every variant that genuinely refers to this product.
+   Matching already ignores case and extra spaces, so `"Synacor| Zimbra..."` needs no extra alias.
    If one KEV product string covers two catalog products ("FortiOS and FortiProxy"), list it on both.
+   For `Multiple Products` style pairs, add `mentions:` with the product name exactly as CISA's
+   descriptions write it, after reading those descriptions. Never list the bare pair.
+   `patchtacio catalog coverage` lists the most common pairs that no product covers yet.
 2. **Find the endoflife.date slug** from the cached product list. If none exists, set `eol_slug: null`.
 3. **Find the CPE prefix** from NVD CPE data or an existing KEV CVE's NVD record. If you can't
    confirm it from source data, leave the list empty and add `notes: "TODO: verify CPE"`.
 4. **Find the advisory feed** only from the vendor's official PSIRT pages. Prefer CSAF if offered.
 5. **Write the YAML**, one product per file, file name = `id`.
-6. **Validate:** `go run ./cmd/patchtacio catalog lint`
-7. **Test:** add or extend a case in `internal/match/testdata/` showing at least one real KEV
-   entry matching this product (use fixture data, not live).
+6. **Validate:** `go run ./cmd/patchtacio catalog lint`. With saved feeds, it also fails on an
+   unknown `eol_slug` and warns about any alias that matches no real KEV entry.
+7. **Test:** copy at least one real KEV entry per new alias, verbatim, into
+   `internal/match/testdata/kev_sample.json` and update its `count`.
+   `TestEveryAliasMatchesARealEntry` fails until you do. Add a `TestProducts` case for anything
+   subtle (shared pairs, `mentions`, near-misses that must not match).
 8. **Coverage:** run the coverage report and mention the before/after % in the PR description.
 
 ## Rules
