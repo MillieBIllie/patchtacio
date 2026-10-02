@@ -74,6 +74,11 @@ func TestProducts(t *testing.T) {
 		{"CVE-2025-20393", nil}, // Cisco email gateways
 		// KEV does not say which Windows edition: both get the alert.
 		{"CVE-2026-81963", []string{"microsoft-windows", "microsoft-windows-server"}},
+		// Chromium flaws: Edge only when CISA's description names it.
+		{"CVE-2026-87491", []string{"google-chrome", "microsoft-edge"}},
+		{"CVE-2023-4863", []string{"google-chrome"}},
+		// Legacy (pre-Chromium) Edge entries.
+		{"CVE-2017-0037", []string{"microsoft-edge"}},
 		// ASA and FTD named together.
 		{"CVE-2024-20481", []string{"cisco-asa", "cisco-ftd"}},
 	}

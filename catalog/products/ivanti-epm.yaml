@@ -1,0 +1,11 @@
+id: ivanti-epm
+display: "Ivanti Endpoint Manager (EPM, formerly LANDesk)"
+vendor: "Ivanti"
+category: other
+kev_aliases:
+  - { vendor: "Ivanti", product: "Endpoint Manager (EPM)" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["LANDesk", "endpoint management"]
+notes: "Ivanti EPM Mobile (EPMM) and the EPM Cloud Service Appliance are separate products. TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

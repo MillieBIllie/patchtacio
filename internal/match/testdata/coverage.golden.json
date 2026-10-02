@@ -1,8 +1,8 @@
 {
   "since": "2024-10-02",
-  "total": 57,
-  "mapped": 54,
-  "percent": 94.73684210526316,
+  "total": 64,
+  "mapped": 61,
+  "percent": 95.3125,
   "byProduct": [
     {
       "id": "fortinet-fortios",
@@ -14,6 +14,10 @@
     },
     {
       "id": "cisco-asa",
+      "count": 4
+    },
+    {
+      "id": "microsoft-edge",
       "count": 4
     },
     {
@@ -57,6 +61,10 @@
       "count": 2
     },
     {
+      "id": "microsoft-office",
+      "count": 2
+    },
+    {
       "id": "microsoft-sharepoint-server",
       "count": 2
     },
@@ -97,6 +105,10 @@
       "count": 1
     },
     {
+      "id": "ivanti-epm",
+      "count": 1
+    },
+    {
       "id": "ivanti-epmm",
       "count": 1
     },
@@ -113,6 +125,10 @@
       "count": 1
     },
     {
+      "id": "n-able-n-central",
+      "count": 1
+    },
+    {
       "id": "paloalto-panos",
       "count": 1
     },
@@ -122,6 +138,18 @@
     },
     {
       "id": "roundcube-webmail",
+      "count": 1
+    },
+    {
+      "id": "simplehelp-simplehelp",
+      "count": 1
+    },
+    {
+      "id": "solarwinds-serv-u",
+      "count": 1
+    },
+    {
+      "id": "solarwinds-web-help-desk",
       "count": 1
     },
     {
