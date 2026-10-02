@@ -1,0 +1,14 @@
+id: cisco-ftd
+display: "Cisco Firepower Threat Defense (FTD)"
+vendor: "Cisco"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "Cisco", product: "Adaptive Security Appliance (ASA) and Firepower Threat Defense (FTD)" }
+  - { vendor: "Cisco", product: "Adaptive Security Appliance and Firepower Threat Defense" }
+  - { vendor: "Cisco", product: "Secure Firewall Adaptive Security Appliance (ASA) and Secure Firewall Threat Defense (FTD)" }
+  - { vendor: "Cisco", product: "Secure Firewall Adaptive Security Appliance and Secure Firewall Threat Defense" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["Firepower", "Secure Firewall Threat Defense", "Cisco firewall"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

@@ -1,0 +1,11 @@
+id: connectwise-screenconnect
+display: "ConnectWise ScreenConnect (formerly ConnectWise Control)"
+vendor: "ConnectWise"
+category: remote-access
+kev_aliases:
+  - { vendor: "ConnectWise", product: "ScreenConnect" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["ConnectWise Control", "remote support"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

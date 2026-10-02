@@ -1,0 +1,13 @@
+id: microsoft-sharepoint-server
+display: "Microsoft SharePoint Server (on-premises)"
+vendor: "Microsoft"
+category: web-app
+kev_aliases:
+  - { vendor: "Microsoft", product: "SharePoint" }
+  - { vendor: "Microsoft", product: "SharePoint Server" }
+  - { vendor: "Microsoft", product: ".NET Framework, SharePoint, Visual Studio" }
+cpe_prefixes: []
+eol_slug: sharepoint
+aliases_search: ["SharePoint"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

@@ -1,0 +1,15 @@
+id: vmware-vcenter
+display: "VMware vCenter Server"
+vendor: "VMware (Broadcom)"
+category: hypervisor
+kev_aliases:
+  - { vendor: "VMware", product: "vCenter Server" }
+  - { vendor: "VMware", product: "vCenter Server and Cloud Foundation" }
+  - { vendor: "Broadcom", product: "VMware vCenter" }
+  - { vendor: "Broadcom", product: "VMware vCenter Server" }
+cpe_prefixes:
+  - "cpe:2.3:a:vmware:vcenter_server"
+eol_slug: vcenter
+aliases_search: ["vSphere", "VCSA", "Broadcom"]
+notes: ""
+verified: 2026-10-02

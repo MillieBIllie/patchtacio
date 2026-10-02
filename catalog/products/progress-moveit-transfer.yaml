@@ -1,0 +1,11 @@
+id: progress-moveit-transfer
+display: "Progress MOVEit Transfer"
+vendor: "Progress"
+category: file-transfer
+kev_aliases:
+  - { vendor: "Progress", product: "MOVEit Transfer" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["MOVEit", "managed file transfer", "MFT"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

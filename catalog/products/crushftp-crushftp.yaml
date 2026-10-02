@@ -1,0 +1,11 @@
+id: crushftp-crushftp
+display: "CrushFTP"
+vendor: "CrushFTP"
+category: file-transfer
+kev_aliases:
+  - { vendor: "CrushFTP", product: "CrushFTP" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["FTP server", "SFTP"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

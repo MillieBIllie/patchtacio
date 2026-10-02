@@ -1,0 +1,18 @@
+id: cisco-ios-xe
+display: "Cisco IOS XE (routers and switches)"
+vendor: "Cisco"
+category: other
+kev_aliases:
+  - { vendor: "Cisco", product: "IOS XE Software" }
+  - { vendor: "Cisco", product: "IOS XE Web UI" }
+  - { vendor: "Cisco", product: "Cisco IOS XE Web UI" }
+  - { vendor: "Cisco", product: "IOS and IOS XE" }
+  - { vendor: "Cisco", product: "IOS and IOS XE Software" }
+  - { vendor: "Cisco", product: "IOS Software and Cisco IOS XE Software" }
+  - { vendor: "Cisco", product: "IOS, IOS XR, and IOS XE" }
+  - { vendor: "Cisco", product: "IOS, XR, and XE Software" }
+cpe_prefixes: []
+eol_slug: cisco-ios-xe
+aliases_search: ["Catalyst", "ISR", "router", "switch"]
+notes: "Classic Cisco IOS and IOS XR are different products and are not included. TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

@@ -1,0 +1,11 @@
+id: juniper-junos
+display: "Juniper Junos OS (SRX firewalls, EX switches, MX routers)"
+vendor: "Juniper"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "Juniper", product: "Junos OS" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["SRX", "Juniper firewall"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

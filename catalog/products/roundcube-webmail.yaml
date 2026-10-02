@@ -1,0 +1,13 @@
+id: roundcube-webmail
+display: "Roundcube Webmail"
+vendor: "Roundcube"
+category: email
+kev_aliases:
+  - { vendor: "Roundcube", product: "Webmail" }
+  - { vendor: "Roundcube", product: "Roundcube Webmail" }
+cpe_prefixes:
+  - "cpe:2.3:a:roundcube:webmail"
+eol_slug: roundcube
+aliases_search: ["webmail", "cPanel mail"]
+notes: ""
+verified: 2026-10-02

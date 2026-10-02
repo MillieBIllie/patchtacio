@@ -1,0 +1,13 @@
+id: microsoft-exchange-server
+display: "Microsoft Exchange Server (on-premises)"
+vendor: "Microsoft"
+category: email
+kev_aliases:
+  - { vendor: "Microsoft", product: "Exchange" }
+  - { vendor: "Microsoft", product: "Exchange Server" }
+cpe_prefixes:
+  - "cpe:2.3:a:microsoft:exchange_server"
+eol_slug: msexchange
+aliases_search: ["Exchange", "OWA", "Outlook Web Access"]
+notes: ""
+verified: 2026-10-02

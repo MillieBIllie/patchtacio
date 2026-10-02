@@ -1,0 +1,11 @@
+id: paloalto-panos
+display: "Palo Alto Networks PAN-OS (firewalls, GlobalProtect)"
+vendor: "Palo Alto Networks"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "Palo Alto Networks", product: "PAN-OS" }
+cpe_prefixes: []
+eol_slug: panos
+aliases_search: ["Palo Alto firewall", "GlobalProtect"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

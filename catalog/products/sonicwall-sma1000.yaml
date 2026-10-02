@@ -1,0 +1,12 @@
+id: sonicwall-sma1000
+display: "SonicWall SMA 1000 series (remote access)"
+vendor: "SonicWall"
+category: remote-access
+kev_aliases:
+  - { vendor: "SonicWall", product: "SMA1000 Appliances" }
+  - { vendor: "SonicWall", product: "SMA1000 appliance" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["Secure Mobile Access", "SSL VPN"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02
