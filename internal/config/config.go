@@ -74,6 +74,11 @@ func Load(path string) (*Config, error) {
 		}
 		return nil, fmt.Errorf("configuration file %s is not valid: %w", path, err)
 	}
+	// Products after a "---" would silently go unwatched.
+	var extra yaml.Node
+	if err := dec.Decode(&extra); !errors.Is(err, io.EOF) {
+		return nil, fmt.Errorf("configuration file %s has more than one YAML document (a line with ---); merge them into one", path)
+	}
 	if c.Version != SchemaVersion {
 		return nil, fmt.Errorf("configuration file %s has version %d; this Patchtacio reads version %d", path, c.Version, SchemaVersion)
 	}
@@ -102,7 +107,8 @@ func (c *Config) Validate(cat *catalog.Catalog) (warnings []string, err error) {
 			continue
 		}
 		if cp.Deprecated != "" {
-			warnings = append(warnings, fmt.Sprintf("%q has been replaced by %q; run `patchtacio init` to update your configuration", p.ID, cp.Deprecated))
+			warnings = append(warnings, fmt.Sprintf("%q has been replaced by %q, so Patchtacio checks that instead; "+
+				"run `patchtacio init` to update your configuration", p.ID, cp.Deprecated))
 		}
 	}
 	if len(problems) > 0 {
@@ -157,6 +163,25 @@ func Save(path string, c *Config) error {
 		return fmt.Errorf("save configuration: %w", err)
 	}
 	return nil
+}
+
+// Resolve returns the configuration with deprecated product IDs replaced by
+// their successors (keeping version and notes) and duplicates dropped, so a
+// renamed catalog entry keeps being checked. Call it after Validate.
+func (c *Config) Resolve(cat *catalog.Catalog) *Config {
+	out := &Config{Version: c.Version}
+	seen := map[string]bool{}
+	for _, p := range c.Products {
+		if cp, ok := cat.Get(p.ID); ok && cp.Deprecated != "" {
+			p.ID = cp.Deprecated
+		}
+		if seen[p.ID] {
+			continue
+		}
+		seen[p.ID] = true
+		out.Products = append(out.Products, p)
+	}
+	return out
 }
 
 // WithProducts returns a configuration holding ids in order, keeping the

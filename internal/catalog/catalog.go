@@ -189,8 +189,11 @@ func Lint(fsys fs.FS, refs *References) (*Catalog, []Problem) {
 			continue
 		case !strings.HasSuffix(name, ".yaml"):
 			continue // README and the like
+		case !e.Type().IsRegular():
+			add(name, Error, "must be a regular file (symlinks and special files are not allowed)")
+			continue
 		}
-		raw, err := fs.ReadFile(fsys, name)
+		raw, err := readLimited(fsys, name)
 		if err != nil {
 			add(name, Error, "read: %v", err)
 			continue
@@ -241,6 +244,25 @@ func Lint(fsys fs.FS, refs *References) (*Catalog, []Problem) {
 	return cat, problems
 }
 
+// maxFileSize bounds one product file; real ones are about 1 KB.
+const maxFileSize = 64 << 10
+
+func readLimited(fsys fs.FS, name string) ([]byte, error) {
+	f, err := fsys.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+	raw, err := io.ReadAll(io.LimitReader(f, maxFileSize+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(raw) > maxFileSize {
+		return nil, fmt.Errorf("larger than %d KB", maxFileSize>>10)
+	}
+	return raw, nil
+}
+
 // decode parses one product file strictly: one document, no unknown keys.
 func decode(raw []byte) (Product, error) {
 	dec := yaml.NewDecoder(bytes.NewReader(raw))
@@ -273,9 +295,6 @@ func check(p Product) []Problem {
 	bad := func(format string, args ...any) {
 		out = append(out, Problem{Severity: Error, Message: fmt.Sprintf(format, args...)})
 	}
-	warn := func(format string, args ...any) {
-		out = append(out, Problem{Severity: Warning, Message: fmt.Sprintf(format, args...)})
-	}
 
 	switch {
 	case p.ID == "":
@@ -306,8 +325,10 @@ func check(p Product) []Problem {
 		bad("category %q must be one of: %s", p.Category, strings.Join(Categories, ", "))
 	}
 
-	if len(p.KEVAliases) == 0 && p.Deprecated == "" {
-		warn("no kev_aliases: this product can never match a KEV entry")
+	if len(p.KEVAliases) == 0 {
+		// A product that cannot match would be reported as "no matching KEV
+		// entries", which reads as a result. Deprecated products keep theirs.
+		bad("kev_aliases is required: without it this product can never match a KEV entry")
 	}
 	seen := map[string]bool{}
 	for i, a := range p.KEVAliases {

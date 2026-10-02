@@ -63,6 +63,7 @@ func TestLoadErrors(t *testing.T) {
 		{"wrong version", "version: 2\nproducts: []\n", "has version 2"},
 		{"no version", "products: []\n", "has version 0"},
 		{"bad yaml", "version: [", "not valid"},
+		{"two documents", "version: 1\nproducts: [{id: a-b}]\n---\nproducts: [{id: c-d}]\n", "more than one YAML document"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -109,6 +110,10 @@ func TestValidate(t *testing.T) {
 	}
 	if len(warns) != 1 || !strings.Contains(warns[0], `replaced by "acme-new"`) {
 		t.Errorf("warnings = %v", warns)
+	}
+	r := (&Config{Version: 1, Products: []Product{{ID: "acme-old", Version: "2"}, {ID: "acme-new"}}}).Resolve(cat)
+	if len(r.Products) != 1 || r.Products[0] != (Product{ID: "acme-new", Version: "2"}) {
+		t.Errorf("Resolve = %+v", r.Products)
 	}
 	c = &Config{Version: 1, Products: []Product{{ID: "acme-new"}, {ID: "nope-nope"}, {ID: "acme-new"}, {}}}
 	_, err = c.Validate(cat)

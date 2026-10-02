@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"io/fs"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -216,4 +217,17 @@ func errorsIn(problems []Problem) []Problem {
 		}
 	}
 	return out
+}
+
+func TestLintRejectsSymlinksAndHugeFiles(t *testing.T) {
+	fsys := fsWith(map[string]string{"acme-widget.yaml": goodYAML})
+	fsys["acme-link.yaml"] = &fstest.MapFile{Data: []byte(goodYAML), Mode: fs.ModeSymlink}
+	fsys["acme-huge.yaml"] = &fstest.MapFile{Data: []byte(goodYAML + "#" + strings.Repeat("x", maxFileSize))}
+	_, problems := Lint(fsys, nil)
+	if !hasError(problems, "must be a regular file") {
+		t.Errorf("symlink not rejected: %v", problems)
+	}
+	if !hasError(problems, "larger than 64 KB") {
+		t.Errorf("huge file not rejected: %v", problems)
+	}
 }
