@@ -16,6 +16,7 @@ import (
 
 	"go.yaml.in/yaml/v3"
 
+	"github.com/milliebillie/patchtacio/internal/atomicfile"
 	"github.com/milliebillie/patchtacio/internal/catalog"
 )
 
@@ -139,27 +140,9 @@ func Save(path string, c *Config) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("create config directory: %w", err)
 	}
-	tmp, err := os.CreateTemp(dir, FileName+".tmp-*") // created 0600
-	if err != nil {
-		return fmt.Errorf("create temp file: %w", err)
-	}
-	cleanup := func() { _ = os.Remove(tmp.Name()) }
-	if _, err := tmp.Write(buf.Bytes()); err != nil {
-		_ = tmp.Close()
-		cleanup()
-		return fmt.Errorf("write configuration: %w", err)
-	}
-	if err := tmp.Sync(); err != nil {
-		_ = tmp.Close()
-		cleanup()
-		return fmt.Errorf("write configuration: %w", err)
-	}
-	if err := tmp.Close(); err != nil { // Windows cannot rename an open file
-		cleanup()
-		return fmt.Errorf("write configuration: %w", err)
-	}
-	if err := os.Rename(tmp.Name(), path); err != nil {
-		cleanup()
+	// Retries the rename on Windows, where an editor, antivirus or the search
+	// indexer may briefly hold the file open.
+	if err := atomicfile.Write(path, buf.Bytes()); err != nil {
 		return fmt.Errorf("save configuration: %w", err)
 	}
 	return nil

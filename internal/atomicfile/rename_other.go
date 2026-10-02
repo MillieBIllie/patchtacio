@@ -1,6 +1,6 @@
 //go:build !windows
 
-package feeds
+package atomicfile
 
 import (
 	"fmt"

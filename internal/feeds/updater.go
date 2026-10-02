@@ -15,6 +15,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/milliebillie/patchtacio/internal/atomicfile"
 	"github.com/milliebillie/patchtacio/internal/httpcache"
 	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/store"
@@ -328,7 +329,7 @@ func (u *Updater) updateOne(ctx context.Context, src Source, owner string) (Resu
 	// lock is lost inside it, the mismatched file reads as Missing and the
 	// next update downloads it again (fails safe).
 	name := cacheFileName(src)
-	pending, err := prepareFile(u.CacheDir, name, f.Body)
+	pending, err := atomicfile.Prepare(u.CacheDir, name, f.Body)
 	if err != nil {
 		return Result{}, fmt.Errorf("write %s cache: %w", src.Name(), err)
 	}
