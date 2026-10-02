@@ -2,7 +2,7 @@
     "title": "CISA Catalog of Known Exploited Vulnerabilities",
     "catalogVersion": "2026.10.01",
     "dateReleased": "2026-10-01T19:54:04.9308Z",
-    "count": 123,
+    "count": 139,
     "vulnerabilities": [
         {
             "cveID": "CVE-2026-88772",
@@ -168,6 +168,22 @@
             ]
         },
         {
+            "cveID": "CVE-2026-86218",
+            "vendorProject": "N-able",
+            "product": "N-central",
+            "vulnerabilityName": "N-able N-central Static Code Injection Vulnerability",
+            "dateAdded": "2026-09-08",
+            "shortDescription": "N-able N-central contains a static code injection vulnerability that could allow for pre-authentication remote code execution.",
+            "requiredAction": "Apply mitigations in accordance with vendor instructions, ensuring compliance with CISA’s BOD 26-04 Prioritizing Security Updates Based on Risk (see URL in Notes) guidance and CISA’s “Forensics Triage Requirements” (see URL in Notes). Follow applicable BOD 26-04 guidance for cloud services or discontinue use of the product if mitigations are unavailable. Stakeholders are responsible for evaluating each asset's internet exposure and ensuring adherence to BOD 26-04 patching guidelines.",
+            "dueDate": "2026-09-11",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Yes",
+            "notes": "https://status.n-able.com/2026/09/06/n-central-2026-3-hotfix-4-cve-2026-86218/ ; https://me.n-able.com/s/security-advisory/aArVy0000002Ld3KAE/cve202686218-preauthentication-remote-code-execution ; BOD 26-04: https://www.cisa.gov/news-events/directives/bod-26-04-prioritizing-security-updates-based-risk ; Forensics Triage Requirements: https://www.cisa.gov/news-events/directives/bod-26-04-implementation-guidance-prioritizing-security-updates-based-risk ; https://nvd.nist.gov/vuln/detail/CVE-2026-86218",
+            "cwes": [
+                "CWE-96"
+            ]
+        },
+        {
             "cveID": "CVE-2026-83548",
             "vendorProject": "SonicWall",
             "product": "SMA1000 Appliances",
@@ -329,6 +345,22 @@
             ]
         },
         {
+            "cveID": "CVE-2026-48558",
+            "vendorProject": "SimpleHelp ",
+            "product": "SimpleHelp",
+            "vulnerabilityName": "SimpleHelp Authentication Bypass Vulnerability",
+            "dateAdded": "2026-06-29",
+            "shortDescription": "SimpleHelp contains an authentication bypass vulnerability in the OIDC authentication flow. When OIDC authentication is configured, identity tokens submitted during login are accepted without verifying their cryptographic signature. In a vulnerable configuration, a remote, unauthenticated attacker can submit a forged token containing arbitrary identity claims to obtain a fully authenticated technician session. In some configurations, this may also allow bypass of multi-factor authentication.",
+            "requiredAction": "Apply mitigations in accordance with vendor instructions, ensuring compliance with CISA’s BOD 26-04 Prioritizing Security Updates Based on Risk (see URL in Notes) guidance and CISA’s “Forensics Triage Requirements” (see URL in Notes). Follow applicable BOD 26-04 guidance for cloud services or discontinue use of the product if mitigations are unavailable. Stakeholders are responsible for evaluating each asset's internet exposure and ensuring adherence to BOD 26-04 patching guidelines.",
+            "dueDate": "2026-07-02",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://simple-help.com/security/simplehelp-security-update-2026-05 ; BOD 26-04: https://www.cisa.gov/news-events/directives/bod-26-04-prioritizing-security-updates-based-risk ; Forensics Triage Requirements: https://www.cisa.gov/news-events/directives/bod-26-04-implementation-guidance-prioritizing-security-updates-based-risk ; https://nvd.nist.gov/vuln/detail/CVE-2026-48558",
+            "cwes": [
+                "CWE-347"
+            ]
+        },
+        {
             "cveID": "CVE-2026-50751",
             "vendorProject": "Check Point",
             "product": "Security Gateway",
@@ -342,6 +374,22 @@
             "notes": "https://blog.checkpoint.com/security/check-point-releases-important-hotfix-for-vulnerabilities-in-deprecated-ikev1-vpn-protocol/ ; https://support.checkpoint.com/results/sk/sk185033?_gl=1*1wqeqhc*_gcl_au*MTI1MzE5MjI2LjE3ODA5MzQ1NTM. ; https://nvd.nist.gov/vuln/detail/CVE-2026-50751",
             "cwes": [
                 "CWE-287"
+            ]
+        },
+        {
+            "cveID": "CVE-2026-28318",
+            "vendorProject": "SolarWinds",
+            "product": "Serv-U",
+            "vulnerabilityName": "SolarWinds Serv-U Uncontrolled Resource Consumption Vulnerability",
+            "dateAdded": "2026-06-05",
+            "shortDescription": "SolarWinds Serv-U contains an uncontrolled resource consumption vulnerability that allows specially crafted POST requests using the Content-Encoding: deflate header to crash the Serv-U service without authentication.",
+            "requiredAction": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+            "dueDate": "2026-06-19",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://www.solarwinds.com/trust-center/security-advisories/cve-2026-28318 ; https://documentation.solarwinds.com/en/success_center/servu/content/release_notes/servu_15-5-4-hotfix-1_release_notes.htm#link7 ; https://nvd.nist.gov/vuln/detail/CVE-2026-28318",
+            "cwes": [
+                "CWE-400"
             ]
         },
         {
@@ -374,6 +422,22 @@
             "notes": "https://hub.ivanti.com/s/article/May-2026-Security-Advisory-Ivanti-Endpoint-Manager-Mobile-EPMM-Multiple-CVEs?language=en_US ; https://nvd.nist.gov/vuln/detail/CVE-2026-6973",
             "cwes": [
                 "CWE-20"
+            ]
+        },
+        {
+            "cveID": "CVE-2009-0238",
+            "vendorProject": "Microsoft",
+            "product": "Office",
+            "vulnerabilityName": "Microsoft Office Remote Code Execution",
+            "dateAdded": "2026-04-14",
+            "shortDescription": "Microsoft Office Excel contains a remote code execution vulnerability that could allow an attacker to take complete control of an affected system if a user opens a specially crafted Excel file that includes a malformed object.",
+            "requiredAction": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+            "dueDate": "2026-04-28",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://learn.microsoft.com/en-us/security-updates/securitybulletins/2009/ms09-009 ; https://nvd.nist.gov/vuln/detail/CVE-2009-0238",
+            "cwes": [
+                "CWE-94"
             ]
         },
         {
@@ -454,6 +518,38 @@
             "notes": "This vulnerability affects a common open-source component, third-party library, or a protocol used by different products. Please check with specific vendors for information on patching status. For more information, please see: https://chromereleases.googleblog.com/2026/03/stable-channel-update-for-desktop_13.html ; https://nvd.nist.gov/vuln/detail/CVE-2026-3909",
             "cwes": [
                 "CWE-787"
+            ]
+        },
+        {
+            "cveID": "CVE-2025-26399",
+            "vendorProject": "SolarWinds",
+            "product": "Web Help Desk",
+            "vulnerabilityName": "SolarWinds Web Help Desk Deserialization of Untrusted Data Vulnerability",
+            "dateAdded": "2026-03-09",
+            "shortDescription": "SolarWinds Web Help Desk contain a deserialization of untrusted data vulnerability in AjaxProxy that could allow an attacker to run commands on the host machine.",
+            "requiredAction": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+            "dueDate": "2026-03-12",
+            "knownRansomwareCampaignUse": "Known",
+            "forensicTriage": "No",
+            "notes": "https://www.solarwinds.com/trust-center/security-advisories/cve-2025-26399 ; https://documentation.solarwinds.com/en/success_center/whd/content/release_notes/whd_12-8-7-hotfix-1_release_notes.htm ; https://nvd.nist.gov/vuln/detail/CVE-2025-26399",
+            "cwes": [
+                "CWE-502"
+            ]
+        },
+        {
+            "cveID": "CVE-2026-1603",
+            "vendorProject": "Ivanti",
+            "product": " Endpoint Manager (EPM)",
+            "vulnerabilityName": "Ivanti Endpoint Manager (EPM) Authentication Bypass Vulnerability",
+            "dateAdded": "2026-03-09",
+            "shortDescription": "Ivanti Endpoint Manager (EPM) contains an authentication bypass using an alternate path or channel vulnerability that could allow a remote unauthenticated attacker to leak specific stored credential data.",
+            "requiredAction": "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable.",
+            "dueDate": "2026-03-23",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://hub.ivanti.com/s/article/Security-Advisory-EPM-February-2026-for-EPM-2024?language=en_US ; https://nvd.nist.gov/vuln/detail/CVE-2026-1603",
+            "cwes": [
+                "CWE-288"
             ]
         },
         {
@@ -841,6 +937,22 @@
             ]
         },
         {
+            "cveID": "CVE-2024-21413",
+            "vendorProject": "Microsoft",
+            "product": "Office Outlook",
+            "vulnerabilityName": "Microsoft Outlook Improper Input Validation Vulnerability",
+            "dateAdded": "2025-02-06",
+            "shortDescription": "Microsoft Outlook contains an improper input validation vulnerability that allows for remote code execution. Successful exploitation of this vulnerability would allow an attacker to bypass the Office Protected View and open in editing mode rather than protected mode.",
+            "requiredAction": "Apply mitigations per vendor instructions or discontinue use of the product if mitigations are unavailable.",
+            "dueDate": "2025-02-27",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2024-21413 ; https://nvd.nist.gov/vuln/detail/CVE-2024-21413",
+            "cwes": [
+                "CWE-20"
+            ]
+        },
+        {
             "cveID": "CVE-2024-38813",
             "vendorProject": "VMware",
             "product": "vCenter Server",
@@ -919,6 +1031,22 @@
             "notes": "https://www.veeam.com/kb4649 ; https://nvd.nist.gov/vuln/detail/CVE-2024-40711",
             "cwes": [
                 "CWE-502"
+            ]
+        },
+        {
+            "cveID": "CVE-2024-38226",
+            "vendorProject": "Microsoft",
+            "product": "Publisher",
+            "vulnerabilityName": "Microsoft Publisher Protection Mechanism Failure Vulnerability",
+            "dateAdded": "2024-09-10",
+            "shortDescription": "Microsoft Publisher contains a protection mechanism failure vulnerability that allows attacker to bypass Office macro policies used to block untrusted or malicious files.",
+            "requiredAction": "Apply mitigations per vendor instructions or discontinue use of the product if mitigations are unavailable.",
+            "dueDate": "2024-10-01",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2024-38226; https://nvd.nist.gov/vuln/detail/CVE-2024-38226",
+            "cwes": [
+                "CWE-693"
             ]
         },
         {
@@ -1143,6 +1271,38 @@
             "notes": "https://chromereleases.googleblog.com/2023/09/stable-channel-update-for-desktop_11.html?m=1; https://nvd.nist.gov/vuln/detail/CVE-2023-4863",
             "cwes": [
                 "CWE-787"
+            ]
+        },
+        {
+            "cveID": "CVE-2023-36761",
+            "vendorProject": "Microsoft",
+            "product": "Word",
+            "vulnerabilityName": "Microsoft Word Information Disclosure Vulnerability",
+            "dateAdded": "2023-09-12",
+            "shortDescription": "Microsoft Word contains an unspecified vulnerability that allows for information disclosure.",
+            "requiredAction": "Apply mitigations per vendor instructions or discontinue use of the product if mitigations are unavailable.",
+            "dueDate": "2023-10-03",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2023-36761;  https://nvd.nist.gov/vuln/detail/CVE-2023-36761",
+            "cwes": [
+                "CWE-668"
+            ]
+        },
+        {
+            "cveID": "CVE-2023-35311",
+            "vendorProject": "Microsoft",
+            "product": "Outlook",
+            "vulnerabilityName": "Microsoft Outlook Security Feature Bypass Vulnerability",
+            "dateAdded": "2023-07-11",
+            "shortDescription": "Microsoft Outlook contains a security feature bypass vulnerability that allows an attacker to bypass the Microsoft Outlook Security Notice prompt.",
+            "requiredAction": "Apply updates per vendor instructions or discontinue use of the product if updates are unavailable.",
+            "dueDate": "2023-08-01",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://msrc.microsoft.com/update-guide/en-US/vulnerability/CVE-2023-35311;  https://nvd.nist.gov/vuln/detail/CVE-2023-35311",
+            "cwes": [
+                "CWE-367"
             ]
         },
         {
@@ -1386,6 +1546,22 @@
             ]
         },
         {
+            "cveID": "CVE-2010-2572",
+            "vendorProject": "Microsoft",
+            "product": "PowerPoint",
+            "vulnerabilityName": "Microsoft PowerPoint Buffer Overflow Vulnerability",
+            "dateAdded": "2022-06-08",
+            "shortDescription": "Microsoft PowerPoint contains a buffer overflow vulnerability that alllows for remote code execution.",
+            "requiredAction": "Apply updates per vendor instructions.",
+            "dueDate": "2022-06-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://nvd.nist.gov/vuln/detail/CVE-2010-2572",
+            "cwes": [
+                "CWE-119"
+            ]
+        },
+        {
             "cveID": "CVE-2022-26134",
             "vendorProject": "Atlassian",
             "product": "Confluence Server/Data Center",
@@ -1413,6 +1589,22 @@
             "knownRansomwareCampaignUse": "Known",
             "forensicTriage": "No",
             "notes": "https://nvd.nist.gov/vuln/detail/CVE-2017-0147",
+            "cwes": [
+                "CWE-200"
+            ]
+        },
+        {
+            "cveID": "CVE-2016-3351",
+            "vendorProject": "Microsoft",
+            "product": "Internet Explorer and Edge",
+            "vulnerabilityName": "Microsoft Internet Explorer and Edge Information Disclosure Vulnerability",
+            "dateAdded": "2022-05-24",
+            "shortDescription": "An information disclosure vulnerability exists in the way that certain functions in Internet Explorer and Edge handle objects in memory. The vulnerability could allow an attacker to detect specific files on the user's computer.",
+            "requiredAction": "Apply updates per vendor instructions.",
+            "dueDate": "2022-06-14",
+            "knownRansomwareCampaignUse": "Known",
+            "forensicTriage": "No",
+            "notes": "https://nvd.nist.gov/vuln/detail/CVE-2016-3351",
             "cwes": [
                 "CWE-200"
             ]
@@ -1482,6 +1674,38 @@
             ]
         },
         {
+            "cveID": "CVE-2017-0037",
+            "vendorProject": "Microsoft",
+            "product": "Edge and Internet Explorer",
+            "vulnerabilityName": "Microsoft Edge and Internet Explorer Type Confusion Vulnerability",
+            "dateAdded": "2022-03-28",
+            "shortDescription": "Microsoft Edge and Internet Explorer have a type confusion vulnerability in mshtml.dll, which allows remote code execution.",
+            "requiredAction": "Apply updates per vendor instructions.",
+            "dueDate": "2022-04-18",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://nvd.nist.gov/vuln/detail/CVE-2017-0037",
+            "cwes": [
+                "CWE-704"
+            ]
+        },
+        {
+            "cveID": "CVE-2016-7201",
+            "vendorProject": "Microsoft",
+            "product": "Edge",
+            "vulnerabilityName": "Microsoft Edge Memory Corruption Vulnerability",
+            "dateAdded": "2022-03-28",
+            "shortDescription": "The Chakra JavaScript scripting engine in Microsoft Edge allows remote attackers to execute remote code or cause a denial of service (memory corruption) via a crafted web site.",
+            "requiredAction": "Apply updates per vendor instructions.",
+            "dueDate": "2022-04-18",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://nvd.nist.gov/vuln/detail/CVE-2016-7201",
+            "cwes": [
+                "CWE-119"
+            ]
+        },
+        {
             "cveID": "CVE-2016-0151",
             "vendorProject": "Microsoft",
             "product": "Client-Server Run-time Subsystem (CSRSS)",
@@ -1545,6 +1769,20 @@
             "cwes": [
                 "CWE-94"
             ]
+        },
+        {
+            "cveID": "CVE-2019-1297",
+            "vendorProject": "Microsoft",
+            "product": "Excel",
+            "vulnerabilityName": "Microsoft Excel Remote Code Execution Vulnerability",
+            "dateAdded": "2022-03-03",
+            "shortDescription": "A remote code execution vulnerability exists in Microsoft Excel when the software fails to properly handle objects in memory.",
+            "requiredAction": "Apply updates per vendor instructions.",
+            "dueDate": "2022-03-17",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "No",
+            "notes": "https://nvd.nist.gov/vuln/detail/CVE-2019-1297",
+            "cwes": []
         },
         {
             "cveID": "CVE-2018-0175",
@@ -1899,6 +2137,20 @@
             "cwes": [
                 "CWE-706"
             ]
+        },
+        {
+            "cveID": "CVE-2017-0199",
+            "vendorProject": "Microsoft",
+            "product": "Office and WordPad",
+            "vulnerabilityName": "Microsoft Office and WordPad Remote Code Execution Vulnerability",
+            "dateAdded": "2021-11-03",
+            "shortDescription": "Microsoft Office and WordPad contain an unspecified vulnerability due to the way the applications parse specially crafted files. Successful exploitation allows for remote code execution.",
+            "requiredAction": "Apply updates per vendor instructions.",
+            "dueDate": "2022-05-03",
+            "knownRansomwareCampaignUse": "Known",
+            "forensicTriage": "No",
+            "notes": "https://nvd.nist.gov/vuln/detail/CVE-2017-0199",
+            "cwes": []
         },
         {
             "cveID": "CVE-2020-1147",

@@ -1,0 +1,19 @@
+id: microsoft-office
+display: "Microsoft Office (Word, Excel, Outlook, PowerPoint)"
+vendor: "Microsoft"
+category: other
+kev_aliases:
+  - { vendor: "Microsoft", product: "Office" }
+  - { vendor: "Microsoft", product: "Office Outlook" }
+  - { vendor: "Microsoft", product: "Office and WordPad" }
+  - { vendor: "Microsoft", product: "Outlook" }
+  - { vendor: "Microsoft", product: "Excel" }
+  - { vendor: "Microsoft", product: "Word" }
+  - { vendor: "Microsoft", product: "PowerPoint" }
+  - { vendor: "Microsoft", product: "Publisher" }
+cpe_prefixes:
+  - "cpe:2.3:a:microsoft:office"
+eol_slug: office
+aliases_search: ["Word", "Excel", "Outlook", "PowerPoint", "Microsoft 365"]
+notes: ""
+verified: 2026-10-02

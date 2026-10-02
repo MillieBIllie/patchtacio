@@ -1,0 +1,11 @@
+id: solarwinds-web-help-desk
+display: "SolarWinds Web Help Desk"
+vendor: "SolarWinds"
+category: web-app
+kev_aliases:
+  - { vendor: "SolarWinds", product: "Web Help Desk" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["help desk", "ticketing", "WHD"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02
