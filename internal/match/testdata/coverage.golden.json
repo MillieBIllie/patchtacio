@@ -1,0 +1,160 @@
+{
+  "since": "2024-10-02",
+  "total": 57,
+  "mapped": 54,
+  "percent": 94.73684210526316,
+  "byProduct": [
+    {
+      "id": "fortinet-fortios",
+      "count": 5
+    },
+    {
+      "id": "google-chrome",
+      "count": 5
+    },
+    {
+      "id": "cisco-asa",
+      "count": 4
+    },
+    {
+      "id": "cisco-ftd",
+      "count": 3
+    },
+    {
+      "id": "citrix-netscaler",
+      "count": 3
+    },
+    {
+      "id": "fortinet-fortiproxy",
+      "count": 3
+    },
+    {
+      "id": "microsoft-windows",
+      "count": 3
+    },
+    {
+      "id": "microsoft-windows-server",
+      "count": 3
+    },
+    {
+      "id": "vmware-esxi",
+      "count": 3
+    },
+    {
+      "id": "vmware-vcenter",
+      "count": 3
+    },
+    {
+      "id": "checkpoint-security-gateway",
+      "count": 2
+    },
+    {
+      "id": "f5-big-ip",
+      "count": 2
+    },
+    {
+      "id": "fortinet-fortiweb",
+      "count": 2
+    },
+    {
+      "id": "microsoft-sharepoint-server",
+      "count": 2
+    },
+    {
+      "id": "sonicwall-sma1000",
+      "count": 2
+    },
+    {
+      "id": "synacor-zimbra",
+      "count": 2
+    },
+    {
+      "id": "atlassian-jira",
+      "count": 1
+    },
+    {
+      "id": "cisco-ios-xe",
+      "count": 1
+    },
+    {
+      "id": "connectwise-screenconnect",
+      "count": 1
+    },
+    {
+      "id": "crushftp-crushftp",
+      "count": 1
+    },
+    {
+      "id": "fortinet-forticlient-ems",
+      "count": 1
+    },
+    {
+      "id": "fortra-goanywhere-mft",
+      "count": 1
+    },
+    {
+      "id": "ivanti-connect-secure",
+      "count": 1
+    },
+    {
+      "id": "ivanti-epmm",
+      "count": 1
+    },
+    {
+      "id": "juniper-junos",
+      "count": 1
+    },
+    {
+      "id": "microsoft-exchange-server",
+      "count": 1
+    },
+    {
+      "id": "mikrotik-routeros",
+      "count": 1
+    },
+    {
+      "id": "paloalto-panos",
+      "count": 1
+    },
+    {
+      "id": "papercut-ng-mf",
+      "count": 1
+    },
+    {
+      "id": "roundcube-webmail",
+      "count": 1
+    },
+    {
+      "id": "sonicwall-sma100",
+      "count": 1
+    },
+    {
+      "id": "sonicwall-sonicos",
+      "count": 1
+    },
+    {
+      "id": "veeam-backup-replication",
+      "count": 1
+    }
+  ],
+  "unmapped": [
+    {
+      "vendor": "Check Point",
+      "product": "Multiple Products",
+      "count": 1,
+      "latest": "2026-09-22"
+    },
+    {
+      "vendor": "Cisco",
+      "product": "Multiple Products",
+      "count": 1,
+      "latest": "2025-12-17"
+    },
+    {
+      "vendor": "Fortinet",
+      "product": "Multiple Products",
+      "count": 1,
+      "latest": "2025-05-14"
+    }
+  ]
+}
