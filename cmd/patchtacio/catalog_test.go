@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestCatalogLintBuiltIn(t *testing.T) {
@@ -54,4 +55,30 @@ verified: 2026-10-02
 	if errOut != "" {
 		t.Errorf("feeds are saved, so no skip notes expected:\n%s", errOut)
 	}
+}
+
+func TestCatalogCoverage(t *testing.T) {
+	e := newTestEnv(t)
+	out, errOut, code := e.exec(t, "catalog", "coverage")
+	requireCode(t, code, exitToolError, out, errOut)
+	requireContains(t, errOut, "there is no saved copy of CISA KEV catalog")
+
+	e.exec(t, "feeds", "update")
+	out, errOut, code = e.exec(t, "catalog", "coverage", "--top", "2")
+	requireCode(t, code, exitOK, out, errOut)
+	// Fixture KEV 2026.09.30: 19 entries, all added in the last two years.
+	requireContains(t, out,
+		"of 19 KEV entries added since 30 Sep 2024 map to a catalog product",
+		"KEV catalog 2026.09.30, published 30 Sep 2026.",
+		"Most common unmapped vendor/product pairs (2 of ")
+
+	out, _, code = e.exec(t, "catalog", "coverage", "--json")
+	requireCode(t, code, exitOK, out, "")
+	requireContains(t, out, `"kevVersion": "2026.09.30"`, `"since": "2024-09-30"`, `"total": 19`)
+
+	// Three days later without an update: KEV is out of date, and coverage says so.
+	e.clock = e.clock.Add(72 * time.Hour)
+	out, errOut, code = e.exec(t, "catalog", "coverage")
+	requireCode(t, code, exitStale, out, errOut)
+	requireContains(t, errOut, "CISA KEV catalog data is out of date")
 }

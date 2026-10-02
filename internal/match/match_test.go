@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/milliebillie/patchtacio/internal/catalog"
+	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/feeds/kev"
 	"github.com/milliebillie/patchtacio/internal/testutil"
 )
@@ -116,5 +117,34 @@ func TestKEVNoProducts(t *testing.T) {
 	_, m, kc := load(t)
 	if got := m.KEV(kc.Vulnerabilities, nil); len(got) != 0 {
 		t.Errorf("got %d findings with no products ticked", len(got))
+	}
+}
+
+func TestCoverage(t *testing.T) {
+	_, m, kc := load(t)
+	since, err := feeds.ParseDate("2024-10-02")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := m.Coverage(kc.Vulnerabilities, since)
+	if c.Total == 0 || c.Mapped == 0 || c.Mapped > c.Total {
+		t.Fatalf("implausible coverage: %+v", c)
+	}
+	unmapped := 0
+	for _, p := range c.Unmapped {
+		unmapped += p.Count
+	}
+	if c.Mapped+unmapped != c.Total {
+		t.Errorf("mapped %d + unmapped %d != total %d", c.Mapped, unmapped, c.Total)
+	}
+	testutil.Golden(t, filepath.Join("testdata", "coverage.golden.json"), c)
+}
+
+func TestCoverageEmptyWindow(t *testing.T) {
+	_, m, kc := load(t)
+	since, _ := feeds.ParseDate("2099-01-01")
+	c := m.Coverage(kc.Vulnerabilities, since)
+	if c.Total != 0 || c.Percent != 0 || len(c.Unmapped) != 0 {
+		t.Errorf("want an empty report, got %+v", c)
 	}
 }

@@ -308,6 +308,15 @@ func unitFor(name string) string {
 // date formats a calendar date in the user's time zone: "30 Sep 2026".
 func (a *app) date(t time.Time) string { return t.In(a.loc).Format("2 Jan 2006") }
 
+// calDate formats a calendar date from a feed (KEV dateAdded, dueDate):
+// "14 Oct 2026". It has no time zone, so it is never converted.
+func calDate(d feeds.Date) string {
+	if d.IsZero() {
+		return "not stated"
+	}
+	return d.Format("2 Jan 2006")
+}
+
 // when formats a moment with its age: "30 Sep 2026 14:05 UTC (3 hours ago)".
 func (a *app) when(t time.Time) string {
 	if t.IsZero() {

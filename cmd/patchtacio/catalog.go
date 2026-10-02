@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"text/tabwriter"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +16,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/feeds/eol"
 	"github.com/milliebillie/patchtacio/internal/feeds/kev"
+	"github.com/milliebillie/patchtacio/internal/match"
 )
 
 func newCatalogCmd(a *app) *cobra.Command {
@@ -19,7 +24,7 @@ func newCatalogCmd(a *app) *cobra.Command {
 		Use:   "catalog",
 		Short: "Check the product catalog that maps products to KEV and endoflife.date",
 	}
-	cmd.AddCommand(newCatalogLintCmd(a))
+	cmd.AddCommand(newCatalogLintCmd(a), newCatalogCoverageCmd(a))
 	return cmd
 }
 
@@ -62,6 +67,80 @@ func newCatalogLintCmd(a *app) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&dir, "dir", "", "check product files in this directory instead of the built-in catalog\n(for example catalog/products)")
 	return cmd
+}
+
+func newCatalogCoverageCmd(a *app) *cobra.Command {
+	var days, top int
+	var asJSON bool
+	cmd := &cobra.Command{
+		Use:   "coverage",
+		Short: "Show how much of the saved KEV catalog maps to a catalog product (no network use)",
+		Long: "Counts the KEV entries added in the chosen window that map to at least one catalog product,\n" +
+			"and lists the most common vendor/product pairs no product covers yet. The window ends at the\n" +
+			"KEV catalog's own release date, so the same saved copy always gives the same numbers.\n\n" +
+			"Exit codes: 0 done; 3 the saved KEV copy is out of date (warning printed); 2 no saved copy.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if days < 1 {
+				return errors.New("--days must be at least 1")
+			}
+			cat, err := catalog.Embedded()
+			if err != nil {
+				return err
+			}
+			u, closeFn, err := a.openUpdater(cmd.Context())
+			if err != nil {
+				return err
+			}
+			defer closeFn()
+			kc, st, err := a.loadKEV(cmd.Context(), u)
+			if err != nil {
+				a.warnState(cmd.ErrOrStderr(), st)
+				return fmt.Errorf("read KEV: %w", err)
+			}
+			end := time.Date(kc.Released.Year(), kc.Released.Month(), kc.Released.Day(), 0, 0, 0, 0, time.UTC)
+			since := feeds.Date{Time: end.AddDate(0, 0, -days)}
+			c := match.New(cat).Coverage(kc.Vulnerabilities, since)
+			if asJSON {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				if err := enc.Encode(struct {
+					KEVVersion string `json:"kevVersion"`
+					match.Coverage
+				}{kc.Version, c}); err != nil {
+					return fmt.Errorf("encode coverage: %w", err)
+				}
+			} else {
+				a.printCoverage(cmd.OutOrStdout(), kc, c, top)
+			}
+			a.warnState(cmd.ErrOrStderr(), st)
+			return outcome(stateCode(st.State))
+		},
+	}
+	cmd.Flags().IntVar(&days, "days", 730, "count KEV entries added in this many days before the catalog's release")
+	cmd.Flags().IntVar(&top, "top", 20, "how many unmapped vendor/product pairs to list (0 for all)")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "print machine-readable JSON")
+	return cmd
+}
+
+func (a *app) printCoverage(w io.Writer, kc *kev.Catalog, c match.Coverage, top int) {
+	_, _ = fmt.Fprintf(w, "%s of %s KEV entries added since %s map to a catalog product (%.1f%%).\n",
+		thousands(c.Mapped), thousands(c.Total), calDate(c.Since), c.Percent)
+	_, _ = fmt.Fprintf(w, "KEV catalog %s, published %s.\n", clean(kc.Version), a.date(kc.Released))
+	if len(c.Unmapped) == 0 {
+		return
+	}
+	rows := c.Unmapped
+	if top > 0 && len(rows) > top {
+		rows = rows[:top]
+	}
+	_, _ = fmt.Fprintf(w, "\nMost common unmapped vendor/product pairs (%d of %d):\n", len(rows), len(c.Unmapped))
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	_, _ = fmt.Fprintln(tw, "ENTRIES\tLATEST\tVENDOR\tPRODUCT")
+	for _, p := range rows {
+		_, _ = fmt.Fprintf(tw, "%d\t%s\t%s\t%s\n", p.Count, calDate(p.Latest), clean(p.Vendor), clean(p.Product))
+	}
+	_ = tw.Flush()
 }
 
 // catalogReferences loads the saved KEV and endoflife.date data for the
