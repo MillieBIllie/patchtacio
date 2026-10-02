@@ -1,0 +1,13 @@
+id: synacor-zimbra
+display: "Zimbra Collaboration Suite (ZCS)"
+vendor: "Synacor"
+category: email
+kev_aliases:
+  - { vendor: "Synacor", product: "Zimbra Collaboration Suite (ZCS)" }
+  - { vendor: "Synacor", product: "Zimbra Collaborate Suite (ZCS)" }
+  - { vendor: "Synacor", product: "Zimbra Collaboration Suite" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["Zimbra", "webmail"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

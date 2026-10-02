@@ -1,0 +1,11 @@
+id: sonicwall-sonicos
+display: "SonicWall SonicOS (firewalls)"
+vendor: "SonicWall"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "SonicWall", product: "SonicOS" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["SonicWall firewall", "TZ", "NSa"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

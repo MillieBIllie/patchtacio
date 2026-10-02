@@ -1,0 +1,15 @@
+id: f5-big-ip
+display: "F5 BIG-IP"
+vendor: "F5"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "F5", product: "BIG-IP" }
+  - { vendor: "F5", product: "BIG-IP APM" }
+  - { vendor: "F5", product: "BIG-IP Configuration Utility" }
+  - { vendor: "F5", product: "BIG-IP Traffic Management Microkernel" }
+  - { vendor: "F5", product: "BIG-IP and BIG-IQ Centralized Management" }
+cpe_prefixes: []
+eol_slug: big-ip
+aliases_search: ["load balancer", "APM", "LTM"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

@@ -1,0 +1,12 @@
+id: fortinet-fortiweb
+display: "Fortinet FortiWeb (web application firewall)"
+vendor: "Fortinet"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "Fortinet", product: "FortiWeb" }
+  - { vendor: "Fortinet", product: "Multiple Products", mentions: ["FortiWeb"] }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["WAF"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

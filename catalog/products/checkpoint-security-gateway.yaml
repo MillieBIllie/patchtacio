@@ -1,0 +1,13 @@
+id: checkpoint-security-gateway
+display: "Check Point Security Gateway (Quantum firewalls)"
+vendor: "Check Point"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "Check Point", product: "Quantum Security Gateways" }
+  - { vendor: "Check Point", product: "Security Gateway" }
+  - { vendor: "Check Point", product: "Multiple Products", mentions: ["Security Gateway", "Security Gateways"] }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["Quantum", "Check Point firewall", "Remote Access VPN"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

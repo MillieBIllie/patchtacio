@@ -1,0 +1,15 @@
+id: citrix-netscaler
+display: "Citrix NetScaler ADC and NetScaler Gateway (formerly Citrix ADC)"
+vendor: "Citrix"
+category: remote-access
+kev_aliases:
+  - { vendor: "Citrix", product: "NetScaler" }
+  - { vendor: "Citrix", product: "NetScaler ADC and Gateway" }
+  - { vendor: "Citrix", product: "NetScaler ADC and NetScaler Gateway" }
+  - { vendor: "Citrix", product: "Application Delivery Controller (ADC) and Gateway" }
+  - { vendor: "Citrix", product: "Application Delivery Controller (ADC), Gateway, and SD-WAN WANOP Appliance" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["Citrix ADC", "Citrix Gateway", "NetScaler"]
+notes: "NetScaler SD-WAN entries are a different product and are not included. TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

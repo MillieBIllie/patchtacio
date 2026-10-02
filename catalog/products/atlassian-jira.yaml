@@ -1,0 +1,12 @@
+id: atlassian-jira
+display: "Atlassian Jira (Server and Data Center)"
+vendor: "Atlassian"
+category: web-app
+kev_aliases:
+  - { vendor: "Atlassian", product: "Jira Server and Data Center" }
+cpe_prefixes:
+  - "cpe:2.3:a:atlassian:jira"
+eol_slug: jira-software
+aliases_search: ["Jira Software", "issue tracker"]
+notes: ""
+verified: 2026-10-02

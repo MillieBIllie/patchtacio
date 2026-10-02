@@ -1,0 +1,12 @@
+id: papercut-ng-mf
+display: "PaperCut NG and PaperCut MF (print management)"
+vendor: "PaperCut"
+category: other
+kev_aliases:
+  - { vendor: "PaperCut", product: "NG/MF" }
+  - { vendor: "PaperCut", product: "MF/NG" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["printing", "print server"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

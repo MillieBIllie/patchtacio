@@ -1,0 +1,15 @@
+id: vmware-esxi
+display: "VMware ESXi"
+vendor: "VMware (Broadcom)"
+category: hypervisor
+kev_aliases:
+  - { vendor: "VMware", product: "ESXi" }
+  - { vendor: "VMware", product: "ESXi and Workstation" }
+  - { vendor: "VMware", product: "ESXi, Workstation, and Fusion" }
+  - { vendor: "VMware", product: "VMware ESXi and Horizon DaaS" }
+cpe_prefixes:
+  - "cpe:2.3:o:vmware:esxi"
+eol_slug: esxi
+aliases_search: ["vSphere", "hypervisor", "Broadcom"]
+notes: ""
+verified: 2026-10-02

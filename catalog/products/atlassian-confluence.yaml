@@ -1,0 +1,17 @@
+id: atlassian-confluence
+display: "Atlassian Confluence (Server and Data Center)"
+vendor: "Atlassian"
+category: web-app
+kev_aliases:
+  - { vendor: "Atlassian", product: "Confluence" }
+  - { vendor: "Atlassian", product: "Confluence Data Center and Server" }
+  - { vendor: "Atlassian", product: "Confluence Server" }
+  - { vendor: "Atlassian", product: "Confluence Server and Data Center" }
+  - { vendor: "Atlassian", product: "Confluence Server and Data Server" }
+  - { vendor: "Atlassian", product: "Confluence Server/Data Center" }
+cpe_prefixes:
+  - "cpe:2.3:a:atlassian:confluence"
+eol_slug: confluence
+aliases_search: ["wiki"]
+notes: ""
+verified: 2026-10-02

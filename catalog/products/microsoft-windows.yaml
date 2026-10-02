@@ -1,0 +1,20 @@
+id: microsoft-windows
+display: "Microsoft Windows (desktop: Windows 10, 11)"
+vendor: "Microsoft"
+category: os
+kev_aliases:
+  - { vendor: "Microsoft", product: "Windows" }
+  - { vendor: "Microsoft", product: "Win32k" }
+  - { vendor: "Microsoft", product: "SMBv1 server" }
+  - { vendor: "Microsoft", product: "Client-Server Run-time Subsystem (CSRSS)" }
+  - { vendor: "Microsoft", product: "WinVerifyTrust function" }
+  - { vendor: "Microsoft", product: "Windows Ancillary Function Driver for WinSock" }
+  - { vendor: "Microsoft", product: "Windows CNG Key Isolation Service" }
+  - { vendor: "Microsoft", product: "Windows COM+ Event System Service" }
+  - { vendor: "Microsoft", product: "Internet Key Exchange (IKE) Service Extensions" }
+cpe_prefixes:
+  - "cpe:2.3:o:microsoft:windows"
+eol_slug: windows
+aliases_search: ["Windows 10", "Windows 11", "PC", "laptop"]
+notes: "KEV lists Windows flaws as \"Windows\" or by component (Win32k, SMBv1 server, ...) without saying whether desktop or server editions are affected, so these entries match both microsoft-windows and microsoft-windows-server."
+verified: 2026-10-02

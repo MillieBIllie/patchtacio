@@ -1,0 +1,11 @@
+id: fortinet-forticlient-ems
+display: "Fortinet FortiClient EMS"
+vendor: "Fortinet"
+category: remote-access
+kev_aliases:
+  - { vendor: "Fortinet", product: "FortiClient EMS" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["FortiClient", "Endpoint Management Server"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

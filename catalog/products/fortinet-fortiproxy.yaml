@@ -1,0 +1,13 @@
+id: fortinet-fortiproxy
+display: "Fortinet FortiProxy"
+vendor: "Fortinet"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "Fortinet", product: "FortiOS and FortiProxy" }
+  - { vendor: "Fortinet", product: "FortiOS and FortiProxy SSL-VPN" }
+  - { vendor: "Fortinet", product: "Multiple Products", mentions: ["FortiProxy"] }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["web proxy"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

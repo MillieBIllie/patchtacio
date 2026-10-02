@@ -1,0 +1,16 @@
+id: ivanti-connect-secure
+display: "Ivanti Connect Secure (formerly Pulse Connect Secure VPN)"
+vendor: "Ivanti"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "Ivanti", product: "Connect Secure and Policy Secure" }
+  - { vendor: "Ivanti", product: "Connect Secure, Policy Secure, and Neurons" }
+  - { vendor: "Ivanti", product: "Connect Secure, Policy Secure, and ZTA Gateways" }
+  - { vendor: "Ivanti", product: "Pulse Connect Secure" }
+  - { vendor: "Ivanti", product: "Pulse Connect Secure and Pulse Policy Secure" }
+  - { vendor: "Pulse Secure", product: "Pulse Connect Secure" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["Pulse Secure", "Pulse VPN", "ICS"]
+notes: "TODO: verify CPE (not listed by endoflife.date; confirm from an NVD record before adding)."
+verified: 2026-10-02

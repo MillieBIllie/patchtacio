@@ -1,0 +1,12 @@
+id: mikrotik-routeros
+display: "MikroTik RouterOS"
+vendor: "MikroTik"
+category: firewall-vpn
+kev_aliases:
+  - { vendor: "MikroTik", product: "RouterOS" }
+cpe_prefixes:
+  - "cpe:2.3:o:mikrotik:routeros"
+eol_slug: routeros
+aliases_search: ["MikroTik router", "Winbox"]
+notes: ""
+verified: 2026-10-02
