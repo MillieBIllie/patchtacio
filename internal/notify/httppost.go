@@ -9,6 +9,7 @@ import (
 	"maps"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -109,12 +110,30 @@ func (p *poster) post(ctx context.Context, u *url.URL, header http.Header, body 
 func scrub(s string, u *url.URL, header http.Header) string {
 	s = logging.RedactString(s)
 	secrets := []string{u.RawQuery, strings.TrimPrefix(header.Get("Authorization"), "Bearer ")}
-	if p := strings.Trim(u.Path, "/"); p != "" {
-		secrets = append(secrets, p)
-		for part := range strings.SplitSeq(p, "/") {
-			secrets = append(secrets, part)
+	// Every query value, raw and decoded: a Teams Workflows URL carries its
+	// secret in sig=, and a server may echo that value alone.
+	for _, vs := range u.Query() {
+		for _, v := range vs {
+			secrets = append(secrets, v, url.QueryEscape(v))
 		}
 	}
+	// The whole path, and each segment that looks like a token or topic
+	// (long, or containing a digit). Fixed words such as "services" or
+	// "triggers" stay, so the server's message still makes sense.
+	for _, p := range []string{u.EscapedPath(), u.Path} {
+		p = strings.Trim(p, "/")
+		if p == "" {
+			continue
+		}
+		secrets = append(secrets, p)
+		for part := range strings.SplitSeq(p, "/") {
+			if len(part) >= 16 || strings.ContainsAny(part, "0123456789") {
+				secrets = append(secrets, part)
+			}
+		}
+	}
+	// Longest first, so a whole path is replaced before its parts.
+	slices.SortFunc(secrets, func(a, b string) int { return len(b) - len(a) })
 	for _, sec := range secrets {
 		if len(sec) >= 4 {
 			s = strings.ReplaceAll(s, sec, logging.Redacted)

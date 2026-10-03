@@ -95,7 +95,11 @@ func newCheckCmd(a *app) *cobra.Command {
 					// or silence would read as an all clear.
 					reps, alertErr := a.sendAlerts(cmd.Context(), u.Store, cfg, nil, false,
 						&feedProblem{title: st.Title, lastGood: st.CheckedAt, why: logging.RedactString(err.Error())})
-					a.reportAlerts(cmd.OutOrStdout(), warn, reps, alertErr)
+					out := cmd.OutOrStdout()
+					if asJSON {
+						out = io.Discard // stdout stays JSON (or empty)
+					}
+					a.reportAlerts(out, warn, reps, alertErr)
 				}
 				return outcome(exitToolError)
 			}
@@ -119,7 +123,9 @@ func newCheckCmd(a *app) *cobra.Command {
 			var alertErr error
 			if sendAlerts {
 				var problem *feedProblem
-				if stale {
+				// Only when the copy is actually out of date: one failed
+				// fetch while it is still fresh is not worth an alert.
+				if st.State != feeds.Fresh {
 					why := st.StaleReason
 					if why == "" {
 						why = st.LastError

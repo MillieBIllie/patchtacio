@@ -14,6 +14,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/catalog"
 	"github.com/milliebillie/patchtacio/internal/config"
+	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/match"
 	"github.com/milliebillie/patchtacio/internal/notify"
 	"github.com/milliebillie/patchtacio/internal/store"
@@ -116,7 +117,10 @@ const (
 	noticeKEVStale = "kev-out-of-date"
 	noticeEvery    = 24 * time.Hour
 	notifyLockName = "notify"
-	notifyLockTTL  = 15 * time.Minute // longer than four slow channels
+	// Two passes (notice, then alerts) over four slow channels take about 12
+	// minutes at worst. A laptop that sleeps mid-send can outlast it; the
+	// cost is a possible duplicate alert, never a missed one.
+	notifyLockTTL = 30 * time.Minute
 )
 
 // notifyLockWait is how long a run waits for another to finish sending; a
@@ -152,6 +156,10 @@ func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Confi
 	if haveData {
 		results, err := d.Run(ctx, candidates(cfg, findings))
 		reps = append(reps, toReports(results, "")...)
+		if results == nil && err != nil {
+			// Nothing was tried (e.g. alert state unreadable): report why.
+			reps = append(reps, alertReport{Channel: "all channels", Error: firstLine(logging.RedactString(err.Error()))})
+		}
 		errs = append(errs, err)
 	}
 	return reps, errors.Join(errs...)

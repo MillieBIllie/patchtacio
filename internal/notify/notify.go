@@ -148,6 +148,7 @@ func (d *Dispatcher) Notice(ctx context.Context, kind string, n advice.Notice, e
 		r := Result{Channel: ch.Name()}
 		key := ch.Key()
 		last, err := d.Store.LastNotice(ctx, key, kind)
+		last = notInFuture(last, now)
 		switch {
 		case err != nil:
 			r.Err = err
@@ -186,6 +187,7 @@ func (d *Dispatcher) holdForDigest(ctx context.Context, channel string, now time
 	if err != nil {
 		return time.Time{}, false, err
 	}
+	last = notInFuture(last, now)
 	next := last.Add(period - time.Hour)
 	if last.IsZero() || !now.Before(next) {
 		return time.Time{}, false, nil
@@ -305,6 +307,16 @@ func deliveries(channel string, due []Due) []store.Delivery {
 		}
 	}
 	return ds
+}
+
+// notInFuture treats a time more than an hour ahead of now as never: it was
+// recorded while the clock was wrong, and trusting it would hold digests or
+// "alerts may be missing" notices until that date.
+func notInFuture(t, now time.Time) time.Time {
+	if t.After(now.Add(time.Hour)) {
+		return time.Time{}
+	}
+	return t
 }
 
 // destinationKey is name plus a short SHA-256 of the destination's details.
