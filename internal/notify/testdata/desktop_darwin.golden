@@ -1,0 +1,9 @@
+path: /usr/bin/osascript
+arg: -e
+arg: on run argv
+arg: -e
+arg: display notification (item 2 of argv) with title (item 1 of argv)
+arg: -e
+arg: end run
+arg: [Action needed by 12 Oct 2026] Acme "Widget"; $(rm -rf ~) & '
+arg: -n Patchtacio: Acme exploited flaw CVE-2026-1. `whoami` <toast/>
