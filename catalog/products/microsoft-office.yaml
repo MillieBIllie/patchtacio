@@ -24,7 +24,8 @@ cpe_prefixes:
   - "cpe:2.3:a:microsoft:outlook"
   - "cpe:2.3:a:microsoft:powerpoint"
   - "cpe:2.3:a:microsoft:office_powerpoint"
+  - "cpe:2.3:a:microsoft:publisher"
 eol_slug: office
 aliases_search: ["Word", "Excel", "Outlook", "PowerPoint", "Microsoft 365"]
-notes: "NVD names Office by suite (365 Apps, LTSC, 2016 to 2021) and by app. Access, Publisher, OneNote, Visio, Project, the viewers, the Compatibility Pack and the Office web servers have their own CPE names and are not listed."
+notes: "NVD names Office by suite (365 Apps, LTSC, 2016 to 2021) and by app. Access, OneNote, Visio, Project, the viewers, the Compatibility Pack and the Office web servers have their own CPE names and are not listed."
 verified: 2026-10-03
