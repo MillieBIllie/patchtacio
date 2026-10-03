@@ -144,7 +144,8 @@ func Save(path string, c *Config) error {
 	}
 	// A save killed before its rename leaves a temp file; an hour is far
 	// longer than any save takes, so a concurrent save's file is kept.
-	atomicfile.RemoveStale(dir, filepath.Base(path), time.Hour)
+	base := filepath.Base(path)
+	_, _ = atomicfile.RemoveStale(dir, func(dest string) bool { return dest == base }, time.Hour)
 	// Retries the rename on Windows, where an editor, antivirus or the search
 	// indexer may briefly hold the file open.
 	if err := atomicfile.Write(path, buf.Bytes()); err != nil {

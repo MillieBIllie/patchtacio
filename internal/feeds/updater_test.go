@@ -487,8 +487,8 @@ func TestAcceptShrinkKeepsOtherChecks(t *testing.T) {
 
 func TestLeftoverTempFilesCleaned(t *testing.T) {
 	h := newHarness(t, fakeResp{body: body(100, day1)})
-	old := filepath.Join(h.u.CacheDir, "fake.json.tmp-crashed")
-	recent := filepath.Join(h.u.CacheDir, "fake.json.tmp-inprogress")
+	old := filepath.Join(h.u.CacheDir, "fake.json.tmp-1234567")
+	recent := filepath.Join(h.u.CacheDir, "fake.json.tmp-7654321")
 	for _, f := range []string{old, recent} {
 		if err := os.WriteFile(f, []byte("x"), 0o600); err != nil {
 			t.Fatal(err)
