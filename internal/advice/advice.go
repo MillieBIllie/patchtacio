@@ -58,7 +58,8 @@ type Item struct {
 
 // Message is everything one channel sends in one run.
 type Message struct {
-	Items []Item
+	Items []Item    // known exploited vulnerabilities
+	EOL   []EOLItem // releases at or near end of life
 	Today time.Time // the reader's calendar date, for "passed" and "in N days"
 }
 
@@ -103,13 +104,31 @@ func ChatMessage(m Message) (Chat, error) {
 func Short(m Message) string {
 	v := newView(m, 0)
 	var s string
-	if len(v.all) == 1 {
+	if v.SingleEOL != nil {
+		return v.SingleEOL.short()
+	}
+	if len(v.all) == 0 {
+		return fitName(fmt.Sprintf("Patchtacio: %d releases you run are at or near end of life (%s). Plan the upgrades. Details: patchtacio check",
+			len(v.EOL)+v.moreEOL, "%s"), v.eolProducts())
+	}
+	if len(v.all) == 1 && len(v.EOL) == 0 {
 		it := v.all[0]
 		s = fmt.Sprintf("Patchtacio: %s exploited flaw %s. %s. Details: patchtacio check", "%s", it.CVE, it.shortDeadline())
 		return fitName(s, it.ShortProducts)
 	}
-	s = fmt.Sprintf("Patchtacio: %d exploited flaws in your products (%s). %s. Details: patchtacio check",
-		len(v.all), "%s", v.shortDeadline())
+	flaws := "flaws"
+	if len(v.all) == 1 {
+		flaws = "flaw"
+	}
+	switch n := len(v.EOL) + v.moreEOL; n {
+	case 0:
+	case 1:
+		flaws += " and 1 end-of-life release"
+	default:
+		flaws += fmt.Sprintf(" and %d end-of-life releases", n)
+	}
+	s = fmt.Sprintf("Patchtacio: %d exploited %s in your products (%s). %s. Details: patchtacio check",
+		len(v.all), flaws, "%s", v.shortDeadline())
 	return fitName(s, v.shortProducts())
 }
 
@@ -136,12 +155,16 @@ type view struct {
 	Count        int
 	New          []itemView
 	Reminders    []itemView
-	Single       *itemView // the item, when there is exactly one
+	Single       *itemView // the item, when there is exactly one (and no EOL item)
+	SingleEOL    *eolView  // the end-of-life item, when it is the only item
+	EOL          []eolView // end-of-life items listed
+	EOLCount     int       // all end-of-life items
 	More         int       // items not listed in full
 	Products     string    // every affected product, for the footer
 	ProductCount int
 	FirstCVE     string // an example for "patchtacio ack"
 	all          []itemView
+	moreEOL      int
 }
 
 type itemView struct {
@@ -188,6 +211,16 @@ func newView(m Message, limit int) view {
 		v.More = len(listed) - limit
 		listed = listed[:limit]
 	}
+	for _, e := range m.EOL {
+		v.EOL = append(v.EOL, newEOLView(e, today))
+	}
+	slices.SortStableFunc(v.EOL, eolLess)
+	v.EOLCount = len(v.EOL)
+	if limit > 0 && len(v.EOL) > limit {
+		v.moreEOL = len(v.EOL) - limit
+		v.More += v.moreEOL
+		v.EOL = v.EOL[:limit]
+	}
 	for _, it := range listed {
 		if it.Kind == KindNew {
 			v.New = append(v.New, it)
@@ -203,21 +236,52 @@ func newView(m Message, limit int) view {
 			}
 		}
 	}
+	for _, e := range m.EOL {
+		if n := clean(e.Product.Display); !slices.Contains(names, n) {
+			names = append(names, n)
+		}
+	}
 	v.Products = joinAnd(names)
 	v.ProductCount = len(names)
-	if len(items) > 0 {
+	switch {
+	case len(items) > 0:
 		v.FirstCVE = items[0].CVE
+	case len(v.EOL) > 0:
+		v.FirstCVE = v.EOL[0].AckID
 	}
-	if len(items) == 1 {
+	switch {
+	case len(items) == 1 && v.EOLCount == 0:
 		v.Single = &items[0]
-	}
-
-	if len(items) == 1 {
 		v.Headline = items[0].Headline
-	} else {
-		v.Headline = fmt.Sprintf("[%s] %d actively exploited flaws in your products", v.tag(), len(items))
+	case len(items) == 0 && v.EOLCount == 1:
+		v.SingleEOL = &v.EOL[0]
+		v.Headline = v.EOL[0].Headline
+	case len(items) == 0:
+		v.Headline = fmt.Sprintf("[End of life] %d releases you run are at or near end of life", v.EOLCount)
+	default:
+		flaws := "flaws"
+		if len(items) == 1 {
+			flaws = "flaw"
+		}
+		v.Headline = fmt.Sprintf("[%s] %d actively exploited %s in your products", v.tag(), len(items), flaws)
+		if v.EOLCount == 1 {
+			v.Headline += " and 1 end-of-life release"
+		} else if v.EOLCount > 1 {
+			v.Headline += fmt.Sprintf(" and %d end-of-life releases", v.EOLCount)
+		}
 	}
 	return v
+}
+
+func (v view) eolProducts() string {
+	var names []string
+	for _, e := range v.EOL {
+		names = append(names, e.Name)
+	}
+	if len(names) > 2 {
+		return fmt.Sprintf("%s, %s +%d", names[0], names[1], len(names)-2+v.moreEOL)
+	}
+	return joinAnd(names)
 }
 
 func rank(it itemView) int {

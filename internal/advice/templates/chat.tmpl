@@ -9,16 +9,23 @@ What to do{{if .Due}}{{if not .DuePassed}} by {{.Due}}{{end}}{{end}}:
 {{template "deadline" .}}{{end}}
 NVD: {{.NVDURL}}
 When you have dealt with it, run: patchtacio ack {{.CVE}}
-{{- end}}{{else -}}
-Patchtacio found {{.Count}} known exploited vulnerabilities (CISA KEV) in products on your list. Attackers are already using all of them. Start with the earliest deadline. Matched by product name; versions not checked.
-{{if .New}}
+{{- end}}{{else if .SingleEOL}}{{template "eol-chat-one" .SingleEOL}}{{else -}}
+{{if .Count -}}
+Patchtacio found {{.Count}} known exploited {{if eq .Count 1}}vulnerability{{else}}vulnerabilities{{end}} (CISA KEV) in products on your list. Attackers are already using {{if eq .Count 1}}it{{else}}all of them{{end}}. Start with the earliest deadline. Matched by product name; versions not checked.
+{{if .EOLCount}}It also found {{.EOLCount}} {{if eq .EOLCount 1}}release{{else}}releases{{end}} you run at or near end of life.
+{{end}}{{else -}}
+Patchtacio found {{.EOLCount}} releases you run at or near the end of security support (endoflife.date).
+{{end}}{{if .New}}
 New:
 {{range $i, $it := .New}}{{inc $i}}. {{template "entry" $it}}{{end}}{{end}}
 {{- if .Reminders}}
 Reminders (nobody has acknowledged these yet):
 {{range $i, $it := .Reminders}}{{inc $i}}. {{template "entry" $it}}{{end}}{{end}}
+{{- if .EOL}}
+End of life:
+{{range $i, $it := .EOL}}{{inc $i}}. {{template "eol-entry" $it}}{{end}}{{end}}
 {{- if .More}}
 And {{.More}} more, not listed here and not sent again: run `patchtacio check` to see them all.
 {{end}}
-When you have dealt with one, run: patchtacio ack <CVE ID>
+When you have dealt with one, run: patchtacio ack <{{if and .Count .EOLCount}}CVE ID or ID shown{{else if .Count}}CVE ID{{else}}ID shown{{end}}>
 {{- end}}

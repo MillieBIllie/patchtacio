@@ -19,26 +19,36 @@ Links:
 {{end}}{{range .OtherLinks}}  More from CISA's entry: {{.}}
 {{end}}  CISA KEV entry: {{.KEVURL}}
   NVD: {{.NVDURL}}
+{{end}}{{else if .SingleEOL}}{{template "eol-email-one" .SingleEOL}}{{else -}}
+{{if .Count -}}
+Patchtacio found {{.Count}} known exploited {{if eq .Count 1}}vulnerability{{else}}vulnerabilities{{end}} (CISA KEV) that {{if eq .Count 1}}affects{{else}}affect{{end}} products on your list. Attackers are already using {{if eq .Count 1}}it{{else}}all of them{{end}}. Start with the earliest deadline.
+Patchtacio matched {{if eq .Count 1}}it{{else}}them{{end}} by product name and has not checked whether your versions are affected.
+{{if .EOLCount}}It also found {{.EOLCount}} {{if eq .EOLCount 1}}release{{else}}releases{{end}} you run at or near the end of security support (endoflife.date).
 {{end}}{{else -}}
-Patchtacio found {{.Count}} known exploited vulnerabilities (CISA KEV) that affect products on your list. Attackers are already using all of them. Start with the earliest deadline.
-Patchtacio matched them by product name and has not checked whether your versions are affected.
-{{if .New}}
+Patchtacio found {{.EOLCount}} releases you run at or near the end of security support (endoflife.date). Start with the ones that have already ended.
+{{end}}{{if .New}}
 New:
 {{range $i, $it := .New}}{{inc $i}}. {{template "entry" $it}}{{end}}{{end}}
 {{- if .Reminders}}
 Reminders (nobody has acknowledged these yet):
 {{range $i, $it := .Reminders}}{{inc $i}}. {{template "entry" $it}}{{end}}{{end}}
+{{- if .EOL}}
+End of life:
+{{range $i, $it := .EOL}}{{inc $i}}. {{template "eol-entry" $it}}{{end}}{{end}}
 {{- if .More}}
 And {{.More}} more, not listed here and not sent again: run `patchtacio check` to see them all.
-{{end}}
+{{end}}{{if .Count}}
 For each entry, CISA's deadline is the one it set for US government agencies. Use it as a guide to how urgent each one is.
-{{end}}
+{{end}}{{end}}
 --
 {{if .Single -}}
 When you have dealt with it, run: patchtacio ack {{.Single.CVE}}
 Patchtacio then stops reminding you about it.
+{{- else if .SingleEOL -}}
+When you have dealt with it, run: patchtacio ack {{.SingleEOL.AckID}}
+Patchtacio then stops reminding you about it.
 {{- else -}}
-When you have dealt with one, run: patchtacio ack <CVE ID>, for example: patchtacio ack {{.FirstCVE}}
+When you have dealt with one, run: patchtacio ack <{{if and .Count .EOLCount}}CVE ID or ID shown{{else if .Count}}CVE ID{{else}}ID shown{{end}}>, for example: patchtacio ack {{.FirstCVE}}
 Patchtacio then stops reminding you about it.
 {{- end}}
 You get this alert because {{.Products}} {{if eq .ProductCount 1}}is{{else}}are{{end}} on your Patchtacio product list.
