@@ -68,6 +68,7 @@ type Dispatcher struct {
 type Result struct {
 	Channel   string
 	Sent      int       // findings delivered (one message)
+	Vulns     int       // distinct vulnerabilities in that message
 	Held      int       // findings waiting for the next digest
 	NextAfter time.Time // when a held digest may go
 	Err       error
@@ -103,8 +104,9 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 			results = append(results, r)
 			continue
 		}
+		items := Group(due)
 		if r.Err == nil {
-			r.Err = ch.Send(ctx, advice.Message{Items: Group(due), Today: today})
+			r.Err = ch.Send(ctx, advice.Message{Items: items, Today: today})
 		}
 		if r.Err == nil {
 			r.Err = d.Store.RecordDeliveries(ctx, deliveries(ch.Name(), due))
@@ -115,7 +117,7 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 			}
 		}
 		if r.Err == nil {
-			r.Sent = len(due)
+			r.Sent, r.Vulns = len(due), len(items)
 		} else {
 			errs = append(errs, fmt.Errorf("%s: %w", ch.Name(), r.Err))
 		}

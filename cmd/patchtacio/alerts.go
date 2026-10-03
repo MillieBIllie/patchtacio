@@ -93,6 +93,7 @@ func candidates(cfg *config.Config, findings []match.Finding) []notify.Candidate
 type alertReport struct {
 	Channel   string `json:"channel"`
 	Sent      int    `json:"sent"`                // findings covered by the one message sent
+	Vulns     int    `json:"vulnerabilities"`     // distinct CVEs in it (one CVE can match two products)
 	Held      int    `json:"held,omitempty"`      // waiting for the next digest
 	NextAfter string `json:"nextAfter,omitempty"` // RFC 3339: when a held digest may go
 	Error     string `json:"error,omitempty"`
@@ -109,7 +110,7 @@ func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Confi
 	results, runErr := d.Run(ctx, candidates(cfg, findings))
 	reps := make([]alertReport, 0, len(results))
 	for _, r := range results {
-		rep := alertReport{Channel: r.Channel, Sent: r.Sent, Held: r.Held}
+		rep := alertReport{Channel: r.Channel, Sent: r.Sent, Vulns: r.Vulns, Held: r.Held}
 		if !r.NextAfter.IsZero() {
 			rep.NextAfter = r.NextAfter.UTC().Format("2006-01-02T15:04:05Z")
 		}
@@ -130,7 +131,10 @@ func (a *app) printAlerts(w io.Writer, reps []alertReport) {
 		case r.Error != "":
 			what = "failed: " + r.Error + " (it will be retried next run)"
 		case r.Sent > 0:
-			what = "sent one alert covering " + plural(r.Sent, "finding")
+			what = fmt.Sprintf("sent one alert about %d vulnerabilities", r.Vulns)
+			if r.Vulns == 1 {
+				what = "sent one alert about 1 vulnerability"
+			}
 		case r.Held > 0:
 			what = fmt.Sprintf("%s waiting for the next digest", plural(r.Held, "finding"))
 			if r.NextAfter != "" {

@@ -132,7 +132,7 @@ func TestNotifyNewKEVEntryAlertsOnce(t *testing.T) {
 	// First run: what is already on CISA's list arrives as one summary.
 	out, errOut, code := e.exec(t, "check", "--notify")
 	requireCode(t, code, exitFindings, out, errOut)
-	requireContains(t, out, "Alerts by webhook: sent one alert covering 3 findings.")
+	requireContains(t, out, "Alerts by webhook: sent one alert about 3 vulnerabilities.")
 	if msgs := chans.messages("webhook"); len(msgs) != 1 || len(msgs[0].Items) != 3 {
 		t.Fatalf("first run: %d messages", len(msgs))
 	}
