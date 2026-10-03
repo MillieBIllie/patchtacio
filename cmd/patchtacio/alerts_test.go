@@ -354,6 +354,34 @@ func TestNotifyIgnoresSince(t *testing.T) {
 	}
 }
 
+// While a run sends, its heartbeat keeps the lock past the TTL.
+func TestNotifyLockHeartbeat(t *testing.T) {
+	e := newTestEnv(t)
+	e.exec(t, "init", "--products", "citrix-netscaler")
+	e.exec(t, "check") // creates the database
+	st, err := store.Open(context.Background(), filepath.Join(os.Getenv(paths.EnvDataDir), dbFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = st.Close() }()
+	oldTTL, oldWait := notifyLockTTL, notifyLockWait
+	notifyLockTTL, notifyLockWait = 400*time.Millisecond, 0
+	defer func() { notifyLockTTL, notifyLockWait = oldTTL, oldWait }()
+
+	release, err := e.app.notifyLock(context.Background(), st)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(3 * notifyLockTTL) // well past the TTL, but heartbeats ran
+	if ok, err := st.AcquireLock(context.Background(), notifyLockName, "intruder", notifyLockTTL); err != nil || ok {
+		t.Errorf("lock taken while its holder was still sending: %v %v", ok, err)
+	}
+	release()
+	if ok, err := st.AcquireLock(context.Background(), notifyLockName, "next", notifyLockTTL); err != nil || !ok {
+		t.Errorf("lock not free after release: %v %v", ok, err)
+	}
+}
+
 // Two overlapping runs never both send: the second waits, then gives up and
 // says so.
 func TestNotifyLockHeld(t *testing.T) {
