@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/milliebillie/patchtacio/internal/advice"
+	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/store"
 )
 
@@ -64,11 +66,18 @@ func (m *memStore) LastDelivery(_ context.Context, channel string) (time.Time, e
 // fakeChannel records messages; fail makes Send fail.
 type fakeChannel struct {
 	name string
+	key  string // destination; defaults to name
 	fail bool
 	msgs []advice.Message
 }
 
 func (f *fakeChannel) Name() string { return f.name }
+func (f *fakeChannel) Key() string {
+	if f.key != "" {
+		return f.key
+	}
+	return f.name
+}
 func (f *fakeChannel) Send(_ context.Context, m advice.Message) error {
 	if f.fail {
 		return errors.New("connection refused")
@@ -257,6 +266,42 @@ func TestGroupedByCVE(t *testing.T) {
 	}
 	if len(ch.msgs) != 1 || len(ch.msgs[0].Items) != 1 || len(ch.msgs[0].Items[0].Products) != 2 {
 		t.Errorf("want one item with two products, got %+v", ch.msgs)
+	}
+}
+
+// A new destination (other recipients, another webhook URL) has heard
+// nothing, so it gets everything; the old one is not repeated.
+func TestNewDestinationGetsEverything(t *testing.T) {
+	ctx := context.Background()
+	ch := &fakeChannel{name: "email", key: "email/old"}
+	d, _, _ := setup(t, DigestOff, ch)
+	c := []Candidate{cand("fortios", "CVE-2026-1", "2024-01-01"), cand("exchange", "CVE-2026-2", "")}
+	if _, err := d.Run(ctx, c); err != nil || len(ch.msgs) != 1 {
+		t.Fatalf("first: %d messages, %v", len(ch.msgs), err)
+	}
+	ch.key = "email/new"
+	if _, err := d.Run(ctx, c); err != nil || len(ch.msgs) != 2 || len(ch.msgs[1].Items) != 2 {
+		t.Fatalf("new destination: %d messages, %v", len(ch.msgs), err)
+	}
+	if _, err := d.Run(ctx, c); err != nil || len(ch.msgs) != 2 {
+		t.Errorf("repeated to the new destination: %d messages", len(ch.msgs))
+	}
+}
+
+func TestDestinationKeys(t *testing.T) {
+	e1 := NewEmail(config.Email{To: []string{"IT <it@example.org>", "head@example.org"}}, env(nil))
+	e2 := NewEmail(config.Email{To: []string{"head@example.org", "it@EXAMPLE.org"}}, env(nil))
+	e3 := NewEmail(config.Email{To: []string{"it@example.org"}}, env(nil))
+	if e1.Key() != e2.Key() || e1.Key() == e3.Key() || !strings.HasPrefix(e1.Key(), "email/") {
+		t.Errorf("email keys: %s %s %s", e1.Key(), e2.Key(), e3.Key())
+	}
+	w := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: "https://hooks.slack.com/services/T/B/SECRETTOKEN"}))
+	if k := w.Key(); strings.Contains(k, "SECRET") || !strings.HasPrefix(k, "webhook/") {
+		t.Errorf("webhook key %q", k)
+	}
+	w2 := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: "https://hooks.slack.com/services/T/B/OTHER"}))
+	if w.Key() == w2.Key() {
+		t.Error("two webhook URLs share a key")
 	}
 }
 

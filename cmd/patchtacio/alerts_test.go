@@ -31,6 +31,7 @@ type fakeChan struct {
 }
 
 func (c fakeChan) Name() string { return c.name }
+func (c fakeChan) Key() string  { return c.name }
 func (c fakeChan) Send(_ context.Context, m advice.Message) error {
 	c.f.mu.Lock()
 	defer c.f.mu.Unlock()

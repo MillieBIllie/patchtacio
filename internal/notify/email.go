@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/mail"
 	"net/smtp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,19 @@ func NewEmail(cfg config.Email, getenv func(string) string) *Email {
 
 // Name implements Channel.
 func (e *Email) Name() string { return config.ChannelEmail }
+
+// Key implements Channel: the recipients, in any order or case.
+func (e *Email) Key() string {
+	to := make([]string, 0, len(e.Config.To))
+	for _, a := range e.Config.To {
+		if addr, err := mail.ParseAddress(a); err == nil {
+			a = addr.Address
+		}
+		to = append(to, strings.ToLower(strings.TrimSpace(a)))
+	}
+	slices.Sort(to)
+	return destinationKey(config.ChannelEmail, to...)
+}
 
 // Send implements Channel.
 func (e *Email) Send(ctx context.Context, m advice.Message) error {

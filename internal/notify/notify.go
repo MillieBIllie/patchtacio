@@ -10,6 +10,8 @@ package notify
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"slices"
@@ -22,9 +24,13 @@ import (
 
 // Channel is one way of delivering alerts.
 type Channel interface {
-	// Name is the stable name deliveries are recorded under: "email",
-	// "webhook", "ntfy" or "desktop".
+	// Name is the channel type: "email", "webhook", "ntfy" or "desktop".
 	Name() string
+	// Key identifies where the channel delivers ("email/<hash of the
+	// recipients>"), and deliveries are recorded under it: a new address or
+	// URL is a new destination that has heard nothing yet, so it gets
+	// everything again rather than silently missing what went elsewhere.
+	Key() string
 	// Send delivers one message.
 	Send(ctx context.Context, m advice.Message) error
 	// SendTest delivers a message that says it is a test.
@@ -92,12 +98,13 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 	var errs []error
 	for _, ch := range d.Channels {
 		r := Result{Channel: ch.Name()}
-		due := Plan(ch.Name(), cands, states, today)
+		key := ch.Key()
+		due := Plan(key, cands, states, today)
 		if len(due) == 0 {
 			results = append(results, r)
 			continue
 		}
-		if next, hold, err := d.holdForDigest(ctx, ch.Name(), now); err != nil {
+		if next, hold, err := d.holdForDigest(ctx, key, now); err != nil {
 			r.Err = err
 		} else if hold {
 			r.Held, r.NextAfter = len(due), next
@@ -109,7 +116,7 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 			r.Err = ch.Send(ctx, advice.Message{Items: items, Today: today})
 		}
 		if r.Err == nil {
-			r.Err = d.Store.RecordDeliveries(ctx, deliveries(ch.Name(), due))
+			r.Err = d.Store.RecordDeliveries(ctx, deliveries(key, due))
 			if r.Err != nil {
 				// Sent but not recorded: the next run repeats this alert,
 				// which beats losing one.
@@ -262,6 +269,14 @@ func deliveries(channel string, due []Due) []store.Delivery {
 		}
 	}
 	return ds
+}
+
+// destinationKey is name plus a short SHA-256 of the destination's details.
+// Only the hash is stored, so a webhook URL's token never reaches the
+// database.
+func destinationKey(name string, parts ...string) string {
+	h := sha256.Sum256([]byte(strings.Join(parts, "\x00")))
+	return name + "/" + hex.EncodeToString(h[:8])
 }
 
 // calendarDay is t's date in loc, as UTC midnight (how feed dates are kept).
