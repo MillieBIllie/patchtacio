@@ -108,6 +108,7 @@ func (j Job) NextRun(now time.Time) time.Time {
 // Result says how a job was installed.
 type Result struct {
 	Method string
+	Launch string   // Windows: how the task starts the program (Launch* constants)
 	Files  []string // files written, for the user's information
 	Notes  []string // things the user should know or do (linger, console window)
 }

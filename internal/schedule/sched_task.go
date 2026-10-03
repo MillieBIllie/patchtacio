@@ -67,7 +67,7 @@ func (w *Windows) Install(ctx context.Context, j Job) (Result, error) {
 	if err := w.schtasks(ctx, "/Create", "/TN", w.name(), "/XML", f.Name(), "/F"); err != nil {
 		return Result{}, fmt.Errorf("create the scheduled task: %w", err)
 	}
-	r := Result{Method: MethodTask}
+	r := Result{Method: MethodTask, Launch: how}
 	if how == LaunchConsole {
 		r.Notes = append(r.Notes, ConsoleNote)
 	}

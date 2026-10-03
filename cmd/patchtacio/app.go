@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/notify"
 	"github.com/milliebillie/patchtacio/internal/paths"
+	"github.com/milliebillie/patchtacio/internal/schedule"
 	"github.com/milliebillie/patchtacio/internal/secrets"
 	"github.com/milliebillie/patchtacio/internal/store"
 	"github.com/milliebillie/patchtacio/internal/version"
@@ -40,6 +43,13 @@ type app struct {
 	pick       pickFunc
 	isTerminal func() bool
 
+	// The scheduled check: the OS scheduler, this program and how to find
+	// it on PATH, and the random install minute; fakes in tests.
+	scheduler  func(logDir, tempDir string) (schedule.Scheduler, error)
+	executable func() (string, error)
+	lookPath   func(string) (string, error)
+	randIntN   func(int) int
+
 	// Set from global flags before a command runs.
 	verbosity  int
 	quiet      bool
@@ -57,6 +67,10 @@ func defaultApp() *app {
 		newClient:  func(l *slog.Logger) *httpcache.Client { return httpcache.New(version.UserAgent(), l) },
 		pick:       huhPicker(os.Stdin, os.Stdout, os.Getenv("ACCESSIBLE") != ""),
 		isTerminal: stdinIsTerminal,
+		scheduler:  realScheduler,
+		executable: os.Executable,
+		lookPath:   exec.LookPath,
+		randIntN:   rand.IntN, // spreads install times; not security relevant
 		log:        slog.New(slog.DiscardHandler),
 	}
 	a.channels = func(n *config.Notify) ([]notify.Channel, error) { return realChannels(n, a.secretStore().Getenv) }
@@ -108,4 +122,13 @@ func (a *app) secretStore() *secrets.Store {
 
 func (a *app) setupLogging(stderr interface{ Write([]byte) (int, error) }) {
 	a.log = logging.New(stderr, logging.Level(a.verbosity, a.quiet))
+}
+
+// realScheduler is this computer's scheduler, for the current user.
+func realScheduler(logDir, tempDir string) (schedule.Scheduler, error) {
+	o, err := schedule.DefaultOptions(logDir, tempDir)
+	if err != nil {
+		return nil, err
+	}
+	return schedule.New(o), nil
 }
