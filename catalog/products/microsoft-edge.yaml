@@ -3,9 +3,6 @@ display: "Microsoft Edge"
 vendor: "Microsoft"
 category: other
 kev_aliases:
-  - { vendor: "Microsoft", product: "Edge" }
-  - { vendor: "Microsoft", product: "Edge and Internet Explorer" }
-  - { vendor: "Microsoft", product: "Internet Explorer and Edge" }
   - { vendor: "Google", product: "Chromium" }
   - { vendor: "Google", product: "Chromium Animation" }
   - { vendor: "Google", product: "Chromium Blink" }
@@ -26,5 +23,5 @@ kev_aliases:
 cpe_prefixes: []
 eol_slug: null
 aliases_search: ["browser", "Chromium"]
-notes: "Edge is built on Chromium, so every KEV entry filed under a Google Chromium component matches here even when CISA's description names only Chrome. Dawn matches only when the description names Microsoft Edge. The three Microsoft pairs are legacy (pre-Chromium) EdgeHTML entries. TODO: verify CPE. NVD files Chromium flaws under cpe:2.3:a:google:chrome, not under Edge."
+notes: "Edge is built on Chromium, so every KEV entry filed under a Google Chromium component matches here even when CISA's description names only Chrome. Dawn matches only when the description names Microsoft Edge. Pre-Chromium (EdgeHTML) entries are under microsoft-edge-legacy. TODO: verify CPE. NVD files Chromium flaws under cpe:2.3:a:google:chrome, not under Edge."
 verified: 2026-10-02
