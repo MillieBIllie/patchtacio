@@ -1,0 +1,13 @@
+id: microsoft-edge-legacy
+display: "Microsoft Edge Legacy (EdgeHTML, before Chromium)"
+vendor: "Microsoft"
+category: other
+kev_aliases:
+  - { vendor: "Microsoft", product: "Edge" }
+  - { vendor: "Microsoft", product: "Edge and Internet Explorer" }
+  - { vendor: "Microsoft", product: "Internet Explorer and Edge" }
+cpe_prefixes: []
+eol_slug: null
+aliases_search: ["browser", "EdgeHTML", "Spartan"]
+notes: "The original Edge (EdgeHTML engine), replaced by the Chromium-based microsoft-edge. KEV files its flaws under Microsoft Edge, sometimes together with Internet Explorer. TODO: verify CPE."
+verified: 2026-10-03

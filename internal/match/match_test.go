@@ -103,8 +103,8 @@ func TestProducts(t *testing.T) {
 		// description names it.
 		{"CVE-2026-87491", []string{"google-chrome", "microsoft-edge"}},
 		{"CVE-2023-4863", []string{"google-chrome", "microsoft-edge"}},
-		// Legacy (pre-Chromium) Edge entries.
-		{"CVE-2017-0037", []string{"microsoft-edge"}},
+		// Pre-Chromium (EdgeHTML) entries go to Edge Legacy, not today's Edge.
+		{"CVE-2017-0037", []string{"microsoft-edge-legacy"}},
 		// ASA and FTD named together.
 		{"CVE-2024-20481", []string{"cisco-asa", "cisco-ftd"}},
 	}
