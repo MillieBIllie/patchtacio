@@ -1,0 +1,34 @@
+=== email subject
+[End of life on 30 Nov 2026] Atlassian Confluence 7.19: security updates stop
+=== email body
+What's affected:
+  Atlassian Confluence (Server and Data Center, the wiki the whole school has run on since before anyone can remember), version 7.2.8 (your note: head office firewall)
+  That is release 7.19 on endoflife.date.
+
+Why it matters:
+  Security updates for Atlassian Confluence 7.19 stop on 30 Nov 2026, in 58 days. After that, newly found flaws in it, including ones attackers use, will not be fixed.
+
+What to do before 30 Nov 2026:
+  1. Upgrade to a supported release. The newest supported release listed on endoflife.date is 8.0 (latest version 8.0.1).
+  2. Until you can upgrade, limit who can reach it (for example, no access from the internet) and keep an eye on its vendor's advisories.
+
+Links:
+  endoflife.date: https://endoflife.date/fortios
+  Vendor lifecycle: https://www.fortinet.com/support/product-life-cycle
+
+--
+When you have dealt with it, run: patchtacio ack eol/fortinet-fortios/7.2
+Patchtacio then stops reminding you about it.
+You get this alert because Atlassian Confluence (Server and Data Center, the wiki the whole school has run on since before anyone can remember) is on your Patchtacio product list.
+=== chat title
+[End of life on 30 Nov 2026] Atlassian Confluence 7.19: security updates stop
+=== chat body
+Security updates for Atlassian Confluence 7.19 stop on 30 Nov 2026, in 58 days. After that, newly found flaws in it, including ones attackers use, will not be fixed.
+Affects: Atlassian Confluence (Server and Data Center, the wiki the whole school has run on since before anyone can remember), version 7.2.8 (your note: head office firewall) (release 7.19 on endoflife.date).
+What to do: Upgrade to a supported release. The newest supported release listed on endoflife.date is 8.0 (latest version 8.0.1).
+Until you can upgrade, limit who can reach it.
+endoflife.date: https://endoflife.date/fortios
+When you have dealt with it, run: patchtacio ack eol/fortinet-fortios/7.2
+
+=== short
+Patchtacio: Atlassian Confluence 7.19 reaches end of life on 30 Nov 2026: security updates stop. Plan the upgrade. Details: patchtacio check

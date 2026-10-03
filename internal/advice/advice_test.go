@@ -97,18 +97,49 @@ func cases() map[string]Message {
 		many = append(many, it)
 	}
 
+	fos72 := EOLItem{
+		Kind: KindNew, Product: Product{Display: "Fortinet FortiOS (FortiGate firewalls)", Version: "7.2.8", Notes: "head office firewall"},
+		Release: "7.2", EOLDate: d("2026-11-30"), Successor: "8.0", SuccessorAt: "8.0.1",
+		Page: "https://endoflife.date/fortios", Policy: "https://www.fortinet.com/support/product-life-cycle",
+		AckID: "eol/fortinet-fortios/7.2",
+	}
+	ended := EOLItem{
+		Kind: KindNew, Product: Product{Display: "Microsoft Windows Server", Version: "2016"},
+		Release: "2016", EOLDate: d("2027-01-12"), Page: "https://endoflife.date/windows-server",
+		AckID: "eol/microsoft-windows-server/2016",
+	}
+	ended.EOLDate = d("2026-09-30")
+	ended.ExtendedUntil = d("2029-09-30")
+	eolSoon := fos72
+	eolSoon.Kind = KindDueSoon
+	eolSoon.EOLDate = d("2026-10-20")
+	noDate := ended
+	noDate.EOLDate = time.Time{}
+	noDate.Ended = true
+	noDate.ExtendedUntil = time.Time{}
+	longEOL := fos72
+	longEOL.Product.Display = "Atlassian Confluence (Server and Data Center, the wiki the whole school has run on since before anyone can remember)"
+	longEOL.Release = "7.19"
+
 	return map[string]Message{
-		"full":        {Items: []Item{full}},
-		"no_advisory": {Items: []Item{noAdvisory}},
-		"past_due":    {Items: []Item{pastDue}},
-		"ransomware":  {Items: []Item{ransomware}},
-		"long_names":  {Items: []Item{long}},
-		"no_due_date": {Items: []Item{noDue}},
-		"due_soon":    {Items: []Item{dueSoon}},
-		"overdue":     {Items: []Item{overdue}},
-		"hostile":     {Items: []Item{hostile}},
-		"summary":     {Items: []Item{exchange, full, ivanti}},
-		"summary_cap": {Items: many},
+		"eol_upcoming":      {EOL: []EOLItem{fos72}},
+		"eol_ended":         {EOL: []EOLItem{ended}},
+		"eol_due_soon":      {EOL: []EOLItem{eolSoon}},
+		"eol_ended_no_date": {EOL: []EOLItem{noDate}},
+		"eol_long_name":     {EOL: []EOLItem{longEOL}},
+		"eol_summary":       {EOL: []EOLItem{fos72, ended}},
+		"mixed_summary":     {Items: []Item{full}, EOL: []EOLItem{ended}},
+		"full":              {Items: []Item{full}},
+		"no_advisory":       {Items: []Item{noAdvisory}},
+		"past_due":          {Items: []Item{pastDue}},
+		"ransomware":        {Items: []Item{ransomware}},
+		"long_names":        {Items: []Item{long}},
+		"no_due_date":       {Items: []Item{noDue}},
+		"due_soon":          {Items: []Item{dueSoon}},
+		"overdue":           {Items: []Item{overdue}},
+		"hostile":           {Items: []Item{hostile}},
+		"summary":           {Items: []Item{exchange, full, ivanti}},
+		"summary_cap":       {Items: many},
 	}
 }
 

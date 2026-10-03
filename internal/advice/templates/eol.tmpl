@@ -1,0 +1,48 @@
+{{- /* End-of-life blocks. Data is an eolView. */ -}}
+
+{{define "eol-why" -}}
+{{if .Ended}}{{if .Date}}Security updates for {{.Name}} stopped on {{.Date}}{{else}}Security updates for {{.Name}} have stopped{{end}}: newly found flaws in it, including ones attackers use, are not fixed any more.
+{{- else}}Security updates for {{.Name}} stop on {{.Date}}, in {{.DaysLeft}} days. After that, newly found flaws in it, including ones attackers use, will not be fixed.{{end}}
+{{- if .Extended}} Extended support (often paid) is listed until {{.Extended}}.{{end}}
+{{- end}}
+
+{{define "eol-upgrade" -}}
+{{if .Successor}}Upgrade to a supported release. The newest supported release listed on endoflife.date is {{.Successor}}{{if .SuccessorAt}} (latest version {{.SuccessorAt}}){{end}}.{{else}}Upgrade to a supported release. The vendor's lifecycle page says which releases are supported{{if .Policy}}: {{.Policy}}{{else if .Page}}; see {{.Page}}{{else}}.{{end}}{{end}}
+{{- end}}
+
+{{define "eol-email-one" -}}
+{{if eq .Kind "due-soon"}}Reminder: nobody has acknowledged this yet, and security updates stop on {{.Date}}.
+{{else if eq .Kind "overdue"}}Reminder: nobody has acknowledged this yet, and security updates have stopped.
+{{end}}What's affected:
+  {{.ProductLine}}
+  That is release {{.Release}} on endoflife.date.
+
+Why it matters:
+  {{template "eol-why" .}}
+
+What to do{{if not .Ended}} before {{.Date}}{{end}}:
+  1. {{template "eol-upgrade" .}}
+  2. Until you can upgrade, limit who can reach it (for example, no access from the internet) and keep an eye on its vendor's advisories.
+
+Links:
+{{if .Page}}  endoflife.date: {{.Page}}
+{{end}}{{if .Policy}}  Vendor lifecycle: {{.Policy}}
+{{end}}{{end}}
+
+{{define "eol-chat-one" -}}
+{{if eq .Kind "due-soon"}}Reminder: nobody has acknowledged this yet.
+{{else if eq .Kind "overdue"}}Reminder: nobody has acknowledged this yet.
+{{end}}{{template "eol-why" .}}
+Affects: {{.ProductLine}} (release {{.Release}} on endoflife.date).
+What to do: {{template "eol-upgrade" .}}
+Until you can upgrade, limit who can reach it.
+{{if .Page}}endoflife.date: {{.Page}}
+{{end}}When you have dealt with it, run: patchtacio ack {{.AckID}}
+{{- end}}
+
+{{define "eol-entry" -}}
+{{.Headline}}
+   {{template "eol-why" .}}
+   What to do: {{template "eol-upgrade" .}}
+   Acknowledge with: patchtacio ack {{.AckID}}
+{{end}}

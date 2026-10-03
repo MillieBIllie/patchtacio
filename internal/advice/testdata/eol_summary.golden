@@ -1,0 +1,38 @@
+=== email subject
+[End of life] 2 releases you run are at or near end of life
+=== email body
+Patchtacio found 2 releases you run at or near the end of security support (endoflife.date). Start with the ones that have already ended.
+
+End of life:
+1. [End of life since 30 Sep 2026] Microsoft Windows Server 2016: security updates have stopped
+   Security updates for Microsoft Windows Server 2016 stopped on 30 Sep 2026: newly found flaws in it, including ones attackers use, are not fixed any more. Extended support (often paid) is listed until 30 Sep 2029.
+   What to do: Upgrade to a supported release. The vendor's lifecycle page says which releases are supported; see https://endoflife.date/windows-server
+   Acknowledge with: patchtacio ack eol/microsoft-windows-server/2016
+2. [End of life on 30 Nov 2026] Fortinet FortiOS 7.2: security updates stop
+   Security updates for Fortinet FortiOS 7.2 stop on 30 Nov 2026, in 58 days. After that, newly found flaws in it, including ones attackers use, will not be fixed.
+   What to do: Upgrade to a supported release. The newest supported release listed on endoflife.date is 8.0 (latest version 8.0.1).
+   Acknowledge with: patchtacio ack eol/fortinet-fortios/7.2
+
+--
+When you have dealt with one, run: patchtacio ack <ID shown>, for example: patchtacio ack eol/microsoft-windows-server/2016
+Patchtacio then stops reminding you about it.
+You get this alert because Fortinet FortiOS (FortiGate firewalls) and Microsoft Windows Server are on your Patchtacio product list.
+=== chat title
+[End of life] 2 releases you run are at or near end of life
+=== chat body
+Patchtacio found 2 releases you run at or near the end of security support (endoflife.date).
+
+End of life:
+1. [End of life since 30 Sep 2026] Microsoft Windows Server 2016: security updates have stopped
+   Security updates for Microsoft Windows Server 2016 stopped on 30 Sep 2026: newly found flaws in it, including ones attackers use, are not fixed any more. Extended support (often paid) is listed until 30 Sep 2029.
+   What to do: Upgrade to a supported release. The vendor's lifecycle page says which releases are supported; see https://endoflife.date/windows-server
+   Acknowledge with: patchtacio ack eol/microsoft-windows-server/2016
+2. [End of life on 30 Nov 2026] Fortinet FortiOS 7.2: security updates stop
+   Security updates for Fortinet FortiOS 7.2 stop on 30 Nov 2026, in 58 days. After that, newly found flaws in it, including ones attackers use, will not be fixed.
+   What to do: Upgrade to a supported release. The newest supported release listed on endoflife.date is 8.0 (latest version 8.0.1).
+   Acknowledge with: patchtacio ack eol/fortinet-fortios/7.2
+
+When you have dealt with one, run: patchtacio ack <ID shown>
+
+=== short
+Patchtacio: 2 releases you run are at or near end of life (Microsoft Windows Server 2016 and Fortinet FortiOS 7.2). Plan the upgrades. Details: patchtacio check

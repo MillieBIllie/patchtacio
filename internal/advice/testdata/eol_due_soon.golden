@@ -1,0 +1,36 @@
+=== email subject
+[Reminder: end of life on 20 Oct 2026] Fortinet FortiOS 7.2: security updates stop
+=== email body
+Reminder: nobody has acknowledged this yet, and security updates stop on 20 Oct 2026.
+What's affected:
+  Fortinet FortiOS (FortiGate firewalls), version 7.2.8 (your note: head office firewall)
+  That is release 7.2 on endoflife.date.
+
+Why it matters:
+  Security updates for Fortinet FortiOS 7.2 stop on 20 Oct 2026, in 17 days. After that, newly found flaws in it, including ones attackers use, will not be fixed.
+
+What to do before 20 Oct 2026:
+  1. Upgrade to a supported release. The newest supported release listed on endoflife.date is 8.0 (latest version 8.0.1).
+  2. Until you can upgrade, limit who can reach it (for example, no access from the internet) and keep an eye on its vendor's advisories.
+
+Links:
+  endoflife.date: https://endoflife.date/fortios
+  Vendor lifecycle: https://www.fortinet.com/support/product-life-cycle
+
+--
+When you have dealt with it, run: patchtacio ack eol/fortinet-fortios/7.2
+Patchtacio then stops reminding you about it.
+You get this alert because Fortinet FortiOS (FortiGate firewalls) is on your Patchtacio product list.
+=== chat title
+[Reminder: end of life on 20 Oct 2026] Fortinet FortiOS 7.2: security updates stop
+=== chat body
+Reminder: nobody has acknowledged this yet.
+Security updates for Fortinet FortiOS 7.2 stop on 20 Oct 2026, in 17 days. After that, newly found flaws in it, including ones attackers use, will not be fixed.
+Affects: Fortinet FortiOS (FortiGate firewalls), version 7.2.8 (your note: head office firewall) (release 7.2 on endoflife.date).
+What to do: Upgrade to a supported release. The newest supported release listed on endoflife.date is 8.0 (latest version 8.0.1).
+Until you can upgrade, limit who can reach it.
+endoflife.date: https://endoflife.date/fortios
+When you have dealt with it, run: patchtacio ack eol/fortinet-fortios/7.2
+
+=== short
+Patchtacio: Fortinet FortiOS 7.2 reaches end of life on 20 Oct 2026: security updates stop. Plan the upgrade. Details: patchtacio check

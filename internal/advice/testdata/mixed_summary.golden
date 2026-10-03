@@ -1,0 +1,49 @@
+=== email subject
+[Action needed by 12 Oct 2026] 1 actively exploited flaw in your products and 1 end-of-life release
+=== email body
+Patchtacio found 1 known exploited vulnerability (CISA KEV) that affects products on your list. Attackers are already using it. Start with the earliest deadline.
+Patchtacio matched it by product name and has not checked whether your versions are affected.
+It also found 1 release you run at or near the end of security support (endoflife.date).
+
+New:
+1. [Action needed by 12 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-24858)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-24858
+
+End of life:
+1. [End of life since 30 Sep 2026] Microsoft Windows Server 2016: security updates have stopped
+   Security updates for Microsoft Windows Server 2016 stopped on 30 Sep 2026: newly found flaws in it, including ones attackers use, are not fixed any more. Extended support (often paid) is listed until 30 Sep 2029.
+   What to do: Upgrade to a supported release. The vendor's lifecycle page says which releases are supported; see https://endoflife.date/windows-server
+   Acknowledge with: patchtacio ack eol/microsoft-windows-server/2016
+
+For each entry, CISA's deadline is the one it set for US government agencies. Use it as a guide to how urgent each one is.
+
+--
+When you have dealt with one, run: patchtacio ack <CVE ID or ID shown>, for example: patchtacio ack CVE-2026-24858
+Patchtacio then stops reminding you about it.
+You get this alert because Fortinet FortiOS (FortiGate firewalls) and Microsoft Windows Server are on your Patchtacio product list.
+=== chat title
+[Action needed by 12 Oct 2026] 1 actively exploited flaw in your products and 1 end-of-life release
+=== chat body
+Patchtacio found 1 known exploited vulnerability (CISA KEV) in products on your list. Attackers are already using it. Start with the earliest deadline. Matched by product name; versions not checked.
+It also found 1 release you run at or near end of life.
+
+New:
+1. [Action needed by 12 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-24858)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-24858
+
+End of life:
+1. [End of life since 30 Sep 2026] Microsoft Windows Server 2016: security updates have stopped
+   Security updates for Microsoft Windows Server 2016 stopped on 30 Sep 2026: newly found flaws in it, including ones attackers use, are not fixed any more. Extended support (often paid) is listed until 30 Sep 2029.
+   What to do: Upgrade to a supported release. The vendor's lifecycle page says which releases are supported; see https://endoflife.date/windows-server
+   Acknowledge with: patchtacio ack eol/microsoft-windows-server/2016
+
+When you have dealt with one, run: patchtacio ack <CVE ID or ID shown>
+
+=== short
+Patchtacio: 1 exploited flaw and 1 end-of-life release in your products (Fortinet FortiOS). Earliest deadline 12 Oct 2026. Details: patchtacio check
