@@ -45,6 +45,21 @@ type Channel interface {
 type Candidate struct {
 	ID   string // store finding ID
 	Item advice.Item
+	// EOL, when set, makes this an end-of-life candidate instead: its
+	// deadline is the end-of-life date, and Item is unused.
+	EOL *advice.EOLItem
+}
+
+// EOLSoonDays is how close an end-of-life date must be for its reminder.
+const EOLSoonDays = 30
+
+// deadline returns the candidate's date, whether it has passed (an ended
+// release with no date given counts), and its reminder window.
+func (c Candidate) deadline() (due time.Time, ended bool, soonDays int) {
+	if c.EOL != nil {
+		return c.EOL.EOLDate, c.EOL.Ended, EOLSoonDays
+	}
+	return c.Item.DueDate, false, DueSoonDays
 }
 
 // Digest modes.
@@ -82,6 +97,7 @@ type Result struct {
 	Channel   string
 	Sent      int       // findings delivered (one message)
 	Vulns     int       // distinct vulnerabilities in that message
+	EOL       int       // end-of-life releases in that message
 	Held      int       // findings waiting for the next digest
 	NextAfter time.Time // when a held digest may go
 	Err       error
@@ -121,9 +137,9 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 			results = append(results, r)
 			continue
 		}
-		items := Group(due)
+		items, eols := Group(due)
 		if r.Err == nil {
-			r.Err = ch.Send(ctx, advice.Message{Items: items, Today: today})
+			r.Err = ch.Send(ctx, advice.Message{Items: items, EOL: eols, Today: today})
 		}
 		if r.Err == nil {
 			r.Err = d.Store.RecordDeliveries(ctx, deliveries(key, due))
@@ -134,7 +150,7 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 			}
 		}
 		if r.Err == nil {
-			r.Sent, r.Vulns = len(due), len(items)
+			r.Sent, r.Vulns, r.EOL = len(due), len(items), len(eols)
 		} else {
 			errs = append(errs, fmt.Errorf("%s: %w", ch.Name(), r.Err))
 		}
@@ -233,7 +249,9 @@ func Plan(channel string, cands []Candidate, states map[string]store.State, toda
 		if st.Acked() {
 			continue
 		}
-		dueSoon, passed := deadline(c.Item.DueDate, today)
+		due, ended, soonDays := c.deadline()
+		dueSoon, passed := deadline(due, today, soonDays)
+		passed = passed || ended
 		var d Due
 		switch {
 		case !st.Sent(channel, store.KindNew):
@@ -256,9 +274,9 @@ func Plan(channel string, cands []Candidate, states map[string]store.State, toda
 	return out
 }
 
-// deadline reports whether due is DueSoonDays or fewer days ahead (today
+// deadline reports whether due is soonDays or fewer days ahead (today
 // included) and whether it has passed. A zero due date is neither.
-func deadline(due, today time.Time) (soon, passed bool) {
+func deadline(due, today time.Time, soonDays int) (soon, passed bool) {
 	if due.IsZero() {
 		return false, false
 	}
@@ -266,16 +284,24 @@ func deadline(due, today time.Time) (soon, passed bool) {
 	if due.Before(today) {
 		return false, true
 	}
-	return !due.After(today.AddDate(0, 0, DueSoonDays)), false
+	return !due.After(today.AddDate(0, 0, soonDays)), false
 }
 
-// Group merges due findings by CVE into one advice item each, listing every
-// affected product. The item is new if any of its findings is new, else an
-// overdue reminder over a due-soon one.
-func Group(due []Due) []advice.Item {
+// Group merges due KEV findings by CVE into one advice item each, listing
+// every affected product (the item is new if any of its findings is new,
+// else an overdue reminder over a due-soon one), and returns end-of-life
+// candidates as their own items.
+func Group(due []Due) ([]advice.Item, []advice.EOLItem) {
 	var order []string
 	byCVE := map[string]*advice.Item{}
+	var eols []advice.EOLItem
 	for _, d := range due {
+		if d.EOL != nil {
+			e := *d.EOL
+			e.Kind = d.Kind
+			eols = append(eols, e)
+			continue
+		}
 		key := strings.ToUpper(d.Item.CVE)
 		it, ok := byCVE[key]
 		if !ok {
@@ -295,7 +321,7 @@ func Group(due []Due) []advice.Item {
 	for _, k := range order {
 		out = append(out, *byCVE[k])
 	}
-	return out
+	return out, eols
 }
 
 func kindRank(kind string) int {
