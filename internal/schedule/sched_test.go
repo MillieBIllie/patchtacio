@@ -532,3 +532,23 @@ func TestCronUninstallLastLineRemovesCrontab(t *testing.T) {
 		t.Errorf("ours was the only line, so the crontab should be removed: %q", f.calls)
 	}
 }
+
+func TestCronUninstallKeepsLineAddedMeanwhile(t *testing.T) {
+	f := newFake()
+	f.fail(showEnv, "")
+	line, _ := CronLine(plainJob)
+	reads := 0
+	f.answer["crontab -l"] = func() ([]byte, error) {
+		reads++
+		if reads == 1 {
+			return []byte(line + "\n"), nil
+		}
+		return []byte(line + "\n0 3 * * * /usr/bin/backup\n"), nil // the user added a job meanwhile
+	}
+	if _, err := (&Linux{O: testOptions(t, f, true)}).Uninstall(context.Background()); err == nil {
+		t.Fatal("removed the crontab although it changed")
+	}
+	if slices.Contains(f.calls, "crontab -r") {
+		t.Error("crontab -r would have deleted the user's new line")
+	}
+}

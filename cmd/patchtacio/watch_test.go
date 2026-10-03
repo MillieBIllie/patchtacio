@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -462,6 +463,9 @@ func TestSecretWarningsLinuxKeychain(t *testing.T) {
 }
 
 func TestWatchRunRotatesLaunchdOutput(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("launchd's output file exists only on macOS")
+	}
 	e := newTestEnv(t)
 	e.app.desktopNotice = func(context.Context, advice.Notice) error { return nil }
 	logs := filepath.Join(os.Getenv(paths.EnvCacheDir), "logs")
