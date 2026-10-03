@@ -31,7 +31,7 @@ Design decisions: [docs/decisions/0001-m1-data-layer.md](decisions/0001-m1-data-
       Palo Alto PAN-OS, SonicWall SonicOS/SMA, Citrix NetScaler, Cisco ASA/FTD, Microsoft Exchange,
       Windows Server, VMware ESXi/vCenter, Atlassian Confluence, MOVEit, etc.
 - [x] Coverage report: % of KEV entries from the last 2 years that map to a catalog product
-      (`catalog coverage`; seed catalog vs KEV 2026.10.01: 169 of 547, 30.9%)
+      (`catalog coverage`; seed catalog vs KEV 2026.10.01: 169 of 547, 30.9%; 43 products vs KEV 2026.10.02: 194 of 549, 35.3%)
 - [x] Matcher: KEV → catalog product (version optional in v1)
 - [x] `patchtacio init` (interactive picker) and `patchtacio check` (table + JSON output)
 
