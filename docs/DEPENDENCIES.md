@@ -16,6 +16,7 @@ Dependabot opens one grouped `build(deps)` PR a week for Go modules.
 | `charm.land/huh/v2` | The `init` product picker: a searchable multi-select with an accessible mode (named in CLAUDE.md) | M2 |
 | `github.com/charmbracelet/x/term` | Detects whether stdin/stdout are a terminal before showing the picker, and reads `secret set` values without echo. huh already depends on it; `golang.org/x/term` would add a module for the same job | M2 |
 | `github.com/zalando/go-keyring` | Keeps alert secrets in the OS keychain (`patchtacio secret`), which CLAUDE.md rule 5 allows besides env vars. Pure Go on Linux (D-Bus Secret Service via `godbus/dbus`), Windows (Credential Manager via `danieljoos/wincred`) and macOS (drives `/usr/bin/security`, passing the secret over stdin, not argv; checked in v0.2.8's source). Writing three keychain bindings ourselves would be more code to trust than this small, widely used module. Only the BSDs need cgo, and we do not ship BSD builds | M3 |
+| `golang.org/x/sys` | `windows.GetSystemDirectory`, so `schtasks.exe`, `conhost.exe` and `powershell.exe` are run by a full path that Windows itself reports rather than one built from the `SystemRoot` variable (`internal/sysdir`). Already in the module graph through `charmbracelet/x/term` at the same version, so it adds no module; the standard library's `syscall` does not expose this call | M4 |
 
 ## Indirect modules worth watching
 

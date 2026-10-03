@@ -23,7 +23,7 @@ func (w *Windows) name() string {
 }
 
 func (w *Windows) schtasks(ctx context.Context, args ...string) error {
-	_, err := w.O.Run(ctx, nil, "schtasks", args...)
+	_, err := w.O.Run(ctx, nil, w.O.program("schtasks"), args...)
 	return err
 }
 
@@ -34,8 +34,8 @@ func (w *Windows) Launch(j Job) (Job, string) {
 	if p := filepath.Join(filepath.Dir(j.Program), WindowlessName); exists(p) {
 		gui = p
 	}
-	if w.O.SystemRoot != "" {
-		if p := filepath.Join(w.O.SystemRoot, "System32", "conhost.exe"); exists(p) {
+	if w.O.SystemDir != "" {
+		if p := filepath.Join(w.O.SystemDir, "conhost.exe"); exists(p) {
 			conhost = p
 		}
 	}

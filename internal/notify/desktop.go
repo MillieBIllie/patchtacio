@@ -19,6 +19,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/logging"
+	"github.com/milliebillie/patchtacio/internal/sysdir"
 )
 
 // Desktop shows a notification on this computer. The alert text never passes
@@ -28,13 +29,13 @@ import (
 type Desktop struct {
 	goos     string
 	lookPath func(string) (string, error)
-	getenv   func(string) string
+	sysDir   func() (string, error) // the Windows system directory
 	run      func(ctx context.Context, c desktopCmd) error
 }
 
 // NewDesktop returns a desktop channel for this computer.
 func NewDesktop() *Desktop {
-	return &Desktop{goos: runtime.GOOS, lookPath: exec.LookPath, getenv: os.Getenv, run: runDesktop}
+	return &Desktop{goos: runtime.GOOS, lookPath: exec.LookPath, sysDir: sysdir.System, run: runDesktop}
 }
 
 // Name implements Channel.
@@ -58,7 +59,7 @@ func (d *Desktop) SendNotice(ctx context.Context, n advice.Notice) error {
 }
 
 func (d *Desktop) show(ctx context.Context, title, body string) error {
-	c, err := desktopCommand(d.goos, oneLineText(title), oneLineText(body), d.lookPath, d.getenv)
+	c, err := desktopCommand(d.goos, oneLineText(title), oneLineText(body), d.lookPath, d.sysDir)
 	if err != nil {
 		return err
 	}
@@ -98,8 +99,8 @@ $app = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell
 `
 
 // desktopCommand builds the command for goos. It is pure (given lookPath and
-// getenv), so tests check every OS's command on every OS.
-func desktopCommand(goos, title, body string, lookPath func(string) (string, error), getenv func(string) string) (desktopCmd, error) {
+// sysDir), so tests check every OS's command on every OS.
+func desktopCommand(goos, title, body string, lookPath func(string) (string, error), sysDir func() (string, error)) (desktopCmd, error) {
 	switch goos {
 	case "linux", "freebsd", "openbsd", "netbsd":
 		p, err := lookPath("notify-send")
@@ -119,12 +120,13 @@ func desktopCommand(goos, title, body string, lookPath func(string) (string, err
 			notOption(title), notOption(body),
 		}}, nil
 	case "windows":
-		root := getenv("SystemRoot")
-		if root == "" {
-			root = `C:\Windows`
+		// A full path from Windows itself (not %SystemRoot%, which a parent
+		// process sets), so a powershell.exe earlier in PATH is never run.
+		sys, err := sysDir()
+		if err != nil {
+			return desktopCmd{}, fmt.Errorf("find Windows PowerShell: %w", err)
 		}
-		// A full path, so a powershell.exe earlier in PATH is never run.
-		ps := root + `\System32\WindowsPowerShell\v1.0\powershell.exe`
+		ps := sys + `\WindowsPowerShell\v1.0\powershell.exe`
 		return desktopCmd{
 			Path: ps,
 			Args: []string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", encodePowerShell(toastScript)},
