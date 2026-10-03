@@ -26,9 +26,28 @@ builds:
       - -X github.com/milliebillie/patchtacio/internal/version.Version={{ .Version }}
       - -X github.com/milliebillie/patchtacio/internal/version.Commit={{ .Commit }}
       - -X github.com/milliebillie/patchtacio/internal/version.Date={{ .CommitDate }}
+  # The same program as a Windows GUI program: the scheduled check runs it, so no
+  # console window flashes (docs/decisions/0004-m4-scheduling.md).
+  - id: patchtaciow
+    main: ./cmd/patchtacio
+    binary: patchtaciow
+    env:
+      - CGO_ENABLED=0
+    goos: [windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    ldflags:
+      - -s -w -H=windowsgui
+      - -X github.com/milliebillie/patchtacio/internal/version.Version={{ .Version }}
+      - -X github.com/milliebillie/patchtacio/internal/version.Commit={{ .Commit }}
+      - -X github.com/milliebillie/patchtacio/internal/version.Date={{ .CommitDate }}
 
 archives:
   - formats: [tar.gz]
+    # Windows archives also hold patchtaciow.exe.
+    allow_different_binary_count: true
     format_overrides:
       - goos: windows
         formats: [zip]
