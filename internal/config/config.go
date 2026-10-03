@@ -34,6 +34,7 @@ const maxSize = 1 << 20
 type Config struct {
 	Version  int       `yaml:"version"`
 	Products []Product `yaml:"products"`
+	Notify   *Notify   `yaml:"notify,omitempty"` // alerts; nil = none configured
 }
 
 // Product is one product the user runs.
@@ -113,6 +114,7 @@ func (c *Config) Validate(cat *catalog.Catalog) (warnings []string, err error) {
 				"run `patchtacio init` to update your configuration", p.ID, cp.Deprecated))
 		}
 	}
+	problems = append(problems, c.Notify.Validate()...)
 	if len(problems) > 0 {
 		return warnings, fmt.Errorf("configuration problems: %s", strings.Join(problems, "; "))
 	}
@@ -158,7 +160,7 @@ func Save(path string, c *Config) error {
 // their successors (keeping version and notes) and duplicates dropped, so a
 // renamed catalog entry keeps being checked. Call it after Validate.
 func (c *Config) Resolve(cat *catalog.Catalog) *Config {
-	out := &Config{Version: c.Version}
+	out := &Config{Version: c.Version, Notify: c.Notify}
 	seen := map[string]bool{}
 	for _, p := range c.Products {
 		if cp, ok := cat.Get(p.ID); ok && cp.Deprecated != "" {
@@ -174,9 +176,10 @@ func (c *Config) Resolve(cat *catalog.Catalog) *Config {
 }
 
 // WithProducts returns a configuration holding ids in order, keeping the
-// version and notes of products that were already configured.
+// version and notes of products that were already configured, and the
+// notification settings.
 func (c *Config) WithProducts(ids []string) *Config {
-	out := &Config{Version: SchemaVersion}
+	out := &Config{Version: SchemaVersion, Notify: c.Notify}
 	for _, id := range ids {
 		i := slices.IndexFunc(c.Products, func(p Product) bool { return p.ID == id })
 		if i >= 0 {
