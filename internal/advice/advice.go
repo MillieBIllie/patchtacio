@@ -117,8 +117,9 @@ func Short(m Message) string {
 const (
 	TestSubject = "[Test] Patchtacio alerts work on this channel"
 	TestBody    = "This is a test alert from Patchtacio. If you can read it, alerts on this channel work.\n" +
-		"No vulnerability has been found; nothing needs doing.\n"
-	TestShort = "Patchtacio test alert: this channel works. No action needed."
+		"It only tests delivery: it says nothing about whether your products are affected. " +
+		"Run `patchtacio check` for that.\n"
+	TestShort = "Patchtacio test alert: this channel works. It does not check your products; run patchtacio check for that."
 )
 
 func render(name string, v view) (string, error) {
