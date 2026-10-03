@@ -1,0 +1,21 @@
+path: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe
+arg: -NoProfile
+arg: -NonInteractive
+arg: -ExecutionPolicy
+arg: Bypass
+arg: -EncodedCommand
+arg: <EncodedCommand>
+--- decoded script ---
+$ErrorActionPreference = 'Stop'
+[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType = WindowsRuntime] | Out-Null
+$xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
+$text = $xml.GetElementsByTagName('text')
+$text.Item(0).AppendChild($xml.CreateTextNode($env:PATCHTACIO_TOAST_TITLE)) | Out-Null
+$text.Item(1).AppendChild($xml.CreateTextNode($env:PATCHTACIO_TOAST_BODY)) | Out-Null
+$toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
+$app = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe'
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($app).Show($toast)
+--- end ---
+env: PATCHTACIO_TOAST_TITLE=[Action needed by 12 Oct 2026] Acme "Widget"; $(rm -rf ~) & '
+env: PATCHTACIO_TOAST_BODY=-n Patchtacio: Acme exploited flaw CVE-2026-1. `whoami` <toast/>
