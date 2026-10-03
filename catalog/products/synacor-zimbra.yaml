@@ -8,7 +8,8 @@ kev_aliases:
   - { vendor: "Synacor", product: "Zimbra Collaboration Suite" }
 cpe_prefixes:
   - "cpe:2.3:a:synacor:zimbra_collaboration_suite"
+  - "cpe:2.3:a:zimbra:collaboration"
 eol_slug: null
 aliases_search: ["Zimbra", "webmail"]
 notes: ""
-verified: 2026-10-02
+verified: 2026-10-03

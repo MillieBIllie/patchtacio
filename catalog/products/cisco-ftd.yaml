@@ -9,7 +9,8 @@ kev_aliases:
   - { vendor: "Cisco", product: "Secure Firewall Adaptive Security Appliance and Secure Firewall Threat Defense" }
 cpe_prefixes:
   - "cpe:2.3:a:cisco:secure_firewall_threat_defense"
+  - "cpe:2.3:a:cisco:firepower_threat_defense"
 eol_slug: null
 aliases_search: ["Firepower", "Secure Firewall Threat Defense", "Cisco firewall"]
 notes: ""
-verified: 2026-10-02
+verified: 2026-10-03

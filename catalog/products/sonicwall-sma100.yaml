@@ -14,7 +14,8 @@ cpe_prefixes:
   - "cpe:2.3:o:sonicwall:sma_410_firmware"
   - "cpe:2.3:o:sonicwall:sma_500v_firmware"
   - "cpe:2.3:a:sonicwall:sma_500v"
+  - "cpe:2.3:o:sonicwall:sma_100_firmware"
 eol_slug: null
 aliases_search: ["Secure Mobile Access", "SSL VPN"]
 notes: ""
-verified: 2026-10-02
+verified: 2026-10-03

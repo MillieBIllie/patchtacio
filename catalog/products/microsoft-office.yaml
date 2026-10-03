@@ -13,7 +13,18 @@ kev_aliases:
   - { vendor: "Microsoft", product: "Publisher" }
 cpe_prefixes:
   - "cpe:2.3:a:microsoft:office"
+  - "cpe:2.3:a:microsoft:365_apps"
+  - "cpe:2.3:a:microsoft:office_365_proplus"
+  - "cpe:2.3:a:microsoft:office_long_term_servicing_channel"
+  - "cpe:2.3:a:microsoft:office_2016"
+  - "cpe:2.3:a:microsoft:office_2019"
+  - "cpe:2.3:a:microsoft:office_2021"
+  - "cpe:2.3:a:microsoft:word"
+  - "cpe:2.3:a:microsoft:excel"
+  - "cpe:2.3:a:microsoft:outlook"
+  - "cpe:2.3:a:microsoft:powerpoint"
+  - "cpe:2.3:a:microsoft:office_powerpoint"
 eol_slug: office
 aliases_search: ["Word", "Excel", "Outlook", "PowerPoint", "Microsoft 365"]
-notes: ""
-verified: 2026-10-02
+notes: "NVD names Office by suite (365 Apps, LTSC, 2016 to 2021) and by app. Access, Publisher, OneNote, Visio, Project, the viewers, the Compatibility Pack and the Office web servers have their own CPE names and are not listed."
+verified: 2026-10-03

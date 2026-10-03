@@ -8,7 +8,8 @@ kev_aliases:
   - { vendor: "Ivanti", product: "MobileIron Multiple Products", mentions: ["MobileIron's Core"] }
 cpe_prefixes:
   - "cpe:2.3:a:ivanti:endpoint_manager_mobile"
+  - "cpe:2.3:a:mobileiron:core"
 eol_slug: null
 aliases_search: ["MobileIron", "MDM"]
 notes: ""
-verified: 2026-10-02
+verified: 2026-10-03

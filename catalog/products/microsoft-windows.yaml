@@ -14,7 +14,33 @@ kev_aliases:
   - { vendor: "Microsoft", product: "Internet Key Exchange (IKE) Service Extensions" }
 cpe_prefixes:
   - "cpe:2.3:o:microsoft:windows"
+  - "cpe:2.3:o:microsoft:windows_xp"
+  - "cpe:2.3:o:microsoft:windows_vista"
+  - "cpe:2.3:o:microsoft:windows_7"
+  - "cpe:2.3:o:microsoft:windows_8"
+  - "cpe:2.3:o:microsoft:windows_8.1"
+  - "cpe:2.3:o:microsoft:windows_rt"
+  - "cpe:2.3:o:microsoft:windows_rt_8.1"
+  - "cpe:2.3:o:microsoft:windows_10_1507"
+  - "cpe:2.3:o:microsoft:windows_10_1511"
+  - "cpe:2.3:o:microsoft:windows_10_1607"
+  - "cpe:2.3:o:microsoft:windows_10_1703"
+  - "cpe:2.3:o:microsoft:windows_10_1709"
+  - "cpe:2.3:o:microsoft:windows_10_1803"
+  - "cpe:2.3:o:microsoft:windows_10_1809"
+  - "cpe:2.3:o:microsoft:windows_10_1903"
+  - "cpe:2.3:o:microsoft:windows_10_1909"
+  - "cpe:2.3:o:microsoft:windows_10_2004"
+  - "cpe:2.3:o:microsoft:windows_10_20h2"
+  - "cpe:2.3:o:microsoft:windows_10_21h1"
+  - "cpe:2.3:o:microsoft:windows_10_21h2"
+  - "cpe:2.3:o:microsoft:windows_10_22h2"
+  - "cpe:2.3:o:microsoft:windows_11_21h2"
+  - "cpe:2.3:o:microsoft:windows_11_22h2"
+  - "cpe:2.3:o:microsoft:windows_11_23h2"
+  - "cpe:2.3:o:microsoft:windows_11_24h2"
+  - "cpe:2.3:o:microsoft:windows_11_25h2"
 eol_slug: windows
 aliases_search: ["Windows 10", "Windows 11", "PC", "laptop"]
-notes: "KEV lists Windows flaws as \"Windows\" or by component (Win32k, SMBv1 server, ...) without saying whether desktop or server editions are affected, so these entries match both microsoft-windows and microsoft-windows-server."
-verified: 2026-10-02
+notes: "KEV lists Windows flaws as \"Windows\" or by component (Win32k, SMBv1 server, ...) without saying whether desktop or server editions are affected, so these entries match both microsoft-windows and microsoft-windows-server. NVD names each Windows release separately (windows_10_22h2, windows_11_24h2, ...): add new releases as NVD starts using them."
+verified: 2026-10-03
