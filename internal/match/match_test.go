@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/milliebillie/patchtacio/internal/catalog"
@@ -52,6 +53,30 @@ func TestEveryAliasMatchesARealEntry(t *testing.T) {
 	}
 }
 
+// Edge is built on Chromium: every Chromium component pair Chrome matches must
+// also match Edge, unfiltered, or an Edge-only user silently misses that flaw.
+func TestEdgeCoversEveryChromiumPair(t *testing.T) {
+	cat, _, _ := load(t)
+	chrome, ok := cat.Get("google-chrome")
+	if !ok {
+		t.Fatal("google-chrome is not in the catalog")
+	}
+	edge, ok := cat.Get("microsoft-edge")
+	if !ok {
+		t.Fatal("microsoft-edge is not in the catalog")
+	}
+	for _, a := range chrome.KEVAliases {
+		if a.Vendor != "Google" || !strings.HasPrefix(a.Product, "Chromium") {
+			continue
+		}
+		if !slices.ContainsFunc(edge.KEVAliases, func(e catalog.KEVAlias) bool {
+			return catalog.Key(e.Vendor, e.Product) == catalog.Key(a.Vendor, a.Product) && len(e.Mentions) == 0
+		}) {
+			t.Errorf("microsoft-edge has no unfiltered alias for %s / %s", a.Vendor, a.Product)
+		}
+	}
+}
+
 func TestProducts(t *testing.T) {
 	_, m, kc := load(t)
 	byCVE := map[string]kev.Vulnerability{}
@@ -74,9 +99,10 @@ func TestProducts(t *testing.T) {
 		{"CVE-2025-20393", nil}, // Cisco email gateways
 		// KEV does not say which Windows edition: both get the alert.
 		{"CVE-2026-81963", []string{"microsoft-windows", "microsoft-windows-server"}},
-		// Chromium flaws: Edge only when CISA's description names it.
+		// Chromium flaws reach Edge (built on Chromium) whether or not CISA's
+		// description names it.
 		{"CVE-2026-87491", []string{"google-chrome", "microsoft-edge"}},
-		{"CVE-2023-4863", []string{"google-chrome"}},
+		{"CVE-2023-4863", []string{"google-chrome", "microsoft-edge"}},
 		// Legacy (pre-Chromium) Edge entries.
 		{"CVE-2017-0037", []string{"microsoft-edge"}},
 		// ASA and FTD named together.

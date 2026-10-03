@@ -31,5 +31,5 @@ cpe_prefixes:
   - "cpe:2.3:a:google:chrome"
 eol_slug: chrome
 aliases_search: ["browser", "Chromium"]
-notes: "KEV files most Chrome flaws under Chromium components (V8, Skia, ...). They usually affect other Chromium-based browsers such as Microsoft Edge too, which are not covered by this entry."
+notes: "KEV files most Chrome flaws under Chromium components (V8, Skia, ...). They usually affect other Chromium-based browsers too; Microsoft Edge has its own entry that matches every Chromium component pair."
 verified: 2026-10-02

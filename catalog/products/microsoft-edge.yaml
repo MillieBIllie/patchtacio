@@ -6,21 +6,25 @@ kev_aliases:
   - { vendor: "Microsoft", product: "Edge" }
   - { vendor: "Microsoft", product: "Edge and Internet Explorer" }
   - { vendor: "Microsoft", product: "Internet Explorer and Edge" }
-  - { vendor: "Google", product: "Chromium", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium Animation", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium Blink", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium GPU", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium Indexed DB API", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium Intents", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium Mojo", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium Network Service", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium PopupBlocker", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium Portals", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium V8", mentions: ["Microsoft Edge"] }
-  - { vendor: "Google", product: "Chromium WebGL", mentions: ["Microsoft Edge"] }
+  - { vendor: "Google", product: "Chromium" }
+  - { vendor: "Google", product: "Chromium Animation" }
+  - { vendor: "Google", product: "Chromium Blink" }
+  - { vendor: "Google", product: "Chromium GPU" }
+  - { vendor: "Google", product: "Chromium Indexed DB API" }
+  - { vendor: "Google", product: "Chromium Intents" }
+  - { vendor: "Google", product: "Chromium Mojo" }
+  - { vendor: "Google", product: "Chromium Network Service" }
+  - { vendor: "Google", product: "Chromium PopupBlocker" }
+  - { vendor: "Google", product: "Chromium Portals" }
+  - { vendor: "Google", product: "Chromium Skia" }
+  - { vendor: "Google", product: "Chromium V8" }
+  - { vendor: "Google", product: "Chromium WebGL" }
+  - { vendor: "Google", product: "Chromium WebP" }
+  - { vendor: "Google", product: "Chromium WebRTC" }
+  - { vendor: "Google", product: "Chromium libvpx" }
   - { vendor: "Google", product: "Dawn", mentions: ["Microsoft Edge"] }
 cpe_prefixes: []
 eol_slug: null
 aliases_search: ["browser", "Chromium"]
-notes: "Edge is built on Chromium. KEV files those flaws under Google Chromium; they match here only when CISA's description names Microsoft Edge, which most do. Tick Google Chrome as well to see every Chromium entry. TODO: verify CPE. NVD files Chromium flaws under cpe:2.3:a:google:chrome, not under Edge."
+notes: "Edge is built on Chromium, so every KEV entry filed under a Google Chromium component matches here even when CISA's description names only Chrome. Dawn matches only when the description names Microsoft Edge. The three Microsoft pairs are legacy (pre-Chromium) EdgeHTML entries. TODO: verify CPE. NVD files Chromium flaws under cpe:2.3:a:google:chrome, not under Edge."
 verified: 2026-10-02
