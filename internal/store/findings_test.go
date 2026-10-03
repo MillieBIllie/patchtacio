@@ -142,3 +142,24 @@ func TestStatesManyIDs(t *testing.T) {
 		t.Errorf("States returned %d of %d", len(sts), len(ids))
 	}
 }
+
+func TestNotices(t *testing.T) {
+	ctx := context.Background()
+	s, now := clock(t)
+	if last, err := s.LastNotice(ctx, "email/x", "kev-stale"); err != nil || !last.IsZero() {
+		t.Fatalf("before: %v, %v", last, err)
+	}
+	if err := s.RecordNotice(ctx, "email/x", "kev-stale"); err != nil {
+		t.Fatal(err)
+	}
+	*now = now.Add(time.Hour)
+	if err := s.RecordNotice(ctx, "email/x", "kev-stale"); err != nil {
+		t.Fatal(err)
+	}
+	if last, err := s.LastNotice(ctx, "email/x", "kev-stale"); err != nil || !last.Equal(*now) {
+		t.Errorf("LastNotice = %v, %v; want %v", last, err, *now)
+	}
+	if last, _ := s.LastNotice(ctx, "webhook/y", "kev-stale"); !last.IsZero() {
+		t.Error("notices leak between channels")
+	}
+}

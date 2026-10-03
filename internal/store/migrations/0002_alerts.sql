@@ -39,3 +39,13 @@ CREATE TABLE deliveries (
 ) STRICT;
 
 CREATE INDEX deliveries_channel_sent ON deliveries (channel, sent_at);
+
+-- Notices that are not about a finding (e.g. "the KEV list could not be
+-- updated, alerts may be missing"), per destination key and kind, so a
+-- lasting problem is reported at most once a day rather than every run.
+CREATE TABLE notices (
+    channel TEXT NOT NULL,
+    kind    TEXT NOT NULL,
+    sent_at TEXT NOT NULL,
+    PRIMARY KEY (channel, kind)
+) STRICT;

@@ -52,9 +52,9 @@ func (d *Desktop) Send(ctx context.Context, m advice.Message) error {
 	return d.show(ctx, c.Title, advice.Short(m))
 }
 
-// SendTest implements Channel.
-func (d *Desktop) SendTest(ctx context.Context) error {
-	return d.show(ctx, advice.TestSubject, advice.TestShort)
+// SendNotice implements Channel.
+func (d *Desktop) SendNotice(ctx context.Context, n advice.Notice) error {
+	return d.show(ctx, n.Subject, n.Short)
 }
 
 func (d *Desktop) show(ctx context.Context, title, body string) error {

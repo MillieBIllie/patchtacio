@@ -15,13 +15,23 @@ import (
 
 // memStore is an in-memory Store with a clock the test controls.
 type memStore struct {
-	now   *time.Time
-	acked map[string]bool
-	sent  map[string]map[string]map[string]time.Time // id -> channel -> kind
+	now     *time.Time
+	acked   map[string]bool
+	sent    map[string]map[string]map[string]time.Time // id -> channel -> kind
+	notices map[string]time.Time                       // channel + "|" + kind
+}
+
+func (m *memStore) LastNotice(_ context.Context, channel, kind string) (time.Time, error) {
+	return m.notices[channel+"|"+kind], nil
+}
+
+func (m *memStore) RecordNotice(_ context.Context, channel, kind string) error {
+	m.notices[channel+"|"+kind] = *m.now
+	return nil
 }
 
 func newMemStore(now *time.Time) *memStore {
-	return &memStore{now: now, acked: map[string]bool{}, sent: map[string]map[string]map[string]time.Time{}}
+	return &memStore{now: now, acked: map[string]bool{}, sent: map[string]map[string]map[string]time.Time{}, notices: map[string]time.Time{}}
 }
 
 func (m *memStore) States(_ context.Context, ids []string) (map[string]store.State, error) {
@@ -65,10 +75,11 @@ func (m *memStore) LastDelivery(_ context.Context, channel string) (time.Time, e
 
 // fakeChannel records messages; fail makes Send fail.
 type fakeChannel struct {
-	name string
-	key  string // destination; defaults to name
-	fail bool
-	msgs []advice.Message
+	name    string
+	key     string // destination; defaults to name
+	fail    bool
+	msgs    []advice.Message
+	notices []advice.Notice
 }
 
 func (f *fakeChannel) Name() string { return f.name }
@@ -85,7 +96,13 @@ func (f *fakeChannel) Send(_ context.Context, m advice.Message) error {
 	f.msgs = append(f.msgs, m)
 	return nil
 }
-func (f *fakeChannel) SendTest(context.Context) error { return nil }
+func (f *fakeChannel) SendNotice(_ context.Context, n advice.Notice) error {
+	if f.fail {
+		return errors.New("connection refused")
+	}
+	f.notices = append(f.notices, n)
+	return nil
+}
 
 func cand(product, cve, due string) Candidate {
 	it := advice.Item{CVE: cve, Products: []advice.Product{{Display: product}}}
@@ -322,6 +339,35 @@ func TestDigestHoldsUntilPeriodEnds(t *testing.T) {
 	*now = now.Add(17*time.Hour + 30*time.Minute) // 23.5 h after the first: within drift allowance
 	if _, err := d.Run(ctx, both); err != nil || len(ch.msgs) != 2 || !slices.Equal(cves(ch.msgs[1]), []string{"new:CVE-2026-2"}) {
 		t.Errorf("next day: %d messages, %v", len(ch.msgs), err)
+	}
+}
+
+// A lasting problem is reported at most once a day per destination, and a
+// failed send is retried next run.
+func TestNoticeOncePerDay(t *testing.T) {
+	ctx := context.Background()
+	good := &fakeChannel{name: "email"}
+	bad := &fakeChannel{name: "webhook", fail: true}
+	d, now, _ := setup(t, DigestOff, good, bad)
+	n := advice.FeedNotice("CISA KEV catalog", time.Date(2026, 9, 28, 0, 0, 0, 0, time.UTC), "connection refused")
+	res, err := d.Notice(ctx, "kev-stale", n, 24*time.Hour)
+	if err == nil || res[0].Sent != 1 || res[1].Err == nil {
+		t.Fatalf("first: %+v, %v", res, err)
+	}
+	bad.fail = false
+	*now = now.Add(2 * time.Hour)
+	res, err = d.Notice(ctx, "kev-stale", n, 24*time.Hour)
+	if err != nil || res[0].Held != 1 || res[1].Sent != 1 {
+		t.Fatalf("2 h later: %+v, %v", res, err)
+	}
+	*now = now.Add(23 * time.Hour)
+	if res, _ = d.Notice(ctx, "kev-stale", n, 24*time.Hour); res[0].Sent != 1 {
+		t.Errorf("next day: %+v", res)
+	}
+	// The webhook first got through at +2 h; +25 h is a day later for it too
+	// (the hour of drift allowance).
+	if len(good.notices) != 2 || len(bad.notices) != 2 {
+		t.Errorf("email %d notices (want 2), webhook %d (want 2)", len(good.notices), len(bad.notices))
 	}
 }
 

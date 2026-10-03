@@ -33,8 +33,9 @@ type Channel interface {
 	Key() string
 	// Send delivers one message.
 	Send(ctx context.Context, m advice.Message) error
-	// SendTest delivers a message that says it is a test.
-	SendTest(ctx context.Context) error
+	// SendNotice delivers a message that is not about a finding: a test, or
+	// a warning that alerts may be missing.
+	SendNotice(ctx context.Context, n advice.Notice) error
 }
 
 // Candidate is one current finding: a KEV entry matching one of the user's
@@ -59,6 +60,8 @@ type Store interface {
 	States(ctx context.Context, ids []string) (map[string]store.State, error)
 	RecordDeliveries(ctx context.Context, ds []store.Delivery) error
 	LastDelivery(ctx context.Context, channel string) (time.Time, error)
+	LastNotice(ctx context.Context, channel, kind string) (time.Time, error)
+	RecordNotice(ctx context.Context, channel, kind string) error
 }
 
 // Dispatcher sends what is due on each channel.
@@ -126,6 +129,39 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 		if r.Err == nil {
 			r.Sent, r.Vulns = len(due), len(items)
 		} else {
+			errs = append(errs, fmt.Errorf("%s: %w", ch.Name(), r.Err))
+		}
+		results = append(results, r)
+	}
+	return results, errors.Join(errs...)
+}
+
+// Notice sends n on every channel whose destination has not had a notice of
+// this kind within every (less an hour for schedule drift), and records it.
+// Use it for problems that last, such as a feed that cannot be updated. Held
+// channels report Held = 1.
+func (d *Dispatcher) Notice(ctx context.Context, kind string, n advice.Notice, every time.Duration) ([]Result, error) {
+	now := d.now()
+	var results []Result
+	var errs []error
+	for _, ch := range d.Channels {
+		r := Result{Channel: ch.Name()}
+		key := ch.Key()
+		last, err := d.Store.LastNotice(ctx, key, kind)
+		switch {
+		case err != nil:
+			r.Err = err
+		case !last.IsZero() && now.Before(last.Add(every-time.Hour)):
+			r.Held, r.NextAfter = 1, last.Add(every-time.Hour)
+		default:
+			if r.Err = ch.SendNotice(ctx, n); r.Err == nil {
+				r.Err = d.Store.RecordNotice(ctx, key, kind)
+			}
+			if r.Err == nil {
+				r.Sent = 1
+			}
+		}
+		if r.Err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", ch.Name(), r.Err))
 		}
 		results = append(results, r)

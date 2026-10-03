@@ -16,7 +16,11 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
 
 ## Delivery and dedupe
 
-- Deliveries are stored per **finding, channel and kind** (`new`, `due-soon`, `overdue`).
+- Deliveries are stored per **finding, destination and kind** (`new`, `due-soon`, `overdue`).
+  The destination key is the channel type plus a short SHA-256 of the recipients (email) or URL
+  (webhook, ntfy), or `desktop`. A changed address or URL is a new destination that gets
+  everything again, instead of silently missing what went elsewhere. Only the hash is stored, so a
+  webhook token never reaches the database.
   - A channel that fails records nothing and is retried alone on the next run.
   - A channel that worked is never repeated because another one failed.
 - **One message per channel per run.** Several findings become one summary, and findings sharing
@@ -33,6 +37,14 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
   delivery. The period is one hour short, so a run scheduled at the same time each day is not
   held back by a few minutes of drift. There is no extra table; the last delivery time is
   `MAX(sent_at)` for the channel.
+
+- **Feed problems are reported on the alert channels.** If the KEV data is stale or missing,
+  `check --notify` sends a "[Check needed] ... alerts may be missing" notice on every channel, at
+  most once a day per destination (`notices` table), and still sends alerts from the saved copy.
+  Otherwise someone who only reads email would take silence as an all clear (CLAUDE.md rule 3).
+- `--since` narrows the report, never the alerts.
+- A store lock (`notify`, 15-minute TTL) is held around sending, so a scheduled and a manual run
+  cannot both send the same alert. The second waits up to a minute, then exits 2 without sending.
 
 ## Acknowledgements
 

@@ -38,7 +38,9 @@ func newCheckCmd(a *app) *cobra.Command {
 			"3 no match, but the KEV data is out of date (warning printed); 2 error or no KEV data.\n\n" +
 			"With --notify, new findings and reminders are also sent on the channels in the notify: section\n" +
 			"of your configuration: at most one message per channel per run, each finding alerted once.\n" +
-			"If a channel fails, check exits 2 and that channel retries next run.",
+			"If a channel fails, check exits 2 and that channel retries next run. If the KEV data cannot be\n" +
+			"updated, each channel also gets a notice (at most once a day) that alerts may be missing.\n" +
+			"--since narrows what is shown, never what is alerted.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var sinceDate feeds.Date
@@ -88,6 +90,13 @@ func newCheckCmd(a *app) *cobra.Command {
 			kc, st, err := a.loadKEV(cmd.Context(), u)
 			if err != nil {
 				_, _ = fmt.Fprintf(warn, "Cannot check your products: %s\n", firstLine(logging.RedactString(err.Error())))
+				if sendAlerts {
+					// No data means no alerts: say so on the alert channels,
+					// or silence would read as an all clear.
+					reps, alertErr := a.sendAlerts(cmd.Context(), u.Store, cfg, nil, false,
+						&feedProblem{title: st.Title, lastGood: st.CheckedAt, why: logging.RedactString(err.Error())})
+					a.reportAlerts(cmd.OutOrStdout(), warn, reps, alertErr)
+				}
 				return outcome(exitToolError)
 			}
 			code = worse(code, stateCode(st.State)) // in case a source reported no result
@@ -99,6 +108,7 @@ func newCheckCmd(a *app) *cobra.Command {
 			if err := u.Store.RecordFindings(cmd.Context(), storedFindings(findings)); err != nil {
 				return fmt.Errorf("save findings: %w", err)
 			}
+			allFindings := slices.Clone(findings) // --since narrows the report, never the alerts (DeleteFunc works in place)
 			if !sinceDate.IsZero() {
 				findings = slices.DeleteFunc(findings, func(f match.Finding) bool { return f.Vuln.DateAdded.Before(sinceDate.Time) })
 			}
@@ -108,10 +118,15 @@ func newCheckCmd(a *app) *cobra.Command {
 			}
 			var alertErr error
 			if sendAlerts {
-				rep.Alerts, alertErr = a.sendAlerts(cmd.Context(), u.Store, cfg, findings)
-				if rep.Alerts == nil && alertErr != nil {
-					return alertErr // nothing was attempted (could not read alert state)
+				var problem *feedProblem
+				if stale {
+					why := st.StaleReason
+					if why == "" {
+						why = st.LastError
+					}
+					problem = &feedProblem{title: st.Title, lastGood: st.CheckedAt, why: logging.RedactString(why)}
 				}
+				rep.Alerts, alertErr = a.sendAlerts(cmd.Context(), u.Store, cfg, allFindings, true, problem)
 			}
 			if asJSON {
 				enc := json.NewEncoder(cmd.OutOrStdout())
@@ -121,12 +136,15 @@ func newCheckCmd(a *app) *cobra.Command {
 				}
 			} else {
 				a.printCheck(cmd.OutOrStdout(), rep)
-				if sendAlerts {
-					a.printAlerts(cmd.OutOrStdout(), rep.Alerts)
+			}
+			if sendAlerts {
+				out := cmd.OutOrStdout()
+				if asJSON {
+					out = io.Discard // the reports are in the JSON
 				}
+				a.reportAlerts(out, warn, rep.Alerts, alertErr)
 			}
 			if alertErr != nil {
-				_, _ = fmt.Fprintln(warn, "Warning: some alerts could not be sent; they will be retried on the next run.")
 				return outcome(exitToolError) // a scheduled run must not fail silently
 			}
 			if len(findings) > 0 {
@@ -325,6 +343,21 @@ func (a *app) printCheck(w io.Writer, rep checkReport) {
 	_, _ = fmt.Fprintln(w, "\nCISA due dates are deadlines for US federal agencies; use them as a guide to urgency.")
 	_, _ = fmt.Fprintln(w, "For CISA's required action and the vendor advisory link for each entry, run: patchtacio check --json")
 	_, _ = fmt.Fprintln(w, "When you have dealt with an entry, run: patchtacio ack <CVE ID> (ACK yes: no more alerts or reminders).")
+}
+
+// reportAlerts prints what --notify did and, on failure, a warning that says
+// why when no channel could even be tried.
+func (a *app) reportAlerts(out, warn io.Writer, reps []alertReport, err error) {
+	if len(reps) > 0 {
+		a.printAlerts(out, reps)
+	}
+	switch {
+	case err == nil:
+	case len(reps) == 0:
+		_, _ = fmt.Fprintf(warn, "Warning: no alerts were sent: %s\n", firstLine(logging.RedactString(err.Error())))
+	default:
+		_, _ = fmt.Fprintln(warn, "Warning: some alerts could not be sent; they will be retried on the next run.")
+	}
 }
 
 // markAcknowledged sets Acknowledged on the report's findings.

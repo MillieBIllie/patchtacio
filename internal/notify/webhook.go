@@ -43,9 +43,9 @@ func (w *Webhook) Send(ctx context.Context, m advice.Message) error {
 	return w.post(ctx, c)
 }
 
-// SendTest implements Channel.
-func (w *Webhook) SendTest(ctx context.Context) error {
-	return w.post(ctx, advice.Chat{Title: advice.TestSubject, Body: advice.TestBody})
+// SendNotice implements Channel.
+func (w *Webhook) SendNotice(ctx context.Context, n advice.Notice) error {
+	return w.post(ctx, advice.Chat{Title: n.Subject, Body: n.Body})
 }
 
 func (w *Webhook) post(ctx context.Context, c advice.Chat) error {
