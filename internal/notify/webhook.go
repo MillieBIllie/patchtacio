@@ -52,7 +52,7 @@ func (w *Webhook) post(ctx context.Context, c advice.Chat) error {
 	u, err := checkURL(w.Getenv(config.EnvWebhookURL), config.EnvWebhookURL)
 	if err != nil {
 		if w.Getenv(config.EnvWebhookURL) == "" {
-			return fmt.Errorf("set %s to the %s webhook URL", config.EnvWebhookURL, w.Kind)
+			return fmt.Errorf("set %s to the %s webhook URL, or save it with `patchtacio secret set webhook-url`", config.EnvWebhookURL, w.Kind)
 		}
 		return err
 	}

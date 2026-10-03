@@ -58,7 +58,7 @@ func (n *Ntfy) SendNotice(ctx context.Context, no advice.Notice) error {
 func (n *Ntfy) post(ctx context.Context, title, body string, priority int, tag string) error {
 	raw := n.Getenv(config.EnvNtfyURL)
 	if raw == "" {
-		return fmt.Errorf("set %s to your ntfy topic URL, e.g. https://ntfy.sh/<your-secret-topic>", config.EnvNtfyURL)
+		return fmt.Errorf("set %s to your ntfy topic URL (e.g. https://ntfy.sh/<your-secret-topic>), or save it with `patchtacio secret set ntfy-url`", config.EnvNtfyURL)
 	}
 	u, err := checkURL(raw, config.EnvNtfyURL)
 	if err != nil {

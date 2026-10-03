@@ -11,10 +11,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/zalando/go-keyring"
+
 	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/notify"
 	"github.com/milliebillie/patchtacio/internal/paths"
+	"github.com/milliebillie/patchtacio/internal/secrets"
 	"github.com/milliebillie/patchtacio/internal/store"
 )
 
@@ -408,5 +411,43 @@ func TestNotifyLockHeld(t *testing.T) {
 	requireContains(t, errOut, "no alerts were sent", "another `patchtacio check --notify` is sending alerts")
 	if len(chans.messages("webhook")) != 0 {
 		t.Error("sent while another run held the lock")
+	}
+}
+
+func TestSecretCommands(t *testing.T) {
+	keyring.MockInit()
+	e := newTestEnv(t)
+	t.Setenv(config.EnvWebhookURL, "")
+	e.app.secrets = secrets.New()
+
+	out, errOut, code := e.execIn(t, "https://hooks.slack.com/services/T0/B0/SECRETTOKEN\n", "secret", "set", "webhook-url")
+	requireCode(t, code, exitOK, out, errOut)
+	requireContains(t, out, "Saved webhook-url in the keychain.")
+	if v, _ := keyring.Get(secrets.Service, config.EnvWebhookURL); v != "https://hooks.slack.com/services/T0/B0/SECRETTOKEN" {
+		t.Errorf("keychain holds %q", v)
+	}
+
+	out, _, _ = e.exec(t, "secret", "status")
+	requireContains(t, out, "webhook-url", "keychain", "smtp-password", "not set")
+	if strings.Contains(out, "SECRETTOKEN") {
+		t.Error("status printed a secret value")
+	}
+
+	// Real channels find it in the keychain.
+	chans, err := realChannels(&config.Notify{Webhook: &config.Webhook{Kind: "slack"}}, e.app.secrets.Getenv)
+	if err != nil || len(chans) != 1 || len(chans[0].Destination()) != 2 || chans[0].Destination()[1] == "" {
+		t.Errorf("channel did not get the keychain value: %v", err)
+	}
+
+	if _, errOut, code := e.execIn(t, "\n", "secret", "set", "ntfy-token"); code != exitToolError || !strings.Contains(errOut, "no value given") {
+		t.Errorf("empty value: code %d, %s", code, errOut)
+	}
+	if _, errOut, code := e.exec(t, "secret", "set", "github-token"); code != exitToolError || !strings.Contains(errOut, "unknown secret") {
+		t.Errorf("unknown name: code %d, %s", code, errOut)
+	}
+	out, errOut, code = e.exec(t, "secret", "delete", "webhook-url")
+	requireCode(t, code, exitOK, out, errOut)
+	if _, err := keyring.Get(secrets.Service, config.EnvWebhookURL); err == nil {
+		t.Error("still in the keychain after delete")
 	}
 }

@@ -86,7 +86,7 @@ func (e *Email) send(ctx context.Context, subject, body string) error {
 	var password string
 	if c.Username != "" {
 		if password = e.Getenv(config.EnvSMTPPassword); password == "" {
-			return fmt.Errorf("email.username is set, so set %s to the mail account's password", config.EnvSMTPPassword)
+			return fmt.Errorf("email.username is set, so set %s to the mail account's password, or save it with `patchtacio secret set smtp-password`", config.EnvSMTPPassword)
 		}
 	}
 	msg, err := e.compose(from, to, subject, body)

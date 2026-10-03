@@ -68,7 +68,13 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
 - Secrets come only from environment variables, read when a channel sends:
   `PATCHTACIO_SMTP_PASSWORD`, `PATCHTACIO_WEBHOOK_URL`, `PATCHTACIO_NTFY_URL`, and
   `PATCHTACIO_NTFY_TOKEN`. The ntfy topic URL is treated as a secret because on ntfy.sh the topic
-  name is the only protection. OS keychain support is a follow-up.
+  name is the only protection.
+- **OS keychain** (`patchtacio secret set|delete|status`): each secret is looked up in its
+  environment variable first, then the keychain (service `patchtacio`, account = the variable
+  name). `secret set` never takes the value as an argument (shell history, process list): it asks
+  without echo, or reads one line from stdin. `status` shows where a secret comes from, never its
+  value. A keychain that cannot be reached (a server without a desktop session) just means "not
+  set"; the environment variable still works.
 - Webhook and ntfy URLs:
   - must be `https://`; `http://` is allowed only to a server on the same computer.
   - Redirects are never followed, because the token would travel with them.

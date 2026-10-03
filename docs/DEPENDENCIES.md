@@ -14,7 +14,8 @@ Dependabot opens one grouped `build(deps)` PR a week for Go modules.
 | `modernc.org/sqlite` | SQLite without cgo (named in CLAUDE.md) | M1 |
 | `go.yaml.in/yaml/v3` | Strict YAML for the catalog and config (`KnownFields`). The maintained successor of `gopkg.in/yaml.v3`; cobra already pulled it in | M2 |
 | `charm.land/huh/v2` | The `init` product picker: a searchable multi-select with an accessible mode (named in CLAUDE.md) | M2 |
-| `github.com/charmbracelet/x/term` | Detects whether stdin/stdout are a terminal before showing the picker. huh already depends on it; `golang.org/x/term` would add a module for the same job | M2 |
+| `github.com/charmbracelet/x/term` | Detects whether stdin/stdout are a terminal before showing the picker, and reads `secret set` values without echo. huh already depends on it; `golang.org/x/term` would add a module for the same job | M2 |
+| `github.com/zalando/go-keyring` | Keeps alert secrets in the OS keychain (`patchtacio secret`), which CLAUDE.md rule 5 allows besides env vars. Pure Go on Linux (D-Bus Secret Service via `godbus/dbus`), Windows (Credential Manager via `danieljoos/wincred`) and macOS (drives `/usr/bin/security`, passing the secret over stdin, not argv; checked in v0.2.8's source). Writing three keychain bindings ourselves would be more code to trust than this small, widely used module. Only the BSDs need cgo, and we do not ship BSD builds | M3 |
 
 ## Indirect modules worth watching
 
