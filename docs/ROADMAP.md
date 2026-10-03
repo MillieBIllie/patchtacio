@@ -51,11 +51,14 @@ Design decisions: [docs/decisions/0002-m3-alerts.md](decisions/0002-m3-alerts.md
 **Done when:** a new KEV entry for a ticked product produces exactly one clear alert.
 
 ### M4: Scheduling
-- [ ] `patchtacio watch --install / --uninstall / --status`
-- [ ] Linux: systemd user timer (fallback: cron). Windows: Task Scheduler. macOS: launchd agent.
-- [ ] Log file in cache dir with rotation
+Design decisions: [docs/decisions/0004-m4-scheduling.md](decisions/0004-m4-scheduling.md). Setup: [docs/SCHEDULING.md](SCHEDULING.md).
+- [x] `patchtacio watch --install / --uninstall / --status` (and `--run-now`)
+- [x] Linux: systemd user timer (fallback: cron). Windows: Task Scheduler (windowless `patchtaciow.exe`). macOS: launchd agent.
+- [x] Log file in cache dir with rotation
 
 **Done when:** install → reboot → scheduled check runs on each OS (manual test checklist in docs/).
+Checklist: [docs/manual-testing.md](manual-testing.md). Windows 11: install and run through Task Scheduler verified;
+reboot, Linux and macOS runs still to do.
 
 ### M5: Local web UI
 - [ ] `patchtacio ui` opens the browser on 127.0.0.1:<random port>
