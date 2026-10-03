@@ -1,0 +1,11 @@
+# Written by `patchtacio watch --install`; remove with `patchtacio watch --uninstall`.
+[Unit]
+Description=Run the Patchtacio check daily
+
+[Timer]
+OnCalendar=*-*-* 23:05:00
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

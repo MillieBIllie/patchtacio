@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Written by `patchtacio watch --install`; remove with `patchtacio watch --uninstall`. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>io.github.milliebillie.patchtacio.check</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/home/o&#39;brien/my tools/patch$tacio</string>
+		<string>watch</string>
+		<string>run</string>
+		<string>--config</string>
+		<string>/home/o&#39;brien/100% &#34;real&#34;/config.yaml</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATCHTACIO_DATA_DIR</key>
+		<string>/srv/data $HOME %h\</string>
+	</dict>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>23</integer>
+		<key>Minute</key>
+		<integer>5</integer>
+	</dict>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>StandardOutPath</key>
+	<string>/Users/jo/Library/Caches/patchtacio/cache/logs/launchd.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/jo/Library/Caches/patchtacio/cache/logs/launchd.log</string>
+</dict>
+</plist>
