@@ -57,7 +57,7 @@ notify:
   email:
     host: smtp.example.org
     port: 587            # default 587; 465 with security: tls
-    security: starttls   # starttls (default), tls, or none (only to a server on localhost)
+    security: starttls   # starttls (default), tls, or none (only to 127.0.0.1 or ::1)
     username: alerts@example.org   # optional; password in PATCHTACIO_SMTP_PASSWORD
     from: "Patchtacio <alerts@example.org>"
     to: [it@example.org]
@@ -95,7 +95,7 @@ Test messages say they are tests and are not recorded, so real alerts are unaffe
   Patchtacio sends an Adaptive Card to it.
 - **Discord.** Channel settings → Integrations → Webhooks. Alerts never ping anyone.
 - **ntfy.** Pick a long random topic name, subscribe to it in the app, and put its URL in
-  `PATCHTACIO_NTFY_URL`. A self-hosted server works too (`http://` only on the same computer).
+  `PATCHTACIO_NTFY_URL`. A self-hosted server works too (`http://` only to 127.0.0.1 on the same computer).
 - **Desktop.** Linux needs `notify-send` (package `libnotify-bin` on Debian and Ubuntu). macOS uses
   `osascript`. Windows shows a toast through Windows PowerShell. A notification from a scheduled
   run needs the user to be logged in.

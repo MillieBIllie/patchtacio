@@ -80,6 +80,31 @@ func decodeIfEncoded(t *testing.T, args []string, a string) string {
 	return ""
 }
 
+func TestDesktopTextNeverAnOption(t *testing.T) {
+	c, err := desktopCommand("darwin", "-e do shell script", "-x", fakeLookPath, fakeGetenv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, a := range c.Args[6:] {
+		if strings.HasPrefix(a, "-") {
+			t.Errorf("osascript argument %q starts with -", a)
+		}
+	}
+	c, _ = desktopCommand("linux", "t", `<a href="x">&</a>`, fakeLookPath, fakeGetenv)
+	if got := c.Args[len(c.Args)-1]; got != "&lt;a href=\"x\"&gt;&amp;&lt;/a&gt;" {
+		t.Errorf("notify-send body not escaped: %q", got)
+	}
+}
+
+func TestChildEnvDropsSecrets(t *testing.T) {
+	got := childEnv([]string{"PATH=/bin", "PATCHTACIO_WEBHOOK_URL=https://x/secret", "patchtacio_smtp_password=p",
+		"PATCHTACIO_NTFY_TOKEN=t", "PATCHTACIO_NTFY_URL=u", "NVD_API_KEY=k", "HOME=/h"}, []string{"PATCHTACIO_TOAST_TITLE=x"})
+	want := []string{"PATH=/bin", "HOME=/h", "PATCHTACIO_TOAST_TITLE=x"}
+	if !slices.Equal(got, want) {
+		t.Errorf("childEnv = %v, want %v", got, want)
+	}
+}
+
 func TestDesktopLinuxWithoutNotifySend(t *testing.T) {
 	_, err := desktopCommand("linux", "t", "b", func(string) (string, error) { return "", errors.New("not found") }, fakeGetenv)
 	if err == nil || !strings.Contains(err.Error(), "notify-send") {

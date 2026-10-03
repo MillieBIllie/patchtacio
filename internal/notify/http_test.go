@@ -41,7 +41,8 @@ func (r *recorder) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Location", "http://127.0.0.1:1/elsewhere")
 	}
 	w.WriteHeader(code)
-	_, _ = w.Write([]byte("error from server"))
+	// Some servers echo the request in error pages.
+	_, _ = w.Write([]byte("error from server: cannot POST " + req.URL.Path + " with " + req.Header.Get("Authorization")))
 }
 
 func (r *recorder) count() int {
@@ -166,6 +167,18 @@ func TestHTTPErrorsNeverShowTheSecretURL(t *testing.T) {
 	if err != nil && !strings.Contains(err.Error(), "HTTP 500") {
 		t.Errorf("500: %v", err)
 	}
+
+	// An error page echoing the path and token: both scrubbed.
+	_, u = serve(t, http.StatusNotFound)
+	err = NewNtfy(4, env(map[string]string{config.EnvNtfyURL: u, config.EnvNtfyToken: "tk_SECRETTOKEN"})).SendTest(ctx)
+	check("echo", err)
+	if err != nil && strings.Contains(err.Error(), "tk_") {
+		t.Errorf("echo: token leaked: %v", err)
+	}
+
+	// Plain http to "localhost" by name is refused: DNS could send it elsewhere.
+	check("localhost name", NewWebhook("slack", env(map[string]string{
+		config.EnvWebhookURL: "http://localhost:1/services/T000/B000/SECRETTOKEN"})).SendTest(ctx))
 
 	// Redirect: not followed, so the token never travels elsewhere.
 	rec, u := serve(t, http.StatusFound)

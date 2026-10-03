@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf16"
@@ -105,15 +106,17 @@ func desktopCommand(goos, title, body string, lookPath func(string) (string, err
 		if err != nil {
 			return desktopCmd{}, errors.New("desktop notifications need notify-send: install libnotify-bin (Debian, Ubuntu) or libnotify (Fedora, Arch)")
 		}
-		// "--" ends options, so text starting with "-" is never one.
-		return desktopCmd{Path: p, Args: []string{"--app-name=Patchtacio", "--urgency=critical", "--", title, body}}, nil
+		// "--" ends options, so text starting with "-" is never one. The
+		// body is markup on GNOME and KDE, so & < > are escaped.
+		return desktopCmd{Path: p, Args: []string{"--app-name=Patchtacio", "--urgency=critical", "--", title, markupEscape(body)}}, nil
 	case "darwin":
 		// The text arrives as argv, never inside the AppleScript source.
+		// osascript has no "--", so text must not start with "-".
 		return desktopCmd{Path: "/usr/bin/osascript", Args: []string{
 			"-e", "on run argv",
 			"-e", "display notification (item 2 of argv) with title (item 1 of argv)",
 			"-e", "end run",
-			title, body,
+			notOption(title), notOption(body),
 		}}, nil
 	case "windows":
 		root := getenv("SystemRoot")
@@ -132,6 +135,36 @@ func desktopCommand(goos, title, body string, lookPath func(string) (string, err
 	}
 }
 
+// markupEscape escapes the characters notify-send bodies treat as markup.
+func markupEscape(s string) string {
+	return strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;").Replace(s)
+}
+
+// notOption keeps text from being read as a command-line option.
+func notOption(s string) string {
+	if strings.HasPrefix(s, "-") {
+		return " " + s
+	}
+	return s
+}
+
+// secretEnv lists environment variables a notification program never needs.
+var secretEnv = []string{
+	config.EnvSMTPPassword, config.EnvWebhookURL, config.EnvNtfyURL, config.EnvNtfyToken, "NVD_API_KEY",
+}
+
+// childEnv is env without the secrets, plus extra.
+func childEnv(env, extra []string) []string {
+	out := make([]string, 0, len(env)+len(extra))
+	for _, kv := range env {
+		name, _, _ := strings.Cut(kv, "=")
+		if !slices.ContainsFunc(secretEnv, func(s string) bool { return strings.EqualFold(s, name) }) {
+			out = append(out, kv)
+		}
+	}
+	return append(out, extra...)
+}
+
 // encodePowerShell is what -EncodedCommand expects: UTF-16LE, base64.
 func encodePowerShell(script string) string {
 	u := utf16.Encode([]rune(script))
@@ -144,7 +177,7 @@ func encodePowerShell(script string) string {
 
 func runDesktop(ctx context.Context, c desktopCmd) error {
 	cmd := exec.CommandContext(ctx, filepath.Clean(c.Path), c.Args...) //nolint:gosec // fixed program; text passed as arguments, never through a shell
-	cmd.Env = append(os.Environ(), c.Env...)
+	cmd.Env = childEnv(os.Environ(), c.Env)
 	var out bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &out
 	if err := cmd.Run(); err != nil {

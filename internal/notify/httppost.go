@@ -50,7 +50,7 @@ func checkURL(raw, envName string) (*url.URL, error) {
 	case u.Scheme == "https":
 	case u.Scheme == "http" && config.IsLoopback(u.Hostname()):
 	default:
-		return nil, fmt.Errorf("%s must be an https:// URL (http:// only for a server on this computer)", envName)
+		return nil, fmt.Errorf("%s must be an https:// URL (http:// only for a server on this computer, as http://127.0.0.1)", envName)
 	}
 	if u.User != nil {
 		return nil, fmt.Errorf("%s must not contain a user name or password; use the token variable instead", envName)
@@ -91,7 +91,7 @@ func (p *poster) post(ctx context.Context, u *url.URL, header http.Header, body 
 		case resp.StatusCode >= 300 && resp.StatusCode < 400:
 			return fmt.Errorf("%s answered with a redirect (HTTP %d), which Patchtacio does not follow for a secret URL; check the URL", u.Hostname(), resp.StatusCode)
 		default:
-			msg := strings.Join(strings.Fields(logging.Clean(string(snippet))), " ")
+			msg := strings.Join(strings.Fields(scrub(logging.Clean(string(snippet)), u, header)), " ")
 			if len(msg) > 200 {
 				msg = msg[:200] + "…"
 			}
@@ -101,6 +101,26 @@ func (p *poster) post(ctx context.Context, u *url.URL, header http.Header, body 
 			return fmt.Errorf("%s answered HTTP %d%s", u.Hostname(), resp.StatusCode, msg)
 		}
 	}
+}
+
+// scrub removes the secret parts of the request (the URL's path and query,
+// which carry webhook tokens and ntfy topics, and any bearer token) from
+// text a server sent back, in case it echoed them.
+func scrub(s string, u *url.URL, header http.Header) string {
+	s = logging.RedactString(s)
+	secrets := []string{u.RawQuery, strings.TrimPrefix(header.Get("Authorization"), "Bearer ")}
+	if p := strings.Trim(u.Path, "/"); p != "" {
+		secrets = append(secrets, p)
+		for part := range strings.SplitSeq(p, "/") {
+			secrets = append(secrets, part)
+		}
+	}
+	for _, sec := range secrets {
+		if len(sec) >= 4 {
+			s = strings.ReplaceAll(s, sec, logging.Redacted)
+		}
+	}
+	return s
 }
 
 // describe returns a network error without the URL that *url.Error carries.
