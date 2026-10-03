@@ -25,7 +25,8 @@ type eolEntry struct {
 	Release         string         `json:"release,omitempty"`
 	EOLDate         feeds.Date     `json:"eolDate,omitzero"` // end of security support, if given
 	ExtendedUntil   feeds.Date     `json:"extendedUntil,omitzero"`
-	Successor       string         `json:"successor,omitempty"` // newest supported release listed
+	Successor       string         `json:"successor,omitempty"`      // newest supported release listed (name)
+	SuccessorLabel  string         `json:"successorLabel,omitempty"` // its label on endoflife.date
 	SuccessorLatest string         `json:"successorLatest,omitempty"`
 	Page            string         `json:"page,omitempty"`
 	Policy          string         `json:"policy,omitempty"`
@@ -97,6 +98,7 @@ func (a *app) eolReport(cat *catalog.Catalog, cfg *config.Config, sts []match.EO
 		}
 		if s.Successor != nil {
 			e.Successor = s.Successor.Name
+			e.SuccessorLabel = releaseLabel(s.Successor)
 			if s.Successor.Latest != nil {
 				e.SuccessorLatest = s.Successor.Latest.Name
 			}
@@ -170,7 +172,7 @@ func upgradeHint(e eolEntry) string {
 	if e.Successor == "" {
 		return "; check the vendor's lifecycle page for supported releases"
 	}
-	return "; newest supported release: " + clean(e.Successor)
+	return "; newest supported release: " + clean(e.SuccessorLabel)
 }
 
 func firstN(s []string, n int) []string {
