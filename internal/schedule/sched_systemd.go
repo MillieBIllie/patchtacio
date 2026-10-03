@@ -1,9 +1,11 @@
 package schedule
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -19,9 +21,10 @@ func (l *Linux) systemctl(ctx context.Context, args ...string) ([]byte, error) {
 	return l.O.Run(ctx, nil, "systemctl", append([]string{"--user"}, args...)...)
 }
 
-// hasSystemd reports whether a systemd user manager answers.
+// hasSystemd reports whether a systemd user manager answers. It asks for the
+// version: show-environment would print variables that may hold secrets.
 func (l *Linux) hasSystemd(ctx context.Context) bool {
-	_, err := l.systemctl(ctx, "show-environment")
+	_, err := l.systemctl(ctx, "show", "--property=Version", "--value")
 	return err == nil
 }
 
@@ -62,7 +65,7 @@ func (l *Linux) installSystemd(ctx context.Context, j Job) (Result, error) {
 	if _, err := l.removeCron(ctx); err != nil {
 		return Result{}, err
 	}
-	r := Result{Method: MethodSystemd, Files: []string{svcPath, timerPath}}
+	r := Result{Method: MethodSystemd, Job: j, Files: []string{svcPath, timerPath}}
 	r.Notes = append(r.Notes, l.lingerNotes(ctx)...)
 	return r, nil
 }
@@ -83,7 +86,7 @@ func (l *Linux) installCron(ctx context.Context, j Job) (Result, error) {
 	if _, err := l.O.Run(ctx, []byte(CronMerge(tab, line)), "crontab", "-"); err != nil {
 		return Result{}, fmt.Errorf("save the crontab: %w", err)
 	}
-	return Result{Method: MethodCron, Notes: []string{cronNote}}, nil
+	return Result{Method: MethodCron, Job: j, Notes: []string{cronNote}}, nil
 }
 
 const cronNote = "Cron does not catch up: if the computer is off at the scheduled time, that day's check is skipped."
@@ -92,7 +95,10 @@ const cronNote = "Cron does not catch up: if the computer is off at the schedule
 func (l *Linux) readCrontab(ctx context.Context) (string, error) {
 	out, err := l.O.Run(ctx, nil, "crontab", "-l")
 	if err != nil {
-		if re, ok := errors.AsType[*RunError](err); ok && strings.Contains(strings.ToLower(re.Output), "no crontab") {
+		// Only this exact answer means "none": anything else read as empty
+		// would replace the user's whole crontab with Patchtacio's line.
+		if re, ok := errors.AsType[*RunError](err); ok && re.Code == 1 && len(bytes.TrimSpace(out)) == 0 &&
+			strings.Contains(strings.ToLower(re.Output), "no crontab") {
 			return "", nil
 		}
 		return "", fmt.Errorf("read the crontab: %w", err)
@@ -132,7 +138,9 @@ func (l *Linux) lingerNotes(ctx context.Context) []string {
 func (l *Linux) Uninstall(ctx context.Context) ([]string, error) {
 	var removed []string
 	svcPath, timerPath := filepath.Join(l.unitDir(), SystemdService), filepath.Join(l.unitDir(), SystemdTimer)
-	if exists(timerPath) || exists(svcPath) {
+	// A drop-in from `systemctl --user edit` may hold secrets (docs/SCHEDULING.md).
+	dropIn := svcPath + ".d"
+	if exists(timerPath) || exists(svcPath) || exists(dropIn) {
 		systemd := l.hasSystemd(ctx)
 		if systemd {
 			_, _ = l.systemctl(ctx, "disable", "--now", SystemdTimer) // not loaded is fine
@@ -145,6 +153,12 @@ func (l *Linux) Uninstall(ctx context.Context) ([]string, error) {
 			if ok {
 				removed = append(removed, p)
 			}
+		}
+		if exists(dropIn) {
+			if err := os.RemoveAll(dropIn); err != nil {
+				return removed, fmt.Errorf("remove %s: %w", dropIn, err)
+			}
+			removed = append(removed, dropIn)
 		}
 		if systemd {
 			_, _ = l.systemctl(ctx, "daemon-reload")

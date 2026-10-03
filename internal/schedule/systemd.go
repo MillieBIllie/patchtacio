@@ -29,6 +29,8 @@ func SystemdServiceUnit(j Job) (string, error) {
 	b.WriteString("SuccessExitStatus=1 3\n")
 	b.WriteString("TimeoutStartSec=30min\n")
 	b.WriteString("Nice=10\n")
+	b.WriteString("UMask=0077\n") // the log and records it creates are the user's alone
+	b.WriteString("NoNewPrivileges=yes\n")
 	return b.String(), nil
 }
 

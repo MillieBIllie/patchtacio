@@ -74,13 +74,47 @@ func TestCronLine(t *testing.T) {
 	if want := "17 8 * * * /usr/local/bin/patchtacio watch run # patchtacio-check"; line != want {
 		t.Errorf("got  %s\nwant %s", line, want)
 	}
-	line, err = CronLine(awkwardJob)
+	line, err = CronLine(cronAwkwardJob)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := `5 23 * * * PATCHTACIO_DATA_DIR='/srv/data $HOME \%h\' '/home/o'\''brien/my tools/patch$tacio' watch run --config '/home/o'\''brien/100\% "real"/config.yaml' # patchtacio-check`
+	want := `5 23 * * * PATCHTACIO_DATA_DIR='/srv/data $HOME\' '/home/o'\''brien/my tools/patch$tacio' watch run --config '/home/o'\''brien/real "one"/config.yaml' # patchtacio-check`
 	if line != want {
 		t.Errorf("got  %s\nwant %s", line, want)
+	}
+	// % cannot be passed to every cron reliably, so it is refused.
+	if _, err := CronLine(awkwardJob); err == nil || !strings.Contains(err.Error(), "%") {
+		t.Errorf("a %% in the job must be refused for cron: %v", err)
+	}
+}
+
+// cronAwkwardJob is awkwardJob without %, which cron refuses.
+var cronAwkwardJob = Job{
+	Program: "/home/o'brien/my tools/patch$tacio",
+	Args:    []string{"watch", "run", "--config", `/home/o'brien/real "one"/config.yaml`},
+	Env:     []EnvVar{{Name: "PATCHTACIO_DATA_DIR", Value: `/srv/data $HOME\`}},
+	Hour:    23, Minute: 5,
+}
+
+func TestTaskXMLRefusesPercent(t *testing.T) {
+	j := windowsJob
+	j.Args = []string{"watch", "run", "--config", `C:\100%\config.yaml`}
+	if _, err := TaskXML(j, TaskName, "S-1-5-21-1", time.Now()); err == nil || !strings.Contains(err.Error(), "%") {
+		t.Errorf("Task Scheduler would expand %%: %v", err)
+	}
+}
+
+func TestTaskNameFor(t *testing.T) {
+	cases := map[string]string{
+		`DESKTOP-1\Jo Smith`: "Patchtacio check (Jo Smith)",
+		"jo":                 "Patchtacio check (jo)",
+		`AD\o:dd*name`:       "Patchtacio check (o-dd-name)",
+		"":                   "Patchtacio check",
+	}
+	for in, want := range cases {
+		if got := TaskNameFor(in); got != want {
+			t.Errorf("TaskNameFor(%q) = %q, want %q", in, got, want)
+		}
 	}
 }
 
@@ -131,7 +165,7 @@ func TestTaskXMLGolden(t *testing.T) {
 		if how != name {
 			t.Errorf("launch %s: got %s", name, how)
 		}
-		x, err := TaskXML(j, sid, start)
+		x, err := TaskXML(j, TaskNameFor(`DESKTOP-1\Jo Smith`), sid, start)
 		if err != nil {
 			t.Fatal(err)
 		}

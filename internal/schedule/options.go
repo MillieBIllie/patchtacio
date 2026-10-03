@@ -27,16 +27,20 @@ type Options struct {
 	SystemRoot string // Windows: C:\Windows, for conhost.exe
 	UID        int    // POSIX user ID (launchd domain, loginctl)
 	UserSID    string // Windows: the user to register the task for
+	UserName   string // Windows: names the task, which is machine-wide
 }
 
-// DefaultOptions describes the current user on this computer. logDir and
-// tempDir come from Patchtacio's own directories.
+// DefaultOptions describes the current user on this computer. logDir is where
+// launchd writes its own output; tempDir "" means the user's temp directory.
 func DefaultOptions(logDir, tempDir string) (Options, error) {
 	o := Options{
 		Run: ExecRunner, LookPath: exec.LookPath, Now: time.Now,
 		LogDir: logDir, TempDir: tempDir,
 		UID:        os.Getuid(),
 		SystemRoot: os.Getenv("SystemRoot"),
+	}
+	if o.TempDir == "" {
+		o.TempDir = os.TempDir()
 	}
 	var err error
 	if o.Home, err = os.UserHomeDir(); err != nil {
@@ -51,6 +55,7 @@ func DefaultOptions(logDir, tempDir string) (Options, error) {
 			return Options{}, fmt.Errorf("find current user: %w", err)
 		}
 		o.UserSID = u.Uid // the SID on Windows
+		o.UserName = u.Username
 	}
 	return o, nil
 }

@@ -6,11 +6,22 @@ import (
 )
 
 // CronLine is the crontab line for j, ending in CronMarker. Cron hands the
-// command to /bin/sh, so every value that is not a plain word is single-quoted,
-// and % (which cron turns into a newline) is escaped.
+// command to /bin/sh, so every value that is not a plain word is single-quoted.
+// % is refused: most crons turn it into a newline unless escaped, but some
+// (BusyBox) would keep the escaping backslash.
 func CronLine(j Job) (string, error) {
 	if err := j.Validate(); err != nil {
 		return "", err
+	}
+	for _, v := range append([]string{j.Program}, j.Args...) {
+		if strings.Contains(v, "%") {
+			return "", fmt.Errorf("%q contains %%, which cron cannot be given reliably; move Patchtacio or its configuration to a path without %%", v)
+		}
+	}
+	for _, e := range j.Env {
+		if strings.Contains(e.Value, "%") {
+			return "", fmt.Errorf("%s contains %%, which cron cannot be given reliably", e.Name)
+		}
 	}
 	words := make([]string, 0, len(j.Env)+1+len(j.Args))
 	for _, e := range j.Env {
@@ -28,7 +39,6 @@ func cronQuote(s string) string {
 		return s
 	}
 	s = strings.ReplaceAll(s, "'", `'\''`)
-	s = strings.ReplaceAll(s, "%", `\%`)
 	return "'" + s + "'"
 }
 

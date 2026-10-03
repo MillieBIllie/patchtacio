@@ -3,7 +3,7 @@
   <RegistrationInfo>
     <Author>patchtacio</Author>
     <Description>Daily Patchtacio check: alerts for exploited vulnerabilities and end-of-life products. Written by `patchtacio watch --install`; remove with `patchtacio watch --uninstall`.</Description>
-    <URI>\Patchtacio check</URI>
+    <URI>\Patchtacio check (Jo Smith)</URI>
   </RegistrationInfo>
   <Triggers>
     <CalendarTrigger>

@@ -43,6 +43,8 @@ func LaunchdPlist(j Job, outPath string) (string, error) {
 	}
 	key("StartCalendarInterval")
 	fmt.Fprintf(&b, "\t<dict>\n\t\t<key>Hour</key>\n\t\t<integer>%d</integer>\n\t\t<key>Minute</key>\n\t\t<integer>%d</integer>\n\t</dict>\n", j.Hour, j.Minute)
+	key("Umask") // files it creates are readable only by the user (077)
+	b.WriteString("\t<integer>63</integer>\n")
 	key("ProcessType")
 	str("\t", "Background")
 	key("StandardOutPath")

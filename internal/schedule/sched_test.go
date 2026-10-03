@@ -44,7 +44,7 @@ func (f *fakeRunner) say(line, out string) {
 
 func (f *fakeRunner) fail(line, output string) {
 	f.answer[line] = func() ([]byte, error) {
-		return nil, &RunError{Name: strings.Fields(line)[0], Err: errors.New("exit status 1"), Output: output}
+		return nil, &RunError{Name: strings.Fields(line)[0], Code: 1, Err: errors.New("exit status 1"), Output: output}
 	}
 }
 
@@ -73,7 +73,7 @@ func testOptions(t *testing.T, f *fakeRunner, hasCrontab bool) Options {
 		Home:       filepath.Join(base, "home"),
 		ConfigHome: filepath.Join(base, "home", ".config"),
 		LogDir:     filepath.Join(base, "cache", "logs"),
-		TempDir:    filepath.Join(base, "cache"),
+		TempDir:    base,
 		UID:        1000,
 		UserSID:    "S-1-5-21-1-2-3-1001",
 	}
@@ -89,7 +89,7 @@ func readText(t *testing.T, path string) string {
 }
 
 const (
-	showEnv = "systemctl --user show-environment"
+	showEnv = "systemctl --user show --property=Version --value"
 	linger  = "loginctl show-user 1000 --property=Linger --value"
 )
 
@@ -439,4 +439,45 @@ func decodeUTF16(t *testing.T, b []byte) string {
 		u[i] = uint16(b[2+2*i]) | uint16(b[3+2*i])<<8
 	}
 	return string(utf16.Decode(u))
+}
+
+func TestCrontabOnlyEmptyWhenCronSaysSo(t *testing.T) {
+	f := newFake()
+	f.fail(showEnv, "")
+	// "no crontab" with another exit code is not "none": never overwrite.
+	f.answer["crontab -l"] = func() ([]byte, error) {
+		return nil, &RunError{Name: "crontab", Code: 2, Err: errors.New("exit status 2"), Output: "no crontab for jo; also something else"}
+	}
+	if _, err := (&Linux{O: testOptions(t, f, true)}).Install(context.Background(), plainJob); err == nil {
+		t.Fatal("an unclear crontab answer was taken as empty")
+	}
+	if slices.Contains(f.calls, "crontab -") {
+		t.Error("crontab was overwritten")
+	}
+}
+
+func TestSystemdUninstallRemovesDropIn(t *testing.T) {
+	f := newFake()
+	f.say(linger, "yes")
+	l := &Linux{O: testOptions(t, f, false)}
+	if _, err := l.Install(context.Background(), plainJob); err != nil {
+		t.Fatal(err)
+	}
+	override := filepath.Join(l.unitDir(), SystemdService+".d", "override.conf")
+	touch(t, override)
+	removed, err := l.Uninstall(context.Background())
+	if err != nil || len(removed) != 3 || exists(filepath.Dir(override)) {
+		t.Errorf("drop-in (which may hold secrets) left behind: %q %v", removed, err)
+	}
+}
+
+func TestTaskNamedPerUser(t *testing.T) {
+	f := newFake()
+	o := testOptions(t, f, false)
+	o.UserName = `SCHOOL\jsmith`
+	w := &Windows{O: o}
+	if _, err := w.Status(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	f.requireCalls(t, "schtasks /Query /TN Patchtacio check (jsmith)")
 }

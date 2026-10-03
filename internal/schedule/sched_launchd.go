@@ -47,7 +47,7 @@ func (d *Darwin) Install(ctx context.Context, j Job) (Result, error) {
 			return Result{}, fmt.Errorf("load the launchd agent: %w", err)
 		}
 	}
-	return Result{Method: MethodLaunchd, Files: []string{path}, Notes: []string{
+	return Result{Method: MethodLaunchd, Job: j, Files: []string{path}, Notes: []string{
 		"If the Mac is asleep at the scheduled time the check runs when it wakes; if it is shut down, that day's check is skipped.",
 	}}, nil
 }

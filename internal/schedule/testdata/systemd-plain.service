@@ -10,3 +10,5 @@ ExecStart=/usr/local/bin/patchtacio watch run
 SuccessExitStatus=1 3
 TimeoutStartSec=30min
 Nice=10
+UMask=0077
+NoNewPrivileges=yes
