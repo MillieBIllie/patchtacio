@@ -86,8 +86,8 @@ func webhookPayload(kind string, c advice.Chat) ([]byte, error) {
 		v = map[string]any{
 			"username": "Patchtacio",
 			"embeds": []map[string]any{{
-				"title":       truncate(c.Title, discordTitleLimit),
-				"description": truncate(c.Body, discordDescLimit),
+				"title":       noMaskedLinks(truncate(c.Title, discordTitleLimit)),
+				"description": noMaskedLinks(truncate(c.Body, discordDescLimit)),
 				"color":       discordWarningColor,
 			}},
 			// Never ping anyone, whatever the text says.
@@ -95,7 +95,7 @@ func webhookPayload(kind string, c advice.Chat) ([]byte, error) {
 		}
 	case "teams":
 		body := []map[string]any{{
-			"type": "TextBlock", "text": c.Title, "weight": "bolder", "size": "medium",
+			"type": "TextBlock", "text": noMaskedLinks(c.Title), "weight": "bolder", "size": "medium",
 			"wrap": true, "color": patchtacioAccent,
 		}}
 		gap := false
@@ -104,7 +104,7 @@ func webhookPayload(kind string, c advice.Chat) ([]byte, error) {
 				gap = true
 				continue
 			}
-			b := map[string]any{"type": "TextBlock", "text": line, "wrap": true, "spacing": "none"}
+			b := map[string]any{"type": "TextBlock", "text": noMaskedLinks(line), "wrap": true, "spacing": "none"}
 			if gap {
 				b["spacing"] = "medium"
 				gap = false
@@ -131,6 +131,15 @@ func webhookPayload(kind string, c advice.Chat) ([]byte, error) {
 		return nil, fmt.Errorf("encode %s message: %w", kind, err)
 	}
 	return b, nil
+}
+
+// noMaskedLinks stops text forming a markdown link, [shown text](target),
+// which Discord embeds and Teams cards render with only the shown text
+// visible: feed text could display one address and link to another. A
+// zero-width space between "]" and "(" breaks the syntax without changing
+// what the reader sees; plain URLs are still linked.
+func noMaskedLinks(s string) string {
+	return strings.ReplaceAll(s, "](", "]\u200b(")
 }
 
 func slackEscape(s string) string {
