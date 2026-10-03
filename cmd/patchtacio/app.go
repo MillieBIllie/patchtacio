@@ -33,6 +33,7 @@ type app struct {
 	// channels builds the configured alert channels; fakes in tests.
 	channels func(*config.Notify) ([]notify.Channel, error)
 	// secrets finds alert secrets: environment first, then the OS keychain.
+	// Built on first use (it needs the config directory); tests set it.
 	secrets *secrets.Store
 
 	// The product picker and whether it can run; fakes in tests.
@@ -47,12 +48,9 @@ type app struct {
 }
 
 func defaultApp() *app {
-	sec := secrets.New()
-	return &app{
-		secrets:  sec,
-		channels: func(n *config.Notify) ([]notify.Channel, error) { return realChannels(n, sec.Getenv) },
-		now:      time.Now,
-		loc:      time.Local,
+	a := &app{
+		now: time.Now,
+		loc: time.Local,
 		sources: func() []feeds.Source {
 			return []feeds.Source{kev.New(), eol.New()}
 		},
@@ -61,6 +59,8 @@ func defaultApp() *app {
 		isTerminal: stdinIsTerminal,
 		log:        slog.New(slog.DiscardHandler),
 	}
+	a.channels = func(n *config.Notify) ([]notify.Channel, error) { return realChannels(n, a.secretStore().Getenv) }
+	return a
 }
 
 // openUpdater resolves the directories, opens the database and returns an
@@ -92,6 +92,18 @@ func (a *app) openUpdater(ctx context.Context) (*feeds.Updater, func(), error) {
 		}
 	}
 	return u, closeFn, nil
+}
+
+// secretStore returns the secrets store, building it on first use.
+func (a *app) secretStore() *secrets.Store {
+	if a.secrets == nil {
+		if dirs, err := paths.Resolve(); err == nil {
+			a.secrets = secrets.New(dirs.Config)
+		} else {
+			a.secrets = &secrets.Store{Env: os.Getenv} // no config directory: environment only
+		}
+	}
+	return a.secrets
 }
 
 func (a *app) setupLogging(stderr interface{ Write([]byte) (int, error) }) {

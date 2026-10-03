@@ -21,6 +21,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/match"
+	"github.com/milliebillie/patchtacio/internal/secrets"
 	"github.com/milliebillie/patchtacio/internal/store"
 )
 
@@ -359,10 +360,28 @@ func (a *app) reportAlerts(out, warn io.Writer, reps []alertReport, err error) {
 	}
 	switch {
 	case err == nil:
+		return
 	case len(reps) == 0:
 		_, _ = fmt.Fprintf(warn, "Warning: no alerts were sent: %s\n", firstLine(logging.RedactString(err.Error())))
 	default:
 		_, _ = fmt.Fprintln(warn, "Warning: some alerts could not be sent; they will be retried on the next run.")
+	}
+	a.explainKeychain(warn)
+}
+
+// explainKeychain says when a secret saved in the keychain could not be read
+// in this run, which otherwise looks like an unset environment variable.
+func (a *app) explainKeychain(warn io.Writer) {
+	if a.secrets == nil {
+		return
+	}
+	for env, err := range a.secrets.Problems() {
+		name := env
+		if s, ok := secrets.ByName(env); ok {
+			name = s.Name
+		}
+		_, _ = fmt.Fprintf(warn, "Note: %s was saved with `patchtacio secret set`, but this run could not read it (%s). "+
+			"Scheduled runs often cannot reach the keychain; set %s for them instead.\n", name, firstLine(err.Error()), env)
 	}
 }
 

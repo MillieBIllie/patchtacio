@@ -139,15 +139,23 @@ func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Confi
 	if err != nil {
 		return nil, err
 	}
+	// Ask the keychain (time-limited) before taking the lock, so nothing
+	// slow happens while other runs wait.
+	if a.secrets != nil {
+		a.secrets.Prefetch()
+	}
 	release, err := a.notifyLock(ctx, st)
 	if err != nil {
 		return nil, err
 	}
 	defer release()
 
-	secret, err := st.InstallSecret(ctx)
+	secret, reset, err := st.InstallSecret(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if reset {
+		a.log.Warn("the install key was damaged and has been replaced; each alert channel will get one summary of everything again")
 	}
 	d := &notify.Dispatcher{Store: st, Channels: chans, Digest: cfg.Notify.Digest, Now: a.now, Location: a.loc, Secret: secret}
 	var reps []alertReport
@@ -220,10 +228,18 @@ func (a *app) notifyLock(ctx context.Context, st *store.Store) (func(), error) {
 	}
 }
 
-// heartbeatNotifyLock refreshes the lock until stop is called.
+// notifyLockMaxHold caps how long a heartbeat keeps the lock: a run that
+// hangs (a channel or keychain that never answers) must not block every
+// later run, and so every later alert, for as long as it lives.
+var notifyLockMaxHold = 30 * time.Minute
+
+// heartbeatNotifyLock refreshes the lock until stop is called, or until
+// notifyLockMaxHold has passed. A failed beat is retried at the next tick;
+// it stops only if another run has taken the lock over.
 func (a *app) heartbeatNotifyLock(ctx context.Context, st *store.Store, owner string) (stop func()) {
 	done := make(chan struct{})
 	finished := make(chan struct{})
+	giveUp := time.Now().Add(notifyLockMaxHold)
 	go func() {
 		defer close(finished)
 		t := time.NewTicker(notifyLockTTL / 4)
@@ -233,11 +249,20 @@ func (a *app) heartbeatNotifyLock(ctx context.Context, st *store.Store, owner st
 			case <-done:
 				return
 			case <-t.C:
-				ok, err := st.HeartbeatLock(context.WithoutCancel(ctx), notifyLockName, owner)
-				if err != nil || !ok {
+				if time.Now().After(giveUp) {
+					a.log.Warn("still sending alerts after the maximum lock time; letting other runs proceed")
+					return
+				}
+				bctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+				ok, err := st.HeartbeatLock(bctx, notifyLockName, owner)
+				cancel()
+				switch {
+				case err != nil:
+					a.log.Debug("alert lock heartbeat failed; retrying", "err", err)
+				case !ok:
 					// Sending goes on: stopping halfway would be worse than a
 					// possible duplicate from a run that took over.
-					a.log.Warn("lost the alert-sending lock; another run may send the same alerts", "err", err)
+					a.log.Warn("lost the alert-sending lock; another run may send the same alerts")
 					return
 				}
 			}

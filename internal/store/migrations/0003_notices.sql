@@ -9,10 +9,3 @@ CREATE TABLE IF NOT EXISTS notices (
     PRIMARY KEY (channel, kind)
 ) STRICT;
 
--- Values this installation keeps, such as 'install_secret': random bytes
--- (hex) that key the hashes of alert destinations, so a hashed ntfy topic
--- or webhook URL in a copied database cannot be confirmed by guessing.
-CREATE TABLE settings (
-    key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-) STRICT;

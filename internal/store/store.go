@@ -36,6 +36,7 @@ const setupDeadline = 15 * time.Second
 type Store struct {
 	db  *sql.DB
 	now func() time.Time
+	dir string // the database's directory (install.key lives beside it)
 }
 
 // Open opens (creating if needed) the database at file and applies pending
@@ -68,7 +69,7 @@ func Open(ctx context.Context, file string) (*Store, error) {
 	// single connection avoids SQLITE_BUSY between our own goroutines.
 	db.SetMaxOpenConns(1)
 
-	s := &Store{db: db, now: time.Now}
+	s := &Store{db: db, now: time.Now, dir: filepath.Dir(file)}
 	// While another process is creating the database and switching it to WAL,
 	// SQLite can answer SQLITE_BUSY without honoring busy_timeout, so retry
 	// setup until a fixed deadline (not an attempt count: each attempt may

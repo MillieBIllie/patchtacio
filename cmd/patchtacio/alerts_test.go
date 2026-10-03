@@ -385,6 +385,32 @@ func TestNotifyLockHeartbeat(t *testing.T) {
 	}
 }
 
+// A run that hangs loses the lock after the maximum hold, so it cannot block
+// every later run (and every later alert) for as long as it lives.
+func TestNotifyLockMaxHold(t *testing.T) {
+	e := newTestEnv(t)
+	e.exec(t, "init", "--products", "citrix-netscaler")
+	e.exec(t, "check")
+	st, err := store.Open(context.Background(), filepath.Join(os.Getenv(paths.EnvDataDir), dbFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = st.Close() }()
+	oldTTL, oldMax := notifyLockTTL, notifyLockMaxHold
+	notifyLockTTL, notifyLockMaxHold = 200*time.Millisecond, 300*time.Millisecond
+	defer func() { notifyLockTTL, notifyLockMaxHold = oldTTL, oldMax }()
+
+	release, err := e.app.notifyLock(context.Background(), st)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	time.Sleep(notifyLockMaxHold + 3*notifyLockTTL) // the "hung" run never releases
+	if ok, err := st.AcquireLock(context.Background(), notifyLockName, "next-run", notifyLockTTL); err != nil || !ok {
+		t.Errorf("a hung run still holds the lock after the maximum hold: %v %v", ok, err)
+	}
+}
+
 // Two overlapping runs never both send: the second waits, then gives up and
 // says so.
 func TestNotifyLockHeld(t *testing.T) {
@@ -415,10 +441,9 @@ func TestNotifyLockHeld(t *testing.T) {
 }
 
 func TestSecretCommands(t *testing.T) {
-	keyring.MockInit()
 	e := newTestEnv(t)
 	t.Setenv(config.EnvWebhookURL, "")
-	e.app.secrets = secrets.New()
+	e.app.secrets = secrets.Mock(os.Getenv(paths.EnvConfigDir), os.Getenv)
 
 	out, errOut, code := e.execIn(t, "https://hooks.slack.com/services/T0/B0/SECRETTOKEN\n", "secret", "set", "webhook-url")
 	requireCode(t, code, exitOK, out, errOut)

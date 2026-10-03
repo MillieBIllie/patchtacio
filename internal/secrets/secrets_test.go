@@ -1,7 +1,9 @@
 package secrets
 
 import (
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/zalando/go-keyring"
 
@@ -9,9 +11,8 @@ import (
 )
 
 func TestLookupOrder(t *testing.T) {
-	keyring.MockInit() // in-memory keychain; tests never touch the real one
 	env := map[string]string{}
-	s := &Store{Env: func(k string) string { return env[k] }}
+	s := Mock(t.TempDir(), func(k string) string { return env[k] }) // in-memory keychain
 	wh, _ := ByName("webhook-url")
 
 	if v, src, err := s.Lookup(config.EnvWebhookURL); v != "" || src != NotSet || err != nil {
@@ -41,6 +42,64 @@ func TestLookupOrder(t *testing.T) {
 	// Only known secrets are looked up in the keychain.
 	if v, src, _ := s.Lookup("HOME_NOT_A_SECRET"); v != "" || src != NotSet {
 		t.Errorf("unknown name: %q %q", v, src)
+	}
+}
+
+// Without `secret set`, the keychain is never asked, so nobody who uses
+// environment variables meets an unlock prompt.
+func TestKeychainOnlyForMarkedSecrets(t *testing.T) {
+	s := Mock(t.TempDir(), func(string) string { return "" })
+	if err := keyring.Set(Service, config.EnvNtfyToken, "set by something else"); err != nil {
+		t.Fatal(err)
+	}
+	called := false
+	s.kc.get = func(string, string) (string, error) { called = true; return "", nil }
+	if v, src, err := s.Lookup(config.EnvNtfyToken); v != "" || src != NotSet || err != nil || called {
+		t.Errorf("unmarked secret: %q %q %v, keychain asked: %v", v, src, err, called)
+	}
+}
+
+// A keychain that never answers (an unlock prompt nobody sees) must not
+// stall the run.
+func TestKeychainTimeout(t *testing.T) {
+	old := readTimeout
+	readTimeout = 50 * time.Millisecond
+	defer func() { readTimeout = old }()
+	s := Mock(t.TempDir(), func(string) string { return "" })
+	wh, _ := ByName("webhook-url")
+	if err := s.Set(wh, "https://example.invalid/hook"); err != nil {
+		t.Fatal(err)
+	}
+	block := make(chan struct{})
+	defer close(block)
+	s.kc.get = func(string, string) (string, error) { <-block; return "", nil }
+	start := time.Now()
+	v, _, err := s.Lookup(config.EnvWebhookURL)
+	if v != "" || err == nil || time.Since(start) > 2*time.Second {
+		t.Errorf("hung keychain: %q, %v after %v", v, err, time.Since(start))
+	}
+	if p := s.Problems(); p[config.EnvWebhookURL] == nil {
+		t.Error("the timeout is not reported in Problems")
+	}
+	// The answer is remembered: a second lookup does not wait again.
+	start = time.Now()
+	_, _, _ = s.Lookup(config.EnvWebhookURL)
+	if time.Since(start) > 20*time.Millisecond {
+		t.Error("second lookup waited again")
+	}
+}
+
+func TestKeychainUnreachableNotCalled(t *testing.T) {
+	s := Mock(t.TempDir(), func(string) string { return "" })
+	wh, _ := ByName("webhook-url")
+	if err := s.Set(wh, "https://example.invalid/hook"); err != nil {
+		t.Fatal(err)
+	}
+	s.forget(config.EnvWebhookURL)
+	s.kc.reachable = func() error { return errors.New("no session bus") }
+	s.kc.get = func(string, string) (string, error) { t.Error("keychain called while unreachable"); return "", nil }
+	if _, _, err := s.Lookup(config.EnvWebhookURL); err == nil {
+		t.Error("want an error saying the keychain is unreachable")
 	}
 }
 
