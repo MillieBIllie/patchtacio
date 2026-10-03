@@ -13,6 +13,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/catalog"
 	"github.com/milliebillie/patchtacio/internal/config"
+	"github.com/milliebillie/patchtacio/internal/feeds/eol"
 	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/match"
 	"github.com/milliebillie/patchtacio/internal/notify"
@@ -379,7 +380,7 @@ func eolCandidates(cfg *config.Config, sts []match.EOLStatus) []notify.Candidate
 			it.ExtendedUntil = s.Release.EOESFrom.Time
 		}
 		if s.Successor != nil {
-			it.Successor = s.Successor.Name
+			it.Successor = releaseLabel(s.Successor)
 			if s.Successor.Latest != nil {
 				it.SuccessorAt = s.Successor.Latest.Name
 			}
@@ -387,6 +388,15 @@ func eolCandidates(cfg *config.Config, sts []match.EOLStatus) []notify.Candidate
 		out = append(out, notify.Candidate{ID: id, EOL: it})
 	}
 	return out
+}
+
+// releaseLabel is endoflife.date's label for a release ("Subscription
+// Edition SU9"), or its name when there is none.
+func releaseLabel(r *eol.Release) string {
+	if l := strings.TrimSpace(r.Label); l != "" {
+		return l
+	}
+	return r.Name
 }
 
 // productName is the catalog display name of id, or id itself.
