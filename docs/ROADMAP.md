@@ -57,8 +57,8 @@ Design decisions: [docs/decisions/0004-m4-scheduling.md](decisions/0004-m4-sched
 - [x] Log file in cache dir with rotation
 
 **Done when:** install → reboot → scheduled check runs on each OS (manual test checklist in docs/).
-Checklist: [docs/manual-testing.md](manual-testing.md). Windows 11: install and run through Task Scheduler verified;
-reboot, Linux and macOS runs still to do.
+Checklist and results: [docs/manual-testing.md](manual-testing.md). Verified on Windows 11 (no reboot yet) and on Linux
+with systemd and cron (WSL, including restart and a missed-run catch-up). macOS and a Windows reboot are still to do.
 
 ### M5: Local web UI
 - [ ] `patchtacio ui` opens the browser on 127.0.0.1:<random port>
