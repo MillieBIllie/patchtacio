@@ -108,7 +108,8 @@ type alertReport struct {
 // feedProblem says why a feed could not be refreshed, for the notice
 // --notify sends so that silence is never mistaken for an all clear.
 type feedProblem struct {
-	kind     string // notice kind, e.g. noticeKEVStale
+	kind     string        // notice kind, e.g. noticeKEVStale
+	notice   advice.Notice // the text, if not a FeedNotice for feed
 	feed     advice.Feed
 	lastGood time.Time // last successful contact; zero = never
 	why      string
@@ -118,8 +119,10 @@ type feedProblem struct {
 const (
 	noticeKEVStale = "kev-out-of-date"
 	noticeEOLStale = "eol-out-of-date"
-	noticeEvery    = 24 * time.Hour
-	notifyLockName = "notify"
+	// noticeEOLNotListed: endoflife.date no longer lists a ticked product.
+	noticeEOLNotListed = "eol-not-listed"
+	noticeEvery        = 24 * time.Hour
+	notifyLockName     = "notify"
 )
 
 // The notify lock is kept alive by a heartbeat every quarter TTL while a run
@@ -163,7 +166,10 @@ func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Confi
 	var reps []alertReport
 	var errs []error
 	for _, p := range problems {
-		n := advice.FeedNotice(p.feed, p.lastGood, p.why)
+		n := p.notice
+		if n.Subject == "" {
+			n = advice.FeedNotice(p.feed, p.lastGood, p.why)
+		}
 		results, err := d.Notice(ctx, p.kind, n, noticeEvery)
 		reps = append(reps, toReports(results, p.kind)...)
 		errs = append(errs, err)
@@ -330,8 +336,11 @@ func alertContents(vulns, eols int) string {
 }
 
 func noticeFeed(kind string) string {
-	if kind == noticeEOLStale {
+	switch kind {
+	case noticeEOLStale:
 		return "endoflife.date data"
+	case noticeEOLNotListed:
+		return "end-of-life check (endoflife.date no longer lists a product)"
 	}
 	return "KEV data"
 }
@@ -406,6 +415,3 @@ func productName(cat *catalog.Catalog, id string) string {
 	}
 	return id
 }
-
-// isFindingID reports whether s looks like "kev/<product>/<CVE>".
-func isFindingID(s string) bool { return strings.Count(s, "/") == 2 }

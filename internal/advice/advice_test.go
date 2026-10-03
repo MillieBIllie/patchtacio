@@ -205,3 +205,21 @@ func TestLinksInsideNoteText(t *testing.T) {
 		t.Errorf("other links = %q", v.OtherLinks)
 	}
 }
+
+// Data that marks a release ended but dates it in the future must not
+// produce "stopped on <future date>"; feed links must be https.
+func TestEOLContradictionsAndLinks(t *testing.T) {
+	it := EOLItem{Kind: KindNew, Product: Product{Display: "Acme OS"}, Release: "3", Ended: true,
+		EOLDate: today.AddDate(0, 2, 0), Page: "http://endoflife.example/acme", Policy: "https://acme.example/lifecycle",
+		AckID: "eol/acme-os/3"}
+	_, body, err := Email(Message{EOL: []EOLItem{it}, Today: today})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(body, "stopped on") || !strings.Contains(body, "have stopped") {
+		t.Errorf("contradictory dates:\n%s", body)
+	}
+	if strings.Contains(body, "http://endoflife.example") || !strings.Contains(body, "https://acme.example/lifecycle") {
+		t.Errorf("links:\n%s", body)
+	}
+}

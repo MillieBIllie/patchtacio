@@ -25,8 +25,22 @@ turns that into findings and alerts, under these rules.
 - **Ended:** endoflife.date says `isEol`, or the end-of-life date has passed (a lagging flag is not
   trusted over the date).
 - **Ending:** the date is 90 days away or nearer.
-- Anything else is "supported until <date>" or "no end date announced". It is never called
-  supported without that qualifier.
+- Anything else is `supported` (until a stated date) or `no-end-date` (still maintained, no date
+  announced). A release endoflife.date marks as not maintained, with no date, counts as ended.
+- Two releases that match a version equally well (duplicate names) give "no match", never a guess.
+- **No answer is never silent.** These states say why there is none:
+  - `no-version`: the user gave none;
+  - `no-match`: the valid names are listed;
+  - `no-data`: endoflife.date data could not be read;
+  - `not-listed`: the data no longer has the product, for example after a rename.
+  For `not-listed`, `check` warns and exits 3, and `--notify` sends a daily "end of life cannot be
+  checked" notice. Unreadable or stale data always sends the "could not update" notice. The JSON
+  report carries `eolFeed` and `eolStale` next to the KEV `feed` and `stale`.
+- A bare ID given to `ack` is a CVE: it never acknowledges end-of-life findings, whose release
+  names (`2019`) repeat across products. Those take their full `eol/...` ID.
+- Feed links in alerts must be `https`.
+- Spelling like "7.0 U3" is not matched to release `7.0`: allowing "-" as a separator would also
+  match "2012-r2" to release `2012`, a different release. It is reported as no match instead.
 - Findings are `eol/<product>/<release>`, use the same store tables, dedupe and
   acknowledgements as KEV (0002), and make `check` exit 1.
 

@@ -50,7 +50,7 @@ func newAckCmd(a *app) *cobra.Command {
 			for _, arg := range args {
 				arg = strings.TrimSpace(arg)
 				var found []store.State
-				if isFindingID(arg) {
+				if strings.HasPrefix(arg, "kev/") || strings.HasPrefix(arg, "eol/") {
 					s, ok, err := st.GetFinding(cmd.Context(), arg)
 					if err != nil {
 						return err
@@ -59,9 +59,13 @@ func newAckCmd(a *app) *cobra.Command {
 						found = []store.State{s}
 					}
 				} else {
+					// A bare ID is a CVE: it never acknowledges end-of-life
+					// findings, whose release names (e.g. "2019") repeat across
+					// products. Those take their full ID.
 					if found, err = st.FindingsForVuln(cmd.Context(), arg); err != nil {
 						return err
 					}
+					found = slices.DeleteFunc(found, func(s store.State) bool { return s.Source != "kev" })
 				}
 				if product != "" {
 					found = slices.DeleteFunc(found, func(s store.State) bool { return s.ProductID != product })
@@ -83,7 +87,7 @@ func newAckCmd(a *app) *cobra.Command {
 					return err
 				}
 				for _, t := range targets {
-					_, _ = fmt.Fprintf(w, "Removed the acknowledgement of %s for %s.\n", t.VulnID, productName(cat, t.ProductID))
+					_, _ = fmt.Fprintf(w, "Removed the acknowledgement of %s for %s.\n", clean(t.VulnID), productName(cat, t.ProductID))
 				}
 				_, _ = fmt.Fprintln(w, "Reminders about it resume with the next `patchtacio check --notify`.")
 				return nil
@@ -95,7 +99,7 @@ func newAckCmd(a *app) *cobra.Command {
 				return err
 			}
 			for _, t := range targets {
-				_, _ = fmt.Fprintf(w, "Acknowledged %s for %s.\n", t.VulnID, productName(cat, t.ProductID))
+				_, _ = fmt.Fprintf(w, "Acknowledged %s for %s.\n", clean(t.VulnID), productName(cat, t.ProductID))
 			}
 			_, _ = fmt.Fprintln(w, "Patchtacio will not alert or remind you about it again; `patchtacio check` still lists it (ACK yes).")
 			if len(targets) > 1 && product == "" {

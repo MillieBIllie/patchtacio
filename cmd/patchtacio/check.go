@@ -120,21 +120,34 @@ func newCheckCmd(a *app) *cobra.Command {
 			if st.State != feeds.Fresh {
 				// Only when the copy is actually out of date: one failed fetch
 				// while it is still fresh is not worth an alert.
-				problems = append(problems, feedProblem{kind: noticeKEVStale, feed: advice.KEVFeed, lastGood: st.CheckedAt, why: staleWhy(st)})
+				problems = append(problems, feedProblem{kind: noticeKEVStale, feed: advice.KEVFeed, lastGood: st.CheckedAt, why: logging.RedactString(staleWhy(st))})
 			}
 
 			findings := match.New(cat).KEV(kc.Vulnerabilities, cfg.IDs())
 			var eols []match.EOLStatus
+			var eolFeed *feeds.Status
 			if needEOL {
 				ec, est, err := a.loadEOL(cmd.Context(), u)
-				if err != nil {
-					_, _ = fmt.Fprintf(warn, "Cannot check end of life: %s\n", firstLine(logging.RedactString(err.Error())))
+				eolFeed = &est
+				switch {
+				case err != nil:
+					// Whatever the feed's state: unreadable data must never
+					// quietly stop end-of-life alerts.
+					why := logging.RedactString(err.Error())
+					_, _ = fmt.Fprintf(warn, "Cannot check end of life: %s\n", firstLine(why))
 					eolCode = worse(eolCode, exitToolError)
-				}
-				if est.State != feeds.Fresh {
-					problems = append(problems, feedProblem{kind: noticeEOLStale, feed: advice.EOLFeed, lastGood: est.CheckedAt, why: staleWhy(est)})
+					problems = append(problems, feedProblem{kind: noticeEOLStale, feed: advice.EOLFeed, lastGood: est.CheckedAt, why: why})
+				case est.State != feeds.Fresh:
+					eolCode = worse(eolCode, stateCode(est.State))
+					problems = append(problems, feedProblem{kind: noticeEOLStale, feed: advice.EOLFeed, lastGood: est.CheckedAt, why: logging.RedactString(staleWhy(est))})
 				}
 				eols = match.EOL(cat, ec, ticked(cfg), a.today())
+				if gone := notListed(eols); len(gone) > 0 {
+					_, _ = fmt.Fprintf(warn, "Warning: endoflife.date no longer lists %s, so end of life cannot be checked for it; check the vendor's lifecycle page.\n",
+						strings.Join(gone, ", "))
+					eolCode = worse(eolCode, exitStale)
+					problems = append(problems, feedProblem{kind: noticeEOLNotListed, notice: advice.NotListedNotice(gone)})
+				}
 			}
 			// Every run records what matched, so `patchtacio ack` works after
 			// a plain check; only --notify sends anything.
@@ -147,6 +160,8 @@ func newCheckCmd(a *app) *cobra.Command {
 			}
 			rep := a.newCheckReport(cat, cfg, kc.Version, kc.Released, st, stale, sinceDate, findings)
 			rep.EndOfLife = a.eolReport(cat, cfg, eols, needEOL)
+			rep.EOLFeed = eolFeed
+			rep.EOLStale = needEOL && eolCode != exitOK
 			for _, e := range rep.EndOfLife {
 				if e.State.IsFinding() {
 					rep.eolFindings++
@@ -226,13 +241,15 @@ type checkReport struct {
 	KEVReleased      time.Time      `json:"kevReleased"`
 	KEVEntries       int            `json:"-"`
 	Feed             feeds.Status   `json:"feed"`
-	Stale            bool           `json:"stale"`            // KEV could not be refreshed or is out of date
+	Stale            bool           `json:"stale"`            // the KEV data (feed) could not be refreshed or is out of date
 	VersionsCompared bool           `json:"versionsCompared"` // always false until version matching exists
 	Since            feeds.Date     `json:"since,omitzero"`
 	Products         []checkProduct `json:"products"`
 	Findings         []checkFinding `json:"findings"`
-	EndOfLife        []eolEntry     `json:"endOfLife"`        // products with endoflife.date data
-	Alerts           []alertReport  `json:"alerts,omitempty"` // with --notify
+	EndOfLife        []eolEntry     `json:"endOfLife"`         // products endoflife.date tracks
+	EOLFeed          *feeds.Status  `json:"eolFeed,omitempty"` // endoflife.date data, when it was looked up
+	EOLStale         bool           `json:"eolStale"`          // endoflife.date data out of date, unreadable, or missing a product
+	Alerts           []alertReport  `json:"alerts,omitempty"`  // with --notify
 	eolFindings      int
 	today            time.Time      // for "passed" due dates
 	byProduct        map[string]int // finding count per product

@@ -129,7 +129,7 @@ func (a *app) printEOL(w io.Writer, rep checkReport) {
 		switch e.State {
 		case match.EOLEnded:
 			what = "security updates have stopped"
-			if !e.EOLDate.IsZero() {
+			if !e.EOLDate.IsZero() && !e.EOLDate.After(rep.today) {
 				what = "security updates stopped on " + calDate(e.EOLDate)
 			}
 			what += upgradeHint(e)
@@ -137,10 +137,11 @@ func (a *app) printEOL(w io.Writer, rep checkReport) {
 			days := int(e.EOLDate.Sub(rep.today).Hours() / 24)
 			what = fmt.Sprintf("security updates stop on %s (in %d days)", calDate(e.EOLDate), days) + upgradeHint(e)
 		case match.EOLSupported:
-			what = "no end date announced on endoflife.date"
-			if !e.EOLDate.IsZero() {
-				what = "security updates until " + calDate(e.EOLDate)
-			}
+			what = "security updates until " + calDate(e.EOLDate)
+		case match.EOLNoEndDate:
+			what = "no end date announced on endoflife.date yet"
+		case match.EOLNotListed:
+			what = "endoflife.date does not list this product (any more); check the vendor's lifecycle page"
 		case match.EOLNoVersion:
 			noVersion++
 			what = "no version in your configuration, so end of life is not checked"
@@ -166,6 +167,18 @@ func (a *app) printEOL(w io.Writer, rep checkReport) {
 	if noVersion > 0 {
 		_, _ = fmt.Fprintln(w, "To check end of life, add version: to those products in your configuration (e.g. version: \"7.4.2\").")
 	}
+}
+
+// notListed names the products endoflife.date no longer lists although the
+// user gave a version.
+func notListed(sts []match.EOLStatus) []string {
+	var out []string
+	for _, s := range sts {
+		if s.State == match.EOLNotListed {
+			out = append(out, shortName(s.Product.Display))
+		}
+	}
+	return out
 }
 
 func upgradeHint(e eolEntry) string {

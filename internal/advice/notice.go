@@ -41,6 +41,28 @@ var (
 	}
 )
 
+// NotListedNotice warns that endoflife.date no longer lists products the
+// user gave versions for, so their end of life cannot be checked.
+func NotListedNotice(products []string) Notice {
+	names := make([]string, len(products))
+	for i, p := range products {
+		names[i] = oneLine(p)
+	}
+	list := joinAnd(names)
+	var b strings.Builder
+	fmt.Fprintf(&b, "endoflife.date no longer lists %s, so Patchtacio cannot tell you when the releases you run stop getting security updates.\n", list)
+	b.WriteString("This is not an all clear.\n\n")
+	b.WriteString("What to do:\n")
+	b.WriteString("  1. Check the vendor's lifecycle page for the release you run.\n")
+	b.WriteString("  2. Update Patchtacio: a newer version may know the product's new name on endoflife.date.\n")
+	b.WriteString("\nPatchtacio sends this at most once a day while the problem lasts.\n")
+	return Notice{
+		Subject: "[Check needed] End of life cannot be checked for " + list,
+		Body:    b.String(),
+		Short:   fitName("Patchtacio: endoflife.date no longer lists %s. End of life not checked; see the vendor's lifecycle page", list),
+	}
+}
+
 // FeedNotice warns that a feed could not be updated, so alerts may be
 // missing. It is never worded as an all clear. lastGood is the last time the
 // feed was reached (zero if never); problem is why it failed, in one line.
