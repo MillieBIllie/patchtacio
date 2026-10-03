@@ -391,6 +391,39 @@ func TestNoticeIgnoresFutureTimes(t *testing.T) {
 	}
 }
 
+// End-of-life: first alert, a reminder 30 days before, one after, then quiet.
+func TestEOLReminders(t *testing.T) {
+	ctx := context.Background()
+	ch := &fakeChannel{name: "email"}
+	d, now, _ := setup(t, DigestOff, ch)
+	eolDate := time.Date(2026, 12, 31, 0, 0, 0, 0, time.UTC)
+	c := []Candidate{{ID: "eol/fortinet-fortios/7.2", EOL: &advice.EOLItem{
+		Product: advice.Product{Display: "Fortinet FortiOS"}, Release: "7.2", EOLDate: eolDate, AckID: "eol/fortinet-fortios/7.2"}}}
+	kinds := func() []string {
+		var out []string
+		for _, m := range ch.msgs {
+			for _, e := range m.EOL {
+				out = append(out, e.Kind)
+			}
+		}
+		return out
+	}
+	for _, day := range []string{"2026-10-03", "2026-11-15", "2026-12-01", "2026-12-20", "2027-01-01", "2027-02-01"} {
+		*now, _ = time.Parse(time.DateOnly, day)
+		if _, err := d.Run(ctx, c); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := strings.Join(kinds(), ","); got != "new,due-soon,overdue" {
+		t.Errorf("EOL alerts %s, want new,due-soon,overdue", got)
+	}
+	for _, m := range ch.msgs {
+		if len(m.Items) != 0 {
+			t.Errorf("an EOL candidate became a KEV item: %+v", m.Items)
+		}
+	}
+}
+
 func TestDeadline(t *testing.T) {
 	today := time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC)
 	for _, tt := range []struct {
@@ -407,7 +440,7 @@ func TestDeadline(t *testing.T) {
 		if tt.due != "" {
 			due, _ = time.Parse(time.DateOnly, tt.due)
 		}
-		if soon, passed := deadline(due, today); soon != tt.soon || passed != tt.passed {
+		if soon, passed := deadline(due, today, DueSoonDays); soon != tt.soon || passed != tt.passed {
 			t.Errorf("deadline(%q) = %v, %v; want %v, %v", tt.due, soon, passed, tt.soon, tt.passed)
 		}
 	}
