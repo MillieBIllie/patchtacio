@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"go.yaml.in/yaml/v3"
 
@@ -122,8 +123,9 @@ const header = "# Patchtacio configuration. Change it with `patchtacio init`, or
 	"# Product IDs come from `patchtacio catalog list`. version and notes are optional.\n" +
 	"# Do not put passwords or tokens here: Patchtacio reads them from environment variables.\n"
 
-// Save writes the configuration atomically (temp file, then rename) with
-// owner-only permissions, creating the directory if needed.
+// Save writes the configuration atomically (temp file, then rename), creating
+// the directory if needed. The file is owner-only on POSIX; on Windows it
+// inherits the directory's ACL, which is why it must never hold secrets.
 func Save(path string, c *Config) error {
 	c.Version = SchemaVersion
 	var buf bytes.Buffer
@@ -140,6 +142,9 @@ func Save(path string, c *Config) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("create config directory: %w", err)
 	}
+	// A save killed before its rename leaves a temp file; an hour is far
+	// longer than any save takes, so a concurrent save's file is kept.
+	atomicfile.RemoveStale(dir, filepath.Base(path), time.Hour)
 	// Retries the rename on Windows, where an editor, antivirus or the search
 	// indexer may briefly hold the file open.
 	if err := atomicfile.Write(path, buf.Bytes()); err != nil {

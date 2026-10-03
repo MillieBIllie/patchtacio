@@ -386,17 +386,8 @@ func shrinkNotApproved(err error, shown, got int) error {
 // writing and renaming. Only files older than the lock TTL are touched, so
 // a concurrent run's in-progress file is never removed.
 func (u *Updater) cleanTempFiles() {
-	matches, err := filepath.Glob(filepath.Join(u.CacheDir, "*.json.tmp-*"))
-	if err != nil {
-		return
-	}
-	cutoff := time.Now().Add(-orDefault(u.LockTTL, defaultLockTTL))
-	for _, m := range matches {
-		if fi, err := os.Stat(m); err == nil && fi.Mode().IsRegular() && fi.ModTime().Before(cutoff) {
-			if err := os.Remove(m); err == nil {
-				u.logger().Debug("removed leftover temp file", "file", filepath.Base(m))
-			}
-		}
+	for _, f := range atomicfile.RemoveStale(u.CacheDir, "*.json", orDefault(u.LockTTL, defaultLockTTL)) {
+		u.logger().Debug("removed leftover temp file", "file", f)
 	}
 }
 
