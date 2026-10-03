@@ -19,12 +19,16 @@ func (d *Darwin) domain() string  { return "gui/" + strconv.Itoa(d.O.UID) }
 func (d *Darwin) service() string { return d.domain() + "/" + LaunchdLabel }
 
 func (d *Darwin) launchctl(ctx context.Context, args ...string) error {
-	_, err := d.O.Run(ctx, nil, "launchctl", args...)
+	_, err := d.O.Run(ctx, nil, d.O.program("launchctl"), args...)
 	return err
 }
 
+// LaunchdOutputName is the file, in the log directory, launchd writes the
+// job's own output to (only written when a run cannot open its log).
+const LaunchdOutputName = "launchd.log"
+
 // LaunchdOutput is the file launchd writes the job's own output to.
-func (d *Darwin) LaunchdOutput() string { return filepath.Join(d.O.LogDir, "launchd.log") }
+func (d *Darwin) LaunchdOutput() string { return filepath.Join(d.O.LogDir, LaunchdOutputName) }
 
 // Install implements Scheduler.
 func (d *Darwin) Install(ctx context.Context, j Job) (Result, error) {

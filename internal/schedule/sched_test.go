@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -361,8 +362,8 @@ func TestTaskInstall(t *testing.T) {
 	}
 
 	// conhost.exe present: headless.
-	o.SystemRoot = filepath.Join(t.TempDir(), "Windows")
-	touch(t, filepath.Join(o.SystemRoot, "System32", "conhost.exe"))
+	o.SystemDir = filepath.Join(t.TempDir(), "Windows", "System32")
+	touch(t, filepath.Join(o.SystemDir, "conhost.exe"))
 	w.O = o
 	if _, how := w.Launch(j); how != LaunchHeadless {
 		t.Errorf("with conhost: %s", how)
@@ -480,4 +481,41 @@ func TestTaskNamedPerUser(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.requireCalls(t, "schtasks /Query /TN Patchtacio check (jsmith)")
+}
+
+func TestProgramsByFullPath(t *testing.T) {
+	f := newFake()
+	o := testOptions(t, f, false)
+	o.Programs = map[string]string{"schtasks": `C:\Windows\System32\schtasks.exe`, "launchctl": "/bin/launchctl"}
+	if _, err := (&Windows{O: o}).Status(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := (&Darwin{O: o}).Uninstall(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	f.requireCalls(t, `C:\Windows\System32\schtasks.exe /Query /TN Patchtacio check`)
+	o.Programs = nil
+	if got := o.program("systemctl"); got != "systemctl" {
+		t.Errorf("unlisted program: %q", got)
+	}
+}
+
+func TestDefaultOptionsPrograms(t *testing.T) {
+	o, err := DefaultOptions(t.TempDir(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if o.TempDir == "" {
+		t.Error("no temp directory")
+	}
+	switch runtime.GOOS {
+	case "windows":
+		if p := o.program("schtasks"); !filepath.IsAbs(p) || !exists(p) {
+			t.Errorf("schtasks at %q", p)
+		}
+	case "darwin":
+		if p := o.program("launchctl"); p != "/bin/launchctl" {
+			t.Errorf("launchctl at %q", p)
+		}
+	}
 }

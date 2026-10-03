@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/milliebillie/patchtacio/internal/sysdir"
 )
 
 // TestTaskSchedulerAcceptsDefinition registers a real task from the
@@ -21,12 +23,16 @@ func TestTaskSchedulerAcceptsDefinition(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	o.SystemRoot = "" // no conhost: register the program itself
+	o.SystemDir = "" // no conhost: register the program itself
 	w := &Windows{O: o, Name: fmt.Sprintf("Patchtacio integration test (%d)", os.Getpid())}
 	ctx := context.Background()
 	t.Cleanup(func() { _, _ = w.Uninstall(ctx) })
 
-	prog := filepath.Join(os.Getenv("SystemRoot"), "System32", "whoami.exe")
+	sys, err := sysdir.System()
+	if err != nil {
+		t.Fatal(err)
+	}
+	prog := filepath.Join(sys, "whoami.exe")
 	if _, err := w.Install(ctx, Job{Program: prog, Args: []string{"/user"}, Hour: 3, Minute: 7}); err != nil {
 		t.Fatal(err)
 	}
