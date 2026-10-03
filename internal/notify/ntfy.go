@@ -29,9 +29,9 @@ func NewNtfy(priority int, getenv func(string) string) *Ntfy {
 // Name implements Channel.
 func (n *Ntfy) Name() string { return config.ChannelNtfy }
 
-// Key implements Channel: the topic URL.
-func (n *Ntfy) Key() string {
-	return destinationKey(config.ChannelNtfy, strings.TrimSpace(n.Getenv(config.EnvNtfyURL)))
+// Destination implements Channel: the topic URL.
+func (n *Ntfy) Destination() []string {
+	return []string{strings.TrimSpace(n.Getenv(config.EnvNtfyURL))}
 }
 
 // ntfyLimit keeps messages under ntfy's 4,096 bytes, above which it turns

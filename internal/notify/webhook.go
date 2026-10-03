@@ -29,9 +29,9 @@ func NewWebhook(kind string, getenv func(string) string) *Webhook {
 // Name implements Channel.
 func (w *Webhook) Name() string { return config.ChannelWebhook }
 
-// Key implements Channel: the kind and URL.
-func (w *Webhook) Key() string {
-	return destinationKey(config.ChannelWebhook, w.Kind, strings.TrimSpace(w.Getenv(config.EnvWebhookURL)))
+// Destination implements Channel: the kind and URL.
+func (w *Webhook) Destination() []string {
+	return []string{w.Kind, strings.TrimSpace(w.Getenv(config.EnvWebhookURL))}
 }
 
 // Send implements Channel.

@@ -83,11 +83,11 @@ type fakeChannel struct {
 }
 
 func (f *fakeChannel) Name() string { return f.name }
-func (f *fakeChannel) Key() string {
+func (f *fakeChannel) Destination() []string {
 	if f.key != "" {
-		return f.key
+		return []string{f.key}
 	}
-	return f.name
+	return nil
 }
 func (f *fakeChannel) Send(_ context.Context, m advice.Message) error {
 	if f.fail {
@@ -125,7 +125,7 @@ func setup(t *testing.T, digest string, channels ...*fakeChannel) (*Dispatcher, 
 	t.Helper()
 	now := time.Date(2026, 10, 3, 9, 0, 0, 0, time.UTC)
 	ms := newMemStore(&now)
-	d := &Dispatcher{Store: ms, Digest: digest, Now: func() time.Time { return now }, Location: time.UTC}
+	d := &Dispatcher{Store: ms, Digest: digest, Now: func() time.Time { return now }, Location: time.UTC, Secret: []byte("test secret, 32 bytes long.....")}
 	for _, c := range channels {
 		d.Channels = append(d.Channels, c)
 	}
@@ -306,19 +306,28 @@ func TestNewDestinationGetsEverything(t *testing.T) {
 }
 
 func TestDestinationKeys(t *testing.T) {
+	d := &Dispatcher{Secret: []byte("install secret A")}
 	e1 := NewEmail(config.Email{To: []string{"IT <it@example.org>", "head@example.org"}}, env(nil))
 	e2 := NewEmail(config.Email{To: []string{"head@example.org", "it@EXAMPLE.org"}}, env(nil))
 	e3 := NewEmail(config.Email{To: []string{"it@example.org"}}, env(nil))
-	if e1.Key() != e2.Key() || e1.Key() == e3.Key() || !strings.HasPrefix(e1.Key(), "email/") {
-		t.Errorf("email keys: %s %s %s", e1.Key(), e2.Key(), e3.Key())
+	if d.key(e1) != d.key(e2) || d.key(e1) == d.key(e3) || !strings.HasPrefix(d.key(e1), "email/") {
+		t.Errorf("email keys: %s %s %s", d.key(e1), d.key(e2), d.key(e3))
 	}
 	w := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: "https://hooks.slack.com/services/T/B/SECRETTOKEN"}))
-	if k := w.Key(); strings.Contains(k, "SECRET") || !strings.HasPrefix(k, "webhook/") {
+	if k := d.key(w); strings.Contains(k, "SECRET") || !strings.HasPrefix(k, "webhook/") {
 		t.Errorf("webhook key %q", k)
 	}
 	w2 := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: "https://hooks.slack.com/services/T/B/OTHER"}))
-	if w.Key() == w2.Key() {
+	if d.key(w) == d.key(w2) {
 		t.Error("two webhook URLs share a key")
+	}
+	// Another installation's secret gives another key, so a guessed URL
+	// cannot be checked against a copied database.
+	if other := (&Dispatcher{Secret: []byte("install secret B")}); other.key(w) == d.key(w) {
+		t.Error("keys do not depend on the install secret")
+	}
+	if d.key(NewDesktop()) != "desktop" {
+		t.Errorf("desktop key %q", d.key(NewDesktop()))
 	}
 }
 
@@ -376,7 +385,7 @@ func TestNoticeIgnoresFutureTimes(t *testing.T) {
 	ctx := context.Background()
 	ch := &fakeChannel{name: "email"}
 	d, now, ms := setup(t, DigestOff, ch)
-	ms.notices["email|kev-stale"] = now.AddDate(1, 0, 0)
+	ms.notices[d.key(ch)+"|kev-stale"] = now.AddDate(1, 0, 0)
 	if res, err := d.Notice(ctx, "kev-stale", advice.FeedNotice("CISA KEV catalog", time.Time{}, ""), 24*time.Hour); err != nil || res[0].Sent != 1 {
 		t.Errorf("future-dated notice suppressed the next: %+v, %v", res, err)
 	}

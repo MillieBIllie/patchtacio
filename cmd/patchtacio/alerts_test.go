@@ -32,8 +32,8 @@ type fakeChan struct {
 	f    *fakeChannels
 }
 
-func (c fakeChan) Name() string { return c.name }
-func (c fakeChan) Key() string  { return c.name }
+func (c fakeChan) Name() string          { return c.name }
+func (c fakeChan) Destination() []string { return nil }
 func (c fakeChan) Send(_ context.Context, m advice.Message) error {
 	c.f.mu.Lock()
 	defer c.f.mu.Unlock()

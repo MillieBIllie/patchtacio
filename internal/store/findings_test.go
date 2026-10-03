@@ -143,6 +143,19 @@ func TestStatesManyIDs(t *testing.T) {
 	}
 }
 
+func TestInstallSecret(t *testing.T) {
+	ctx := context.Background()
+	s, _ := clock(t)
+	a, err := s.InstallSecret(ctx)
+	if err != nil || len(a) != 32 {
+		t.Fatalf("InstallSecret = %d bytes, %v", len(a), err)
+	}
+	b, err := s.InstallSecret(ctx)
+	if err != nil || string(a) != string(b) {
+		t.Error("the install secret changed between calls")
+	}
+}
+
 func TestNotices(t *testing.T) {
 	ctx := context.Background()
 	s, now := clock(t)
@@ -161,5 +174,29 @@ func TestNotices(t *testing.T) {
 	}
 	if last, _ := s.LastNotice(ctx, "webhook/y", "kev-stale"); !last.IsZero() {
 		t.Error("notices leak between channels")
+	}
+}
+
+// A development build of migration 0002 created notices itself; such a
+// database must still take migration 0003.
+func TestMigrationAfterDevBuild0002(t *testing.T) {
+	ctx := context.Background()
+	s, file := openTemp(t)
+	if _, err := s.db.ExecContext(ctx, `DROP TABLE settings`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.db.ExecContext(ctx, `PRAGMA user_version = 2`); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	s2, err := Open(ctx, file)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	defer func() { _ = s2.Close() }()
+	if _, err := s2.InstallSecret(ctx); err != nil {
+		t.Errorf("settings missing after migration: %v", err)
 	}
 }

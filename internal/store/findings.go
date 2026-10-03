@@ -2,7 +2,9 @@ package store
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"slices"
@@ -318,4 +320,27 @@ func (s *Store) RecordNotice(ctx context.Context, channel, kind string) error {
 		return fmt.Errorf("record notice on %s: %w", channel, err)
 	}
 	return nil
+}
+
+// InstallSecret returns this installation's random secret, creating it on
+// first use. It keys the hashes of alert destinations.
+func (s *Store) InstallSecret(ctx context.Context) ([]byte, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return nil, fmt.Errorf("make install secret: %w", err)
+	}
+	// Two first runs at once both try; the first insert wins for both.
+	if _, err := s.db.ExecContext(ctx, `INSERT INTO settings (key, value) VALUES ('install_secret', ?)
+		ON CONFLICT (key) DO NOTHING`, hex.EncodeToString(b)); err != nil {
+		return nil, fmt.Errorf("save install secret: %w", err)
+	}
+	var v string
+	if err := s.db.QueryRowContext(ctx, `SELECT value FROM settings WHERE key = 'install_secret'`).Scan(&v); err != nil {
+		return nil, fmt.Errorf("read install secret: %w", err)
+	}
+	secret, err := hex.DecodeString(v)
+	if err != nil || len(secret) < 16 {
+		return nil, fmt.Errorf("install secret in the database is damaged")
+	}
+	return secret, nil
 }
