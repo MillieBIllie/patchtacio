@@ -139,3 +139,28 @@ func TestOpenLogFileRefusesSymlinkAndTightensMode(t *testing.T) {
 		t.Errorf("existing log left at mode %o", perm)
 	}
 }
+
+func TestRotateIfLarger(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "launchd.log")
+	if err := RotateIfLarger(path, 10, 1); err != nil {
+		t.Errorf("a missing file is not an error: %v", err)
+	}
+	writeFile(t, path, strings.Repeat("y", 11))
+	writeFile(t, path+".1", "older")
+	if err := RotateIfLarger(path, 10, 1); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Error("the large file was not moved aside")
+	}
+	if got := readFile(t, path+".1"); got != strings.Repeat("y", 11) {
+		t.Errorf(".1 = %q, want the rotated file (the older copy dropped)", got)
+	}
+	if err := os.Mkdir(path, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := RotateIfLarger(path, 10, 1); err == nil {
+		t.Error("a directory at the log path was accepted")
+	}
+}
