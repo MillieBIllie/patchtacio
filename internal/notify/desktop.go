@@ -39,6 +39,9 @@ func NewDesktop() *Desktop {
 // Name implements Channel.
 func (d *Desktop) Name() string { return config.ChannelDesktop }
 
+// Key implements Channel: this computer.
+func (d *Desktop) Key() string { return config.ChannelDesktop }
+
 // Send implements Channel.
 func (d *Desktop) Send(ctx context.Context, m advice.Message) error {
 	c, err := advice.ChatMessage(m)

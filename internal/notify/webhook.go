@@ -29,6 +29,11 @@ func NewWebhook(kind string, getenv func(string) string) *Webhook {
 // Name implements Channel.
 func (w *Webhook) Name() string { return config.ChannelWebhook }
 
+// Key implements Channel: the kind and URL.
+func (w *Webhook) Key() string {
+	return destinationKey(config.ChannelWebhook, w.Kind, strings.TrimSpace(w.Getenv(config.EnvWebhookURL)))
+}
+
 // Send implements Channel.
 func (w *Webhook) Send(ctx context.Context, m advice.Message) error {
 	c, err := advice.ChatMessage(m)

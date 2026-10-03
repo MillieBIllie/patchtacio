@@ -6,6 +6,7 @@ import (
 	"mime"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/config"
@@ -27,6 +28,11 @@ func NewNtfy(priority int, getenv func(string) string) *Ntfy {
 
 // Name implements Channel.
 func (n *Ntfy) Name() string { return config.ChannelNtfy }
+
+// Key implements Channel: the topic URL.
+func (n *Ntfy) Key() string {
+	return destinationKey(config.ChannelNtfy, strings.TrimSpace(n.Getenv(config.EnvNtfyURL)))
+}
 
 // ntfyLimit keeps messages under ntfy's 4,096 bytes, above which it turns
 // them into attachments.

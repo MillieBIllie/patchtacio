@@ -23,8 +23,11 @@ CREATE TABLE acknowledgements (
     note       TEXT NOT NULL DEFAULT ''
 ) STRICT;
 
--- Alerts delivered, once per finding, channel ('email', 'webhook', 'ntfy',
--- 'desktop') and kind ('new', 'due-soon', 'overdue'). A channel that failed
+-- Alerts delivered, once per finding, destination and kind ('new',
+-- 'due-soon', 'overdue'). The channel column holds the destination key:
+-- 'desktop', or the type plus a short SHA-256 of the recipients or URL
+-- ('webhook/1f2e...'), so a new address or URL hears everything again and a
+-- webhook token never reaches the database. A channel that failed
 -- has no row, so the next run retries it without repeating the others. The
 -- newest sent_at per channel is when it last sent anything (digest timing).
 CREATE TABLE deliveries (
