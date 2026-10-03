@@ -1,0 +1,13 @@
+# Written by `patchtacio watch --install`; remove with `patchtacio watch --uninstall`.
+[Unit]
+Description=Patchtacio daily check (exploited vulnerabilities and end-of-life alerts)
+Documentation=https://github.com/milliebillie/patchtacio
+
+[Service]
+Type=oneshot
+ExecStart="/home/o'brien/my tools/patch$$tacio" watch run --config "/home/o'brien/100%% \"real\"/config.yaml"
+Environment="PATCHTACIO_DATA_DIR=/srv/data $HOME %%h\\"
+# 1 = findings, 3 = some data out of date: both reported, not failures. 2 is.
+SuccessExitStatus=1 3
+TimeoutStartSec=30min
+Nice=10
