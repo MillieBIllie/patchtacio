@@ -56,6 +56,10 @@ type Product struct {
 // string prefix: cpe:2.3:a:ivanti:endpoint_manager must not match
 // endpoint_manager_mobile (a separate product), nor microsoft:windows match
 // windows_server_2019.
+//
+// Some names belong to two products (NVD's microsoft:edge covers both Edge
+// Legacy and Chromium-based Edge); only the version range tells them apart,
+// so a caller deciding findings by CPE must also compare versions.
 func (p Product) MatchesCPE(cpe string) bool {
 	want, ok := cpeProduct(cpe)
 	if !ok {
@@ -87,7 +91,7 @@ func cpeProduct(cpe string) (string, bool) {
 	if len(fields) < 5 {
 		fields = append(fields, cpe[start:])
 	}
-	if len(fields) < 5 || fields[0] != "cpe" || fields[1] != "2.3" || fields[2] == "" || fields[3] == "" || fields[4] == "" {
+	if len(fields) < 5 || !strings.EqualFold(fields[0], "cpe") || fields[1] != "2.3" || fields[2] == "" || fields[3] == "" || fields[4] == "" {
 		return "", false
 	}
 	return strings.ToLower(fields[2] + ":" + fields[3] + ":" + fields[4]), true
@@ -334,8 +338,9 @@ var (
 )
 
 // cpeName is one CPE 2.3 vendor or product name: lowercase letters, digits
-// and . _ - ~, or a backslash-escaped punctuation character.
-const cpeName = `(?:[a-z0-9._~-]|\\[[:punct:]])+`
+// and . _ - ~, or a backslash-escaped punctuation character other than . _ -
+// (NVD never escapes those, so an escaped one would never match).
+const cpeName = `(?:[a-z0-9._~-]|\\[!-,/:-@\[-^{-~]|\\` + "`" + `)+`
 
 const maxDisplay = 80
 
