@@ -25,6 +25,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/zalando/go-keyring"
@@ -124,6 +125,9 @@ func New(configDir string) *Store {
 // Mock returns a Store over an in-memory keychain (go-keyring's mock) that
 // is always reachable, with its marker file in dir. For tests only.
 func Mock(dir string, env func(string) string) *Store {
+	if !testing.Testing() {
+		panic("secrets.Mock is for tests only")
+	}
 	keyring.MockInit()
 	b := realBackend
 	b.reachable = func() error { return nil }
@@ -192,16 +196,22 @@ func (s *Store) Getenv(env string) string {
 	return v
 }
 
-// Problems returns, per environment variable, why a secret saved in the
-// keychain could not be read in this run (for example a scheduled task that
-// cannot reach the user's keychain). Call it after the lookups.
-func (s *Store) Problems() map[string]error {
+// Problem is a secret saved in the keychain that could not be read.
+type Problem struct {
+	Secret Secret
+	Err    error
+}
+
+// Problems lists, in a fixed order, the secrets saved in the keychain that
+// could not be read in this run (for example a scheduled task that cannot
+// reach the user's keychain). Call it after the lookups.
+func (s *Store) Problems() []Problem {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	out := map[string]error{}
-	for env, l := range s.cache {
-		if l.err != nil {
-			out[env] = l.err
+	var out []Problem
+	for _, sec := range All {
+		if l, ok := s.cache[sec.Env]; ok && l.err != nil {
+			out = append(out, Problem{Secret: sec, Err: l.err})
 		}
 	}
 	return out
@@ -233,19 +243,26 @@ func (s *Store) Set(sec Secret, value string) error {
 	return nil
 }
 
-// Delete removes a secret from the keychain and its mark. Removing one that
-// is not there is not an error.
+// Delete stops using a secret from the keychain and removes it there. If the
+// keychain cannot be reached, the secret is no longer used but may still be
+// stored, and the error says so: someone revoking a leaked token must not be
+// told it is gone when it is not.
 func (s *Store) Delete(sec Secret) error {
-	if s.kc.delete != nil && s.kc.reachable() == nil {
-		if _, err := withTimeout(writeTimeout, func() (string, error) { return "", s.kc.delete(Service, sec.Env) }); err != nil &&
-			!errors.Is(err, keyring.ErrNotFound) {
-			return fmt.Errorf("remove %s from the keychain: %w", sec.Name, explain(err))
-		}
-	}
 	if err := s.mark(sec.Env, false); err != nil {
-		return fmt.Errorf("removed %s from the keychain, but could not record that: %w", sec.Name, err)
+		return fmt.Errorf("stop using %s from the keychain: %w", sec.Name, err)
 	}
 	s.forget(sec.Env)
+	if s.kc.delete == nil {
+		return fmt.Errorf("%s will no longer be used, but the keychain is not available here, so any stored value was not removed", sec.Name)
+	}
+	if err := s.kc.reachable(); err != nil {
+		return fmt.Errorf("%s will no longer be used, but the keychain could not be reached (%v), so its stored value may still be there; "+
+			"run `patchtacio secret delete %s` again from a desktop session to remove it", sec.Name, err, sec.Name)
+	}
+	if _, err := withTimeout(writeTimeout, func() (string, error) { return "", s.kc.delete(Service, sec.Env) }); err != nil &&
+		!errors.Is(err, keyring.ErrNotFound) {
+		return fmt.Errorf("%s will no longer be used, but removing it from the keychain failed: %w", sec.Name, explain(err))
+	}
 	return nil
 }
 

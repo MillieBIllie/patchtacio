@@ -21,7 +21,6 @@ import (
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/match"
-	"github.com/milliebillie/patchtacio/internal/secrets"
 	"github.com/milliebillie/patchtacio/internal/store"
 )
 
@@ -360,7 +359,6 @@ func (a *app) reportAlerts(out, warn io.Writer, reps []alertReport, err error) {
 	}
 	switch {
 	case err == nil:
-		return
 	case len(reps) == 0:
 		_, _ = fmt.Fprintf(warn, "Warning: no alerts were sent: %s\n", firstLine(logging.RedactString(err.Error())))
 	default:
@@ -375,13 +373,9 @@ func (a *app) explainKeychain(warn io.Writer) {
 	if a.secrets == nil {
 		return
 	}
-	for env, err := range a.secrets.Problems() {
-		name := env
-		if s, ok := secrets.ByName(env); ok {
-			name = s.Name
-		}
+	for _, p := range a.secrets.Problems() {
 		_, _ = fmt.Fprintf(warn, "Note: %s was saved with `patchtacio secret set`, but this run could not read it (%s). "+
-			"Scheduled runs often cannot reach the keychain; set %s for them instead.\n", name, firstLine(err.Error()), env)
+			"Scheduled runs often cannot reach the keychain; set %s for them instead.\n", p.Secret.Name, firstLine(p.Err.Error()), p.Secret.Env)
 	}
 }
 

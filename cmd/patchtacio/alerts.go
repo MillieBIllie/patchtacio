@@ -141,9 +141,7 @@ func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Confi
 	}
 	// Ask the keychain (time-limited) before taking the lock, so nothing
 	// slow happens while other runs wait.
-	if a.secrets != nil {
-		a.secrets.Prefetch()
-	}
+	a.secretStore().Prefetch()
 	release, err := a.notifyLock(ctx, st)
 	if err != nil {
 		return nil, err
