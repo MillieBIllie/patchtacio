@@ -1,8 +1,9 @@
 # Patchtacio
 
 > **Status: pre-alpha.** Patchtacio can show the CISA KEV entries for the products you run
-> (`patchtacio init`, then `patchtacio check`), but does not send alerts or check end-of-life dates
-> yet. See [docs/ROADMAP.md](docs/ROADMAP.md) for what's coming.
+> (`patchtacio init`, then `patchtacio check`) and send alerts about new ones
+> (`patchtacio check --notify`), but does not run on a schedule or check end-of-life dates yet.
+> See [docs/ROADMAP.md](docs/ROADMAP.md) for what's coming.
 
 Patchtacio is a free, open source, **local-only** tool for small IT teams in schools, local
 government, and small businesses. You tick the products you run, and it tells you when one of them:
@@ -11,7 +12,8 @@ government, and small businesses. You tick the products you run, and it tells yo
 - is approaching or past **end-of-life** (data from [endoflife.date](https://endoflife.date)).
 
 Alerts are written in plain language: what's affected, how urgent it is, and what to do by when.
-Nothing leaves your machine except requests to the public data feeds.
+Nothing leaves your machine except requests to the public data feeds and the alerts you choose
+to send (email, chat webhook, ntfy).
 
 ## Build from source
 
@@ -38,6 +40,18 @@ Release binaries for Linux, Windows, and macOS will be published once v0.1.0 is 
 check each entry against the version you run. It exits `1` when anything matches, `0` when nothing
 matches and the data is up to date, and `3` when nothing matches but the data is out of date
 (never `0`, because "nothing found" in old data is not an all clear).
+
+### Alerts
+
+```sh
+./patchtacio test-alert              # after adding a notify: section to the configuration
+./patchtacio check --notify          # send what is new: one message per channel, each finding once
+./patchtacio ack CVE-2024-21762      # dealt with it: no more alerts or reminders
+```
+
+Email, Slack, Microsoft Teams, Discord, ntfy and desktop notifications; reminders as CISA's
+deadline approaches and passes; optional daily or weekly digest. Setup and details:
+[docs/ALERTS.md](docs/ALERTS.md).
 
 Without a terminal (scripts, Docker), pass the products directly. `patchtacio catalog list` shows
 the IDs:
