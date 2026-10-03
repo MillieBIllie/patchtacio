@@ -7,10 +7,10 @@
 package atomicfile
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -78,25 +78,46 @@ func Write(path string, data []byte) error {
 }
 
 // RemoveStale deletes temp files left in dir by a process killed between
-// Prepare and Commit: files matching name+".tmp-*" (name may be a glob, such
-// as "*.json") last modified more than olderThan ago. Keep olderThan longer
-// than any write can take, so a concurrent writer's file is never removed. It
-// returns the names it removed.
-func RemoveStale(dir, name string, olderThan time.Duration) []string {
-	matches, err := filepath.Glob(filepath.Join(dir, name+".tmp-*"))
+// Prepare and Commit: files named <dest>.tmp-<digits> (as Prepare creates
+// them) for which owned(dest) is true, last modified more than olderThan ago.
+// Keep olderThan longer than any write can take, so a concurrent writer's
+// file is never removed. Names are compared as plain strings, never as glob
+// patterns, so a file or directory name containing * or [ is safe. It returns
+// the names it removed.
+func RemoveStale(dir string, owned func(dest string) bool, olderThan time.Duration) ([]string, error) {
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("list %s: %w", dir, err)
 	}
 	cutoff := time.Now().Add(-olderThan)
 	var removed []string
-	for _, m := range matches {
-		fi, err := os.Lstat(m)
+	for _, e := range entries {
+		dest, ok := tempDest(e.Name())
+		if !ok || !owned(dest) || !e.Type().IsRegular() {
+			continue
+		}
+		path := filepath.Join(dir, e.Name())
+		fi, err := os.Lstat(path)
 		if err != nil || !fi.Mode().IsRegular() || !fi.ModTime().Before(cutoff) {
 			continue
 		}
-		if err := os.Remove(m); err == nil || errors.Is(err, os.ErrNotExist) {
-			removed = append(removed, filepath.Base(m))
+		if err := os.Remove(path); err == nil {
+			removed = append(removed, e.Name())
 		}
 	}
-	return removed
+	return removed, nil
+}
+
+// tempDest returns the destination name of a temp file name created by
+// Prepare (dest + ".tmp-" + the digits os.CreateTemp adds).
+func tempDest(name string) (string, bool) {
+	i := strings.LastIndex(name, ".tmp-")
+	if i <= 0 {
+		return "", false
+	}
+	digits := name[i+len(".tmp-"):]
+	if digits == "" || strings.Trim(digits, "0123456789") != "" {
+		return "", false
+	}
+	return name[:i], true
 }

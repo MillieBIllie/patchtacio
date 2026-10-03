@@ -89,24 +89,60 @@ func TestRemoveStale(t *testing.T) {
 		}
 	}
 	write("config.yaml", 48*time.Hour)        // the real file: never touched
-	write("config.yaml.tmp-old", 2*time.Hour) // stale: removed
-	write("config.yaml.tmp-new", time.Minute) // a save in progress: kept
-	write("other.yaml.tmp-old", 2*time.Hour)  // another name: kept
-	if err := os.Mkdir(filepath.Join(dir, "config.yaml.tmp-dir"), 0o700); err != nil {
+	write("config.yaml.tmp-123", 2*time.Hour) // stale: removed
+	write("config.yaml.tmp-456", time.Minute) // a save in progress: kept
+	write("config.yaml.tmp-old", 2*time.Hour) // not a CreateTemp name: kept
+	write("other.yaml.tmp-789", 2*time.Hour)  // another destination: kept
+	write("cfgA.yaml.tmp-1", 2*time.Hour)     // would match the glob cfg[A].yaml: kept
+	if err := os.Mkdir(filepath.Join(dir, "config.yaml.tmp-9"), 0o700); err != nil {
 		t.Fatal(err)
 	}
 
-	got := RemoveStale(dir, "config.yaml", time.Hour)
-	if len(got) != 1 || got[0] != "config.yaml.tmp-old" {
-		t.Errorf("removed %v, want [config.yaml.tmp-old]", got)
+	for _, base := range []string{"config.yaml", "cfg[A].yaml", "*"} {
+		got, err := RemoveStale(dir, func(dest string) bool { return dest == base }, time.Hour)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := map[string][]string{"config.yaml": {"config.yaml.tmp-123"}}[base]
+		if !slices.Equal(got, want) {
+			t.Errorf("owner %q removed %v, want %v", base, got, want)
+		}
 	}
 	var left []string
 	entries, _ := os.ReadDir(dir)
 	for _, e := range entries {
 		left = append(left, e.Name())
 	}
-	want := []string{"config.yaml", "config.yaml.tmp-dir", "config.yaml.tmp-new", "other.yaml.tmp-old"}
+	want := []string{"cfgA.yaml.tmp-1", "config.yaml", "config.yaml.tmp-456", "config.yaml.tmp-9",
+		"config.yaml.tmp-old", "other.yaml.tmp-789"}
 	if !slices.Equal(left, want) {
 		t.Errorf("left %v, want %v", left, want)
+	}
+}
+
+// Brackets are legal in Windows and POSIX directory names; with a glob they
+// made cleanup fail silently.
+func TestRemoveStaleBracketDirectory(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "IT [shared]")
+	if err := os.Mkdir(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "config.yaml.tmp-1")
+	if err := os.WriteFile(path, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-2 * time.Hour)
+	if err := os.Chtimes(path, old, old); err != nil {
+		t.Fatal(err)
+	}
+	got, err := RemoveStale(dir, func(string) bool { return true }, time.Hour)
+	if err != nil || len(got) != 1 {
+		t.Errorf("RemoveStale = %v, %v; want the one temp file removed", got, err)
+	}
+}
+
+func TestRemoveStaleMissingDirectory(t *testing.T) {
+	if _, err := RemoveStale(filepath.Join(t.TempDir(), "nope"), func(string) bool { return true }, 0); err == nil {
+		t.Error("want an error for a missing directory")
 	}
 }
