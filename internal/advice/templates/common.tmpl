@@ -1,0 +1,39 @@
+{{- /* Blocks shared by the email and chat templates. Data is an itemView. */ -}}
+
+{{define "affected" -}}
+{{range .ProductLines}}  {{.}}
+{{end -}}
+{{end}}
+
+{{define "why" -}}
+Attackers are already using this flaw: {{.Name}} ({{.CVE}}).
+{{- if .Added}} CISA added it to its list of exploited vulnerabilities on {{.Added}}.{{else}} It is on CISA's list of exploited vulnerabilities.{{end}}
+{{- if .Ransomware}} Linked to ransomware campaigns.{{end}}
+{{- end}}
+
+{{define "update" -}}
+{{if .Advisory}}check the vendor advisory for the fixed version: {{.Advisory}}{{else}}check the vendor's security advisory for {{.CVE}} to find the fixed version.{{end}}
+{{- end}}
+
+{{define "mitigate" -}}
+{{if .RequiredAction}}follow CISA's required action: "{{.RequiredAction}}"{{else}}apply the vendor's mitigations.{{end}}
+{{- end}}
+
+{{define "deadline" -}}
+{{if .Due}}{{if .DuePassed}}CISA's deadline for US government agencies, {{.Due}}, has passed: act as soon as you can.{{else}}CISA set {{.Due}} as the deadline for US government agencies. Use it as a guide to how urgent this is.{{end}}{{end}}
+{{- end}}
+
+{{define "reminder" -}}
+{{if eq .Kind "due-soon"}}Reminder: nobody has acknowledged this yet, and CISA's deadline is {{.Due}}.
+{{else if eq .Kind "overdue"}}Reminder: nobody has acknowledged this yet, and CISA's deadline ({{.Due}}) has passed.
+{{end}}
+{{- end}}
+
+{{define "entry" -}}
+{{.Headline}}
+{{if .Name}}   {{.Name}}.{{end}}{{if .Added}} Added to CISA's list {{.Added}}.{{end}}{{if .Ransomware}} Linked to ransomware campaigns.{{end}}
+   What to do: {{template "update" .}}
+{{- if .RequiredAction}}
+   If you cannot update yet, {{template "mitigate" .}}{{end}}
+   Details: {{.NVDURL}}
+{{end}}

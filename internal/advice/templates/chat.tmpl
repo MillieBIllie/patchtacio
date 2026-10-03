@@ -1,0 +1,24 @@
+{{- if .Single}}{{with .Single -}}
+{{template "reminder" .}}{{template "why" .}}
+Affects: {{join .ProductLines "; "}}. Patchtacio matched by product name and has not checked your version.
+What to do{{if .Due}}{{if not .DuePassed}} by {{.Due}}{{end}}{{end}}:
+1. Update: {{template "update" .}}
+2. If you cannot update yet, {{template "mitigate" .}}
+3. If neither is possible, disconnect it or restrict who can reach it until you can update.
+{{- if .Due}}
+{{template "deadline" .}}{{end}}
+NVD: {{.NVDURL}}
+When you have dealt with it, run: patchtacio ack {{.CVE}}
+{{- end}}{{else -}}
+Patchtacio found {{.Count}} known exploited vulnerabilities (CISA KEV) in products on your list. Attackers are already using all of them. Start with the earliest deadline. Matched by product name; versions not checked.
+{{if .New}}
+New:
+{{range $i, $it := .New}}{{inc $i}}. {{template "entry" $it}}{{end}}{{end}}
+{{- if .Reminders}}
+Reminders (nobody has acknowledged these yet):
+{{range $i, $it := .Reminders}}{{inc $i}}. {{template "entry" $it}}{{end}}{{end}}
+{{- if .More}}
+And {{.More}} more: run `patchtacio check` to see them all.
+{{end}}
+When you have dealt with one, run: patchtacio ack <CVE ID>
+{{- end}}

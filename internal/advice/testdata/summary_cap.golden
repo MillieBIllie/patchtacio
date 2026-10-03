@@ -1,0 +1,204 @@
+=== email subject
+[Action needed by 3 Oct 2026] 30 actively exploited flaws in your products
+=== email body
+Patchtacio found 30 known exploited vulnerabilities (CISA KEV) that affect products on your list. Attackers are already using all of them. Start with the earliest deadline.
+Patchtacio matched them by product name and has not checked whether your versions are affected.
+
+New:
+1. [Action needed by 3 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10006)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10006
+2. [Action needed by 4 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10007)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10007
+3. [Action needed by 5 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10008)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10008
+4. [Action needed by 6 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10009)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10009
+5. [Action needed by 7 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10010)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10010
+6. [Action needed by 8 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10011)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10011
+7. [Action needed by 9 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10012)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10012
+8. [Action needed by 10 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10013)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10013
+9. [Action needed by 11 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10014)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10014
+10. [Action needed by 12 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10015)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10015
+11. [Action needed by 13 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10016)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10016
+12. [Action needed by 14 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10017)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10017
+13. [Action needed by 15 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10018)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10018
+14. [Action needed by 16 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10019)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10019
+15. [Action needed by 17 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10020)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10020
+16. [Action needed by 18 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10021)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10021
+17. [Action needed by 19 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10022)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10022
+18. [Action needed by 20 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10023)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10023
+19. [Action needed by 21 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10024)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10024
+20. [Action needed by 22 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10025)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10025
+21. [Action needed by 23 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10026)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10026
+22. [Action needed by 24 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10027)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10027
+23. [Action needed by 25 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10028)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10028
+24. [Action needed by 26 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10029)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10029
+25. [Action needed now] Fortinet FortiOS: actively exploited flaw (CVE-2026-10005)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10005
+
+And 5 more not listed here: run `patchtacio check` to see them all.
+
+For each entry, CISA's deadline is the one it set for US government agencies. Use it as a guide to how urgent each one is.
+
+--
+When you have dealt with one, run: patchtacio ack <CVE ID>, for example: patchtacio ack CVE-2026-10006
+Patchtacio then stops reminding you about it.
+You get this alert because Fortinet FortiOS (FortiGate firewalls) is on your Patchtacio product list.
+=== chat title
+[Action needed by 3 Oct 2026] 30 actively exploited flaws in your products
+=== chat body
+Patchtacio found 30 known exploited vulnerabilities (CISA KEV) in products on your list. Attackers are already using all of them. Start with the earliest deadline. Matched by product name; versions not checked.
+
+New:
+1. [Action needed by 3 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10006)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10006
+2. [Action needed by 4 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10007)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10007
+3. [Action needed by 5 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10008)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10008
+4. [Action needed by 6 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10009)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10009
+5. [Action needed by 7 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10010)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10010
+6. [Action needed by 8 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10011)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10011
+7. [Action needed by 9 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10012)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10012
+8. [Action needed by 10 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10013)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10013
+9. [Action needed by 11 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10014)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10014
+10. [Action needed by 12 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-10015)
+   Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability. Added to CISA's list 28 Sep 2026.
+   What to do: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+   If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+   Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10015
+
+And 20 more: run `patchtacio check` to see them all.
+
+When you have dealt with one, run: patchtacio ack <CVE ID>
+
+=== short
+Patchtacio: 30 exploited flaws in your products (Fortinet FortiOS). Earliest deadline 3 Oct 2026. Details: patchtacio check
