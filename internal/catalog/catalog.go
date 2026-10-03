@@ -41,13 +41,56 @@ type Product struct {
 	Vendor        string     `yaml:"vendor" json:"vendor"`
 	Category      string     `yaml:"category" json:"category"`
 	KEVAliases    []KEVAlias `yaml:"kev_aliases" json:"kevAliases"`
-	CPEPrefixes   []string   `yaml:"cpe_prefixes" json:"cpePrefixes"`
+	CPEPrefixes   []string   `yaml:"cpe_prefixes" json:"cpePrefixes"`   // see MatchesCPE
 	EOLSlug       string     `yaml:"eol_slug" json:"eolSlug,omitempty"` // "" (or null) = not tracked
 	Advisory      *Advisory  `yaml:"advisory,omitempty" json:"advisory,omitempty"`
 	AliasesSearch []string   `yaml:"aliases_search" json:"aliasesSearch,omitempty"`
 	Notes         string     `yaml:"notes" json:"notes,omitempty"`
 	Verified      string     `yaml:"verified" json:"verified"`                         // YYYY-MM-DD
 	Deprecated    string     `yaml:"deprecated,omitempty" json:"deprecated,omitempty"` // replacement product ID
+}
+
+// MatchesCPE reports whether a CPE 2.3 formatted string (as in NVD, with a
+// version and more) belongs to the product: its part, vendor and product
+// fields equal those of one of CPEPrefixes. A "prefix" is never compared as a
+// string prefix: cpe:2.3:a:ivanti:endpoint_manager must not match
+// endpoint_manager_mobile (a separate product), nor microsoft:windows match
+// windows_server_2019.
+func (p Product) MatchesCPE(cpe string) bool {
+	want, ok := cpeProduct(cpe)
+	if !ok {
+		return false
+	}
+	for _, prefix := range p.CPEPrefixes {
+		if got, ok := cpeProduct(prefix); ok && got == want {
+			return true
+		}
+	}
+	return false
+}
+
+// cpeProduct returns the "part:vendor:product" fields of a CPE 2.3 formatted
+// string, splitting on colons that are not backslash-escaped. Matching
+// ignores case, as CPE 2.3 names are case-insensitive.
+func cpeProduct(cpe string) (string, bool) {
+	var fields []string
+	start := 0
+	for i := 0; i < len(cpe) && len(fields) < 5; i++ {
+		switch cpe[i] {
+		case '\\':
+			i++ // skip the escaped character
+		case ':':
+			fields = append(fields, cpe[start:i])
+			start = i + 1
+		}
+	}
+	if len(fields) < 5 {
+		fields = append(fields, cpe[start:])
+	}
+	if len(fields) < 5 || fields[0] != "cpe" || fields[1] != "2.3" || fields[2] == "" || fields[3] == "" || fields[4] == "" {
+		return "", false
+	}
+	return strings.ToLower(fields[2] + ":" + fields[3] + ":" + fields[4]), true
 }
 
 // KEVAlias is one vendorProject/product pair exactly as it appears in KEV.

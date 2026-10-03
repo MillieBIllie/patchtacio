@@ -50,6 +50,11 @@ verified: 2026-09-30              # date identifiers were last checked against t
 2. **Find the endoflife.date slug** from the cached product list. If none exists, set `eol_slug: null`.
 3. **Find the CPE prefix** from NVD CPE data or an existing KEV CVE's NVD record. If you can't
    confirm it from source data, leave the list empty and add `notes: "TODO: verify CPE"`.
+   A prefix is `cpe:2.3:<part>:<vendor>:<product>`, and `Product.MatchesCPE` compares those three
+   fields exactly, never as a string prefix. So list every name NVD has used for the product,
+   including old ones (a renamed vendor or product, separate firmware/model names), checking
+   the NVD records of the product's older KEV CVEs too. If you checked only some, keep
+   `TODO: verify CPE (only current NVD naming checked)` in the notes.
 4. **Find the advisory feed** only from the vendor's official PSIRT pages. Prefer CSAF if offered.
 5. **Write the YAML**, one product per file, file name = `id`.
 6. **Validate:** `go run ./cmd/patchtacio catalog lint`. With saved feeds, it also fails on an
