@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -20,18 +19,18 @@ import (
 	"github.com/milliebillie/patchtacio/internal/store"
 )
 
-// realChannels builds the configured channels. Secrets are read from the
-// environment when a channel sends, not here.
-func realChannels(n *config.Notify) ([]notify.Channel, error) {
+// realChannels builds the configured channels. Secrets are looked up with
+// getenv (environment, then keychain) when a channel sends, not here.
+func realChannels(n *config.Notify, getenv func(string) string) ([]notify.Channel, error) {
 	var out []notify.Channel
 	for _, name := range n.Channels() {
 		switch name {
 		case config.ChannelEmail:
-			out = append(out, notify.NewEmail(*n.Email, os.Getenv))
+			out = append(out, notify.NewEmail(*n.Email, getenv))
 		case config.ChannelWebhook:
-			out = append(out, notify.NewWebhook(n.Webhook.Kind, os.Getenv))
+			out = append(out, notify.NewWebhook(n.Webhook.Kind, getenv))
 		case config.ChannelNtfy:
-			out = append(out, notify.NewNtfy(n.Ntfy.Priority, os.Getenv))
+			out = append(out, notify.NewNtfy(n.Ntfy.Priority, getenv))
 		case config.ChannelDesktop:
 			out = append(out, notify.NewDesktop())
 		}

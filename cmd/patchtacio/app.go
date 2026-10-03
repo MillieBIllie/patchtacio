@@ -16,6 +16,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/notify"
 	"github.com/milliebillie/patchtacio/internal/paths"
+	"github.com/milliebillie/patchtacio/internal/secrets"
 	"github.com/milliebillie/patchtacio/internal/store"
 	"github.com/milliebillie/patchtacio/internal/version"
 )
@@ -31,6 +32,8 @@ type app struct {
 	newClient func(*slog.Logger) *httpcache.Client
 	// channels builds the configured alert channels; fakes in tests.
 	channels func(*config.Notify) ([]notify.Channel, error)
+	// secrets finds alert secrets: environment first, then the OS keychain.
+	secrets *secrets.Store
 
 	// The product picker and whether it can run; fakes in tests.
 	pick       pickFunc
@@ -44,14 +47,16 @@ type app struct {
 }
 
 func defaultApp() *app {
+	sec := secrets.New()
 	return &app{
-		now: time.Now,
-		loc: time.Local,
+		secrets:  sec,
+		channels: func(n *config.Notify) ([]notify.Channel, error) { return realChannels(n, sec.Getenv) },
+		now:      time.Now,
+		loc:      time.Local,
 		sources: func() []feeds.Source {
 			return []feeds.Source{kev.New(), eol.New()}
 		},
 		newClient:  func(l *slog.Logger) *httpcache.Client { return httpcache.New(version.UserAgent(), l) },
-		channels:   realChannels,
 		pick:       huhPicker(os.Stdin, os.Stdout, os.Getenv("ACCESSIBLE") != ""),
 		isTerminal: stdinIsTerminal,
 		log:        slog.New(slog.DiscardHandler),

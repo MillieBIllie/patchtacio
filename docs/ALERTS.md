@@ -51,7 +51,7 @@ Acknowledged findings get no more alerts or reminders. `patchtacio check` still 
 
 Add a `notify:` section to your configuration file (the path is printed by `patchtacio init`).
 A channel is on when its section is there. **Secrets never go in this file**: each comes from an
-environment variable, read when an alert is sent.
+environment variable or the OS keychain, read when an alert is sent.
 
 ```yaml
 version: 1
@@ -75,11 +75,24 @@ notify:
   desktop: true
 ```
 
-| Channel | Environment variables |
+Instead of environment variables, you can keep secrets in the OS keychain (Credential Manager on
+Windows, Keychain on macOS, GNOME Keyring or KWallet on Linux desktops). The environment variable
+wins if both are set:
+
+```sh
+patchtacio secret set webhook-url      # asks for it, without showing what you type
+patchtacio secret set smtp-password
+patchtacio secret status               # where each secret comes from (never its value)
+patchtacio secret delete webhook-url
+```
+
+On a server without a desktop session there is usually no keychain; use the environment variables.
+
+| Channel | Environment variable (or `patchtacio secret set <name>`) |
 |---|---|
-| email | `PATCHTACIO_SMTP_PASSWORD` (only if `username` is set) |
-| webhook | `PATCHTACIO_WEBHOOK_URL` (the URL contains the token) |
-| ntfy | `PATCHTACIO_NTFY_URL` (e.g. `https://ntfy.sh/<a-long-random-topic>`; on ntfy.sh anyone who knows the topic can read it), optional `PATCHTACIO_NTFY_TOKEN` |
+| email | `PATCHTACIO_SMTP_PASSWORD` / `smtp-password` (only if `username` is set) |
+| webhook | `PATCHTACIO_WEBHOOK_URL` / `webhook-url` (the URL contains the token) |
+| ntfy | `PATCHTACIO_NTFY_URL` / `ntfy-url` (e.g. `https://ntfy.sh/<a-long-random-topic>`; on ntfy.sh anyone who knows the topic can read it), optional `PATCHTACIO_NTFY_TOKEN` / `ntfy-token` |
 | desktop | none |
 
 Then check each channel:

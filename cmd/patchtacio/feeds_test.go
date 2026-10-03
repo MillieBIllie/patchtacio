@@ -120,8 +120,15 @@ func newTestEnv(t *testing.T) *testEnv {
 // exec runs the CLI like main does and returns stdout, stderr and exit code.
 func (e *testEnv) exec(t *testing.T, args ...string) (stdout, stderr string, code int) {
 	t.Helper()
+	return e.execIn(t, "", args...)
+}
+
+// execIn is exec with stdin.
+func (e *testEnv) execIn(t *testing.T, stdin string, args ...string) (stdout, stderr string, code int) {
+	t.Helper()
 	var out, errOut bytes.Buffer
 	cmd := newRootCmd(e.app)
+	cmd.SetIn(strings.NewReader(stdin))
 	cmd.SetOut(&out)
 	cmd.SetErr(&errOut)
 	cmd.SetArgs(args)
