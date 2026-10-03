@@ -38,12 +38,15 @@ Design decisions: [docs/decisions/0001-m1-data-layer.md](decisions/0001-m1-data-
 **Done when:** a fresh user can tick products and see relevant KEV findings in under 2 minutes.
 
 ### M3: Alerts
-- [ ] Store migration: findings + acknowledgements tables (finding identity designed here)
-- [ ] Findings dedupe: alert once, remind as `dueDate` approaches
-- [ ] Advice templates (see `alert-writing` skill) with golden-file tests
-- [ ] Notifiers: SMTP, webhook (Slack/Teams/Discord), ntfy, desktop notification
-- [ ] `patchtacio ack <id>`; daily/weekly digest option
-- [ ] `patchtacio test-alert` to verify notification setup
+Design decisions: [docs/decisions/0002-m3-alerts.md](decisions/0002-m3-alerts.md). Setup: [docs/ALERTS.md](ALERTS.md).
+- [x] Store migration: findings + acknowledgements tables (finding identity designed here)
+- [x] Findings dedupe: alert once, remind as `dueDate` approaches
+- [x] Advice templates (see `alert-writing` skill) with golden-file tests
+- [x] Notifiers: SMTP, webhook (Slack/Teams/Discord), ntfy, desktop notification
+- [x] `patchtacio ack <id>`; daily/weekly digest option
+- [x] `patchtacio test-alert` to verify notification setup
+- [ ] End-of-life alerts: map the user's version to an endoflife.date release cycle, alert before
+      and after EOL (split out of M3: KEV only for now)
 
 **Done when:** a new KEV entry for a ticked product produces exactly one clear alert.
 
