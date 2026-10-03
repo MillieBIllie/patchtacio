@@ -460,3 +460,20 @@ func TestSecretWarningsLinuxKeychain(t *testing.T) {
 		t.Errorf("windows keychain needs no warning: %q", w)
 	}
 }
+
+func TestWatchRunRotatesLaunchdOutput(t *testing.T) {
+	e := newTestEnv(t)
+	e.app.desktopNotice = func(context.Context, advice.Notice) error { return nil }
+	logs := filepath.Join(os.Getenv(paths.EnvCacheDir), "logs")
+	if err := os.MkdirAll(logs, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	big := filepath.Join(logs, schedule.LaunchdOutputName)
+	if err := os.WriteFile(big, make([]byte, 2<<20), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	e.exec(t, "watch", "run")
+	if fi, err := os.Stat(big + ".1"); err != nil || fi.Size() != 2<<20 {
+		t.Errorf("launchd output over 1 MiB was not rotated: %v", err)
+	}
+}

@@ -121,11 +121,13 @@ through a shell.
 - Installing for real, then reboot, is in `docs/manual-testing.md`; a Windows integration test
   (`-tags integration`) registers, queries and deletes a real task.
 
-## Not done (follow-ups)
+## Program paths
 
-- `schtasks.exe`, `conhost.exe` and `launchctl` are found through `PATH` and `%SystemRoot%`, not by
-  absolute system paths (`GetSystemDirectory`, which needs `golang.org/x/sys` as a direct
-  dependency). Defense in depth only: whoever can write early in the user's `PATH` already controls
-  the account.
-- launchd's own output file (`launchd.log`, written only when a run cannot open its log) is not
-  rotated.
+- Windows: `schtasks.exe` and `conhost.exe` are run from the system directory Windows reports
+  (`GetSystemDirectory`, through `golang.org/x/sys`), never from `PATH` or `%SystemRoot%`, which a
+  parent process can set. The desktop notifier finds `powershell.exe` the same way.
+- macOS: `/bin/launchctl`.
+- Linux: `systemctl`, `loginctl` and `crontab` are found on `PATH`, because distributions put them in
+  `/usr/bin` or `/bin`. Whoever can write early in the user's `PATH` already controls the account.
+- launchd's own output file (`launchd.log`, written only when a run cannot open its log) is rotated
+  by the run itself when it passes 1 MiB, keeping one old copy.
