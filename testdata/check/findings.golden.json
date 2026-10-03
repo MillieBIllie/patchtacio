@@ -1,5 +1,19 @@
 {
   "checkedAt": "2026-10-01T09:00:00Z",
+  "endOfLife": [
+    {
+      "acknowledged": false,
+      "product": "VMware vCenter Server",
+      "productId": "vmware-vcenter",
+      "state": "no-version"
+    },
+    {
+      "acknowledged": false,
+      "product": "VMware ESXi",
+      "productId": "vmware-esxi",
+      "state": "no-version"
+    }
+  ],
   "feed": {
     "attemptedAt": "2026-10-01T09:00:00Z",
     "checkedAt": "2026-10-01T09:00:00Z",

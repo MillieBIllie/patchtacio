@@ -98,22 +98,25 @@ type alertReport struct {
 	Notice    string `json:"notice,omitempty"`    // set for a notice, e.g. "kev-out-of-date"; else findings
 	Sent      int    `json:"sent"`                // findings covered by the one message sent (1 for a notice)
 	Vulns     int    `json:"vulnerabilities"`     // distinct CVEs in it (one CVE can match two products)
+	EOL       int    `json:"endOfLife"`           // end-of-life releases in it
 	Held      int    `json:"held,omitempty"`      // waiting for the next digest (or a notice already sent today)
 	NextAfter string `json:"nextAfter,omitempty"` // RFC 3339: when a held message may go
 	Error     string `json:"error,omitempty"`
 }
 
-// feedProblem says why the KEV data could not be refreshed, for the notice
+// feedProblem says why a feed could not be refreshed, for the notice
 // --notify sends so that silence is never mistaken for an all clear.
 type feedProblem struct {
-	title    string
+	kind     string // notice kind, e.g. noticeKEVStale
+	feed     advice.Feed
 	lastGood time.Time // last successful contact; zero = never
 	why      string
 }
 
-// Kind and interval of the "KEV could not be updated" notice.
+// Kinds and interval of the "feed could not be updated" notices.
 const (
 	noticeKEVStale = "kev-out-of-date"
+	noticeEOLStale = "eol-out-of-date"
 	noticeEvery    = 24 * time.Hour
 	notifyLockName = "notify"
 )
@@ -134,7 +137,7 @@ var (
 // failed; the reports say which channel. If nothing could be attempted the
 // reports are empty and the error says why.
 func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Config,
-	findings []match.Finding, haveData bool, problem *feedProblem) ([]alertReport, error) {
+	findings []match.Finding, eols []match.EOLStatus, haveData bool, problems []feedProblem) ([]alertReport, error) {
 	chans, err := a.configuredChannels(cfg)
 	if err != nil {
 		return nil, err
@@ -158,14 +161,14 @@ func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Confi
 	d := &notify.Dispatcher{Store: st, Channels: chans, Digest: cfg.Notify.Digest, Now: a.now, Location: a.loc, Secret: secret}
 	var reps []alertReport
 	var errs []error
-	if problem != nil {
-		n := advice.FeedNotice(problem.title, problem.lastGood, problem.why)
-		results, err := d.Notice(ctx, noticeKEVStale, n, noticeEvery)
-		reps = append(reps, toReports(results, noticeKEVStale)...)
+	for _, p := range problems {
+		n := advice.FeedNotice(p.feed, p.lastGood, p.why)
+		results, err := d.Notice(ctx, p.kind, n, noticeEvery)
+		reps = append(reps, toReports(results, p.kind)...)
 		errs = append(errs, err)
 	}
 	if haveData {
-		results, err := d.Run(ctx, candidates(cfg, findings))
+		results, err := d.Run(ctx, append(candidates(cfg, findings), eolCandidates(cfg, eols)...))
 		reps = append(reps, toReports(results, "")...)
 		if results == nil && err != nil {
 			// Nothing was tried (e.g. alert state unreadable): report why.
@@ -179,7 +182,7 @@ func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Confi
 func toReports(results []notify.Result, notice string) []alertReport {
 	reps := make([]alertReport, 0, len(results))
 	for _, r := range results {
-		rep := alertReport{Channel: r.Channel, Notice: notice, Sent: r.Sent, Vulns: r.Vulns, Held: r.Held}
+		rep := alertReport{Channel: r.Channel, Notice: notice, Sent: r.Sent, Vulns: r.Vulns, EOL: r.EOL, Held: r.Held}
 		if !r.NextAfter.IsZero() {
 			rep.NextAfter = r.NextAfter.UTC().Format("2006-01-02T15:04:05Z")
 		}
@@ -281,10 +284,7 @@ func (a *app) printAlerts(w io.Writer, reps []alertReport) {
 		case r.Error != "":
 			what = "failed: " + r.Error + " (it will be retried next run)"
 		case r.Sent > 0:
-			what = fmt.Sprintf("sent one alert about %d vulnerabilities", r.Vulns)
-			if r.Vulns == 1 {
-				what = "sent one alert about 1 vulnerability"
-			}
+			what = "sent one alert about " + alertContents(r.Vulns, r.EOL)
 		case r.Held > 0:
 			what = fmt.Sprintf("%s waiting for the next digest", plural(r.Held, "finding"))
 			if r.NextAfter != "" {
@@ -297,15 +297,96 @@ func (a *app) printAlerts(w io.Writer, reps []alertReport) {
 			switch {
 			case r.Error != "":
 			case r.Sent > 0:
-				what = "sent a notice that the KEV data could not be updated"
+				what = "sent a notice that the " + noticeFeed(r.Notice) + " could not be updated"
 			case r.Held > 0:
-				what = "the notice that the KEV data could not be updated was already sent today"
+				what = "the notice that the " + noticeFeed(r.Notice) + " could not be updated was already sent today"
 			}
 			_, _ = fmt.Fprintf(w, "Notice by %s: %s.\n", r.Channel, what)
 			continue
 		}
 		_, _ = fmt.Fprintf(w, "Alerts by %s: %s.\n", r.Channel, what)
 	}
+}
+
+// alertContents is "3 vulnerabilities", "1 end-of-life release" or both.
+func alertContents(vulns, eols int) string {
+	var parts []string
+	switch vulns {
+	case 0:
+	case 1:
+		parts = append(parts, "1 vulnerability")
+	default:
+		parts = append(parts, fmt.Sprintf("%d vulnerabilities", vulns))
+	}
+	switch eols {
+	case 0:
+	case 1:
+		parts = append(parts, "1 end-of-life release")
+	default:
+		parts = append(parts, fmt.Sprintf("%d end-of-life releases", eols))
+	}
+	return strings.Join(parts, " and ")
+}
+
+func noticeFeed(kind string) string {
+	if kind == noticeEOLStale {
+		return "endoflife.date data"
+	}
+	return "KEV data"
+}
+
+// storedEOLFindings turns end-of-life findings into store rows
+// (eol/<product>/<release>), due on the end-of-life date.
+func storedEOLFindings(sts []match.EOLStatus) []store.Finding {
+	var out []store.Finding
+	for _, s := range sts {
+		if !s.State.IsFinding() {
+			continue
+		}
+		f := store.Finding{Source: "eol", ProductID: s.Product.ID, VulnID: s.Release.Name}
+		if !s.Release.EOLFrom.IsZero() {
+			f.DueDate = s.Release.EOLFrom.Format("2006-01-02")
+		}
+		f.ID = store.FindingID(f.Source, f.ProductID, f.VulnID)
+		out = append(out, f)
+	}
+	return out
+}
+
+// eolCandidates turns end-of-life findings into alert candidates.
+func eolCandidates(cfg *config.Config, sts []match.EOLStatus) []notify.Candidate {
+	byID := map[string]config.Product{}
+	for _, p := range cfg.Products {
+		byID[p.ID] = p
+	}
+	var out []notify.Candidate
+	for _, s := range sts {
+		if !s.State.IsFinding() {
+			continue
+		}
+		up := byID[s.Product.ID]
+		id := store.FindingID("eol", s.Product.ID, s.Release.Name)
+		it := &advice.EOLItem{
+			Product: advice.Product{Display: s.Product.Display, Version: up.Version, Notes: up.Notes},
+			Release: s.Release.Name,
+			EOLDate: s.Release.EOLFrom.Time,
+			Ended:   s.State == match.EOLEnded,
+			Page:    s.Page,
+			Policy:  s.Policy,
+			AckID:   id,
+		}
+		if !s.Release.EOESFrom.IsZero() {
+			it.ExtendedUntil = s.Release.EOESFrom.Time
+		}
+		if s.Successor != nil {
+			it.Successor = s.Successor.Name
+			if s.Successor.Latest != nil {
+				it.SuccessorAt = s.Successor.Latest.Name
+			}
+		}
+		out = append(out, notify.Candidate{ID: id, EOL: it})
+	}
+	return out
 }
 
 // productName is the catalog display name of id, or id itself.
