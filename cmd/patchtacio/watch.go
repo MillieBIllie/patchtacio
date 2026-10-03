@@ -496,9 +496,11 @@ func (a *app) watchRun(cmd *cobra.Command) error {
 	// launchd (macOS) appends anything the run writes before its log is open
 	// to its own file; it never rotates it, so this run does. One old copy is
 	// plenty for a file that is written only when something is wrong.
-	launchdOut := filepath.Join(d.Logs, schedule.LaunchdOutputName)
-	if err := logging.RotateIfLarger(launchdOut, logging.MaxLogBytes, 1); err != nil {
-		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Warning: %s\n", firstLine(err.Error()))
+	if runtime.GOOS == "darwin" {
+		launchdOut := filepath.Join(d.Logs, schedule.LaunchdOutputName)
+		if err := logging.RotateIfLarger(launchdOut, logging.MaxLogBytes, 1); err != nil {
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Warning: %s\n", firstLine(err.Error()))
+		}
 	}
 	if f, err := logging.OpenLogFile(filepath.Join(d.Logs, logFileName), logging.MaxLogBytes, logging.KeepLogs); err != nil {
 		_, _ = fmt.Fprintf(w, "Warning: cannot open the log file, writing here instead: %s\n", firstLine(err.Error()))

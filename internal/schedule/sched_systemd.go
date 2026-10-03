@@ -106,6 +106,9 @@ func (l *Linux) readCrontab(ctx context.Context) (string, error) {
 	return string(out), nil
 }
 
+// errCrontabChanged means the crontab changed between reading and rewriting it.
+var errCrontabChanged = errors.New("crontab changed")
+
 // removeCron removes Patchtacio's crontab line, if there is one.
 func (l *Linux) removeCron(ctx context.Context) (bool, error) {
 	if _, err := l.O.LookPath("crontab"); err != nil {
@@ -118,7 +121,11 @@ func (l *Linux) removeCron(ctx context.Context) (bool, error) {
 	rest := CronMerge(tab, "")
 	if rest == "" {
 		// Ours was the only line: remove the crontab, leaving the user as
-		// before install rather than with an empty one.
+		// before install rather than with an empty one. Read it once more
+		// first, so a line added meanwhile is never deleted with it.
+		if again, err := l.readCrontab(ctx); err != nil || again != tab {
+			return false, fmt.Errorf("the crontab changed while Patchtacio was removing its line; run `patchtacio watch --uninstall` again: %w", errors.Join(err, errCrontabChanged))
+		}
 		if _, err := l.O.Run(ctx, nil, "crontab", "-r"); err != nil {
 			return false, fmt.Errorf("remove the crontab: %w", err)
 		}
