@@ -240,6 +240,7 @@ func TestCPEPattern(t *testing.T) {
 		`cpe:2.3:a:veeam:veeam_backup_\&_replication`, // NVD escapes & with a backslash
 		"cpe:2.3:a:simple-help:simplehelp",
 		"cpe:2.3:o:sonicwall:sma_500v_firmware",
+		`cpe:2.3:a:acme:a\!b\/c\:d\@e\[f\^g\` + "`" + `h\{i\~j`,
 	} {
 		if !cpePattern.MatchString(ok) {
 			t.Errorf("rejected valid CPE prefix %q", ok)
@@ -248,6 +249,9 @@ func TestCPEPattern(t *testing.T) {
 	for _, bad := range []string{
 		"cpe:2.3:a:veeam:backup_&_replication", // unescaped
 		`cpe:2.3:a:veeam:backup_\a`,            // only punctuation may be escaped
+		`cpe:2.3:o:microsoft:windows_8\.1`,     // NVD never escapes . _ -: would never match
+		`cpe:2.3:a:acme:big\-ip`,
+		`cpe:2.3:a:acme:big\_ip`,
 		"cpe:2.3:x:acme:widget",
 		"cpe:2.3:a:acme:widget:1.0",
 		"cpe:/a:acme:widget",
@@ -270,7 +274,7 @@ func TestMatchesCPE(t *testing.T) {
 	}{
 		{"cpe:2.3:a:ivanti:endpoint_manager:2022:su5:*:*:*:*:*:*", true},
 		{"cpe:2.3:a:ivanti:endpoint_manager", true},
-		{"CPE:2.3:A:Ivanti:Endpoint_Manager:-:*:*:*:*:*:*:*", false}, // "CPE" is not the CPE 2.3 prefix
+		{"CPE:2.3:A:Ivanti:Endpoint_Manager:-:*:*:*:*:*:*:*", true}, // CPE names ignore case
 		{"cpe:2.3:a:Ivanti:Endpoint_Manager:-:*:*:*:*:*:*:*", true},
 		// String prefixes of a listed product are other products.
 		{"cpe:2.3:a:ivanti:endpoint_manager_mobile:12.0:*:*:*:*:*:*:*", false},
