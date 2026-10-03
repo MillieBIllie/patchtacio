@@ -519,3 +519,16 @@ func TestDefaultOptionsPrograms(t *testing.T) {
 		}
 	}
 }
+
+func TestCronUninstallLastLineRemovesCrontab(t *testing.T) {
+	f := newFake()
+	f.fail(showEnv, "")
+	line, _ := CronLine(plainJob)
+	f.say("crontab -l", line+"\n")
+	if _, err := (&Linux{O: testOptions(t, f, true)}).Uninstall(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(f.calls, "crontab -r") || slices.Contains(f.calls, "crontab -") {
+		t.Errorf("ours was the only line, so the crontab should be removed: %q", f.calls)
+	}
+}

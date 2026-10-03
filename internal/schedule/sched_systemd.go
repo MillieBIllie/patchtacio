@@ -115,7 +115,16 @@ func (l *Linux) removeCron(ctx context.Context) (bool, error) {
 	if err != nil || !CronHas(tab) {
 		return false, err
 	}
-	if _, err := l.O.Run(ctx, []byte(CronMerge(tab, "")), "crontab", "-"); err != nil {
+	rest := CronMerge(tab, "")
+	if rest == "" {
+		// Ours was the only line: remove the crontab, leaving the user as
+		// before install rather than with an empty one.
+		if _, err := l.O.Run(ctx, nil, "crontab", "-r"); err != nil {
+			return false, fmt.Errorf("remove the crontab: %w", err)
+		}
+		return true, nil
+	}
+	if _, err := l.O.Run(ctx, []byte(rest), "crontab", "-"); err != nil {
 		return false, fmt.Errorf("save the crontab: %w", err)
 	}
 	return true, nil
