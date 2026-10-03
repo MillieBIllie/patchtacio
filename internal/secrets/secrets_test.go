@@ -2,6 +2,7 @@ package secrets
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -78,7 +79,7 @@ func TestKeychainTimeout(t *testing.T) {
 	if v != "" || err == nil || time.Since(start) > 2*time.Second {
 		t.Errorf("hung keychain: %q, %v after %v", v, err, time.Since(start))
 	}
-	if p := s.Problems(); p[config.EnvWebhookURL] == nil {
+	if p := s.Problems(); len(p) != 1 || p[0].Secret.Env != config.EnvWebhookURL {
 		t.Error("the timeout is not reported in Problems")
 	}
 	// The answer is remembered: a second lookup does not wait again.
@@ -100,6 +101,28 @@ func TestKeychainUnreachableNotCalled(t *testing.T) {
 	s.kc.get = func(string, string) (string, error) { t.Error("keychain called while unreachable"); return "", nil }
 	if _, _, err := s.Lookup(config.EnvWebhookURL); err == nil {
 		t.Error("want an error saying the keychain is unreachable")
+	}
+}
+
+// Delete without a reachable keychain stops using the secret, and says the
+// value may still be stored rather than claiming it is gone.
+func TestDeleteUnreachableSaysSo(t *testing.T) {
+	s := Mock(t.TempDir(), func(string) string { return "" })
+	tok, _ := ByName("ntfy-token")
+	if err := s.Set(tok, "tk_secret"); err != nil {
+		t.Fatal(err)
+	}
+	s.kc.reachable = func() error { return errors.New("no session bus") }
+	err := s.Delete(tok)
+	if err == nil || !strings.Contains(err.Error(), "may still be there") {
+		t.Fatalf("Delete while unreachable: %v", err)
+	}
+	if strings.Contains(err.Error(), "tk_secret") {
+		t.Error("error shows the value")
+	}
+	s.kc.reachable = func() error { return nil }
+	if v, src, _ := s.Lookup(config.EnvNtfyToken); v != "" || src != NotSet {
+		t.Errorf("still used after delete: %q %q", v, src)
 	}
 }
 

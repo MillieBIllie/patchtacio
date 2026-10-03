@@ -76,7 +76,7 @@ func newSecretSetCmd(a *app) *cobra.Command {
 					return fmt.Errorf("read %s from standard input: %w", sec.Name, err)
 				}
 				if len(strings.TrimRight(line, "\r\n")) >= limit {
-					return fmt.Errorf("%s is longer than %d bytes; nothing saved", sec.Name, limit)
+					return fmt.Errorf("%s is %d bytes or longer; nothing saved", sec.Name, limit)
 				}
 				value = line
 			}

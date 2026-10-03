@@ -26,6 +26,9 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
     Someone with the whole data folder has the key too; that is the limit of this protection.
   - A damaged key file is replaced, with a warning: every destination then counts as new and gets
     one summary again (noisy, never silent).
+  - On Windows the 0600 mode is not enforced: `install.key` and the database get the data folder's
+    permissions. The default (`%LocalAppData%`) is private; a `PATCHTACIO_DATA_DIR` override must
+    point at a folder only the user can read.
   - A channel that fails records nothing and is retried alone on the next run.
   - A channel that worked is never repeated because another one failed.
 - **One message per channel per run.** Several findings become one summary, and findings sharing
@@ -85,6 +88,10 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
     `dbus-launch` is never started. A keychain that cannot be read just means "not set", and the
     run says so ("saved with `secret set`, but this run could not read it"), because scheduled tasks
     often cannot reach the user's keychain.
+  - `secret delete` without a reachable keychain stops using the secret but says its value may
+    still be stored, rather than claiming it is gone.
+  - A keychain read that times out on macOS can leave its `security` process running after the
+    run ends; harmless, and accepted.
   - `secret set` never takes the value as an argument (shell history, process list): it asks
     without echo, or reads one line (at most 8 KB) from stdin. `status` never shows values.
 - The notify lock's heartbeat stops after 30 minutes, so a run that hangs (a channel or keychain

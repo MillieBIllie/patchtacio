@@ -63,8 +63,8 @@ func newTestAlertCmd(a *app) *cobra.Command {
 				}
 				_, _ = fmt.Fprintf(w, "%s: sent. %s\n", c.Name(), testHint(c.Name(), cfg.Notify))
 			}
+			a.explainKeychain(cmd.ErrOrStderr())
 			if failed > 0 {
-				a.explainKeychain(cmd.ErrOrStderr())
 				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s failed; fix it, then run `patchtacio test-alert` again.\n", plural(failed, "channel"))
 				return outcome(exitToolError)
 			}

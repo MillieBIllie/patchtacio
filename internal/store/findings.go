@@ -337,12 +337,17 @@ const InstallKeyFile = "install.key"
 // gets one summary again, which is noisy but never silent.
 func (s *Store) InstallSecret(_ context.Context) (secret []byte, reset bool, err error) {
 	path := filepath.Join(s.dir, InstallKeyFile)
-	for range 3 {
+	created := false // another run created the file: it may still be writing it
+	for attempt := range 20 {
 		b, err := os.ReadFile(filepath.Clean(path)) // our own file in the data directory
 		switch {
 		case err == nil:
 			if key, err := hex.DecodeString(strings.TrimSpace(string(b))); err == nil && len(key) >= 32 {
 				return key, false, nil
+			}
+			if created && attempt < 19 {
+				time.Sleep(50 * time.Millisecond) // give the creator time to finish writing
+				continue
 			}
 			key, err := newKey()
 			if err != nil {
@@ -357,10 +362,11 @@ func (s *Store) InstallSecret(_ context.Context) (secret []byte, reset bool, err
 			if err != nil {
 				return nil, false, err
 			}
-			// O_EXCL: of two first runs at once, one creates it and the other
-			// reads what it wrote on the next pass.
+			// O_EXCL: of two first runs at once, one creates the file; the
+			// other reads it, waiting up to a second for it to be written.
 			f, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600) //nolint:gosec // our own file beside the database
 			if errors.Is(err, os.ErrExist) {
+				created = true
 				time.Sleep(50 * time.Millisecond)
 				continue
 			}
