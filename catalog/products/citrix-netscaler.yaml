@@ -11,7 +11,10 @@ kev_aliases:
 cpe_prefixes:
   - "cpe:2.3:a:citrix:netscaler_application_delivery_controller"
   - "cpe:2.3:a:citrix:netscaler_gateway"
+  - "cpe:2.3:o:citrix:application_delivery_controller_firmware"
+  - "cpe:2.3:o:citrix:gateway_firmware"
+  - "cpe:2.3:o:citrix:netscaler_gateway_firmware"
 eol_slug: null
 aliases_search: ["Citrix ADC", "Citrix Gateway", "NetScaler"]
 notes: "NetScaler SD-WAN entries are a different product and are not included."
-verified: 2026-10-02
+verified: 2026-10-03

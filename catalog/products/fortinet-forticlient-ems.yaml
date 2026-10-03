@@ -6,7 +6,8 @@ kev_aliases:
   - { vendor: "Fortinet", product: "FortiClient EMS" }
 cpe_prefixes:
   - "cpe:2.3:a:fortinet:forticlientems"
+  - "cpe:2.3:a:fortinet:forticlient_enterprise_management_server"
 eol_slug: null
 aliases_search: ["FortiClient", "Endpoint Management Server"]
 notes: ""
-verified: 2026-10-02
+verified: 2026-10-03

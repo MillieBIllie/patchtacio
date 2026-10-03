@@ -11,7 +11,8 @@ kev_aliases:
   - { vendor: "Pulse Secure", product: "Pulse Connect Secure" }
 cpe_prefixes:
   - "cpe:2.3:a:ivanti:connect_secure"
+  - "cpe:2.3:a:pulsesecure:pulse_connect_secure"
 eol_slug: null
 aliases_search: ["Pulse Secure", "Pulse VPN", "ICS"]
 notes: ""
-verified: 2026-10-02
+verified: 2026-10-03

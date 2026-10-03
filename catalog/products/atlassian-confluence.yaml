@@ -11,7 +11,9 @@ kev_aliases:
   - { vendor: "Atlassian", product: "Confluence Server/Data Center" }
 cpe_prefixes:
   - "cpe:2.3:a:atlassian:confluence"
+  - "cpe:2.3:a:atlassian:confluence_server"
+  - "cpe:2.3:a:atlassian:confluence_data_center"
 eol_slug: confluence
 aliases_search: ["wiki"]
 notes: ""
-verified: 2026-10-02
+verified: 2026-10-03

@@ -6,8 +6,9 @@ kev_aliases:
   - { vendor: "Microsoft", product: "Edge" }
   - { vendor: "Microsoft", product: "Edge and Internet Explorer" }
   - { vendor: "Microsoft", product: "Internet Explorer and Edge" }
-cpe_prefixes: []
+cpe_prefixes:
+  - "cpe:2.3:a:microsoft:edge"
 eol_slug: null
 aliases_search: ["browser", "EdgeHTML", "Spartan"]
-notes: "The original Edge (EdgeHTML engine), replaced by the Chromium-based microsoft-edge. KEV files its flaws under Microsoft Edge, sometimes together with Internet Explorer. TODO: verify CPE."
+notes: "The original Edge (EdgeHTML engine), replaced by the Chromium-based microsoft-edge. KEV files its flaws under Microsoft Edge, sometimes together with Internet Explorer. NVD uses cpe:2.3:a:microsoft:edge for both this and Chromium-based Edge; only the version (EdgeHTML 12 to 18 against 79 and later) tells them apart."
 verified: 2026-10-03

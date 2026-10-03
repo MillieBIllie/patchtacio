@@ -6,7 +6,9 @@ kev_aliases:
   - { vendor: "Atlassian", product: "Jira Server and Data Center" }
 cpe_prefixes:
   - "cpe:2.3:a:atlassian:jira"
+  - "cpe:2.3:a:atlassian:jira_server"
+  - "cpe:2.3:a:atlassian:jira_data_center"
 eol_slug: jira-software
 aliases_search: ["Jira Software", "issue tracker"]
 notes: ""
-verified: 2026-10-02
+verified: 2026-10-03
