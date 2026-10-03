@@ -180,6 +180,7 @@ func runDesktop(ctx context.Context, c desktopCmd) error {
 	cmd.Env = childEnv(os.Environ(), c.Env)
 	var out bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &out
+	hideWindow(cmd)
 	if err := cmd.Run(); err != nil {
 		msg := strings.Join(strings.Fields(logging.Clean(out.String())), " ")
 		if len(msg) > 300 {
