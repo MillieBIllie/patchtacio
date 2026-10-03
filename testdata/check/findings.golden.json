@@ -15,6 +15,7 @@
   },
   "findings": [
     {
+      "acknowledged": false,
       "cveID": "CVE-2026-88772",
       "cwes": [
         "CWE-119"
@@ -22,6 +23,7 @@
       "dateAdded": "2026-09-27",
       "dueDate": "2026-09-30",
       "duePassed": true,
+      "id": "kev/citrix-netscaler/CVE-2026-88772",
       "kevProduct": "NetScaler",
       "kevVendorProject": "Citrix",
       "notes": [
@@ -41,6 +43,7 @@
       "vulnerabilityName": "Citrix NetScaler Improper Restriction of Operations within the Bounds of a Memory Buffer Vulnerability"
     },
     {
+      "acknowledged": false,
       "cveID": "CVE-2026-88771",
       "cwes": [
         "CWE-119"
@@ -48,6 +51,7 @@
       "dateAdded": "2026-09-27",
       "dueDate": "2026-09-30",
       "duePassed": true,
+      "id": "kev/citrix-netscaler/CVE-2026-88771",
       "kevProduct": "NetScaler",
       "kevVendorProject": "Citrix",
       "notes": [
@@ -67,6 +71,7 @@
       "vulnerabilityName": "Citrix NetScaler Improper Input Validation Vulnerability"
     },
     {
+      "acknowledged": false,
       "cveID": "CVE-2026-85102",
       "cwes": [
         "CWE-295"
@@ -74,6 +79,7 @@
       "dateAdded": "2026-09-22",
       "dueDate": "2026-09-25",
       "duePassed": true,
+      "id": "kev/checkpoint-security-gateway/CVE-2026-85102",
       "kevProduct": "Multiple Products",
       "kevVendorProject": "Check Point",
       "notes": [
@@ -91,6 +97,7 @@
       "vulnerabilityName": "Check Point Multiple Products Improper Certificate Validation Vulnerability"
     },
     {
+      "acknowledged": false,
       "cveID": "CVE-2026-59310",
       "cwes": [
         "CWE-22"
@@ -98,6 +105,7 @@
       "dateAdded": "2026-08-18",
       "dueDate": "2026-08-21",
       "duePassed": true,
+      "id": "kev/vmware-vcenter/CVE-2026-59310",
       "kevProduct": "VMware vCenter",
       "kevVendorProject": "Broadcom",
       "notes": [

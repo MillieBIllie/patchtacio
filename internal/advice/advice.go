@@ -15,6 +15,7 @@ import (
 	"embed"
 	"fmt"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"text/template"
@@ -249,16 +250,20 @@ func newItemView(it Item, today time.Time) itemView {
 		v.DuePassed = v.due.Before(today)
 		v.DaysLeft = int(v.due.Sub(today).Hours() / 24)
 	}
-	for _, l := range it.Links {
-		l = clean(strings.TrimSpace(l))
-		// KEV lists the vendor advisory first; the NVD link it often ends
-		// with is already in the links section.
-		switch {
-		case !isWebLink(l) || strings.HasPrefix(l, "https://nvd.nist.gov/"):
-		case v.Advisory == "":
-			v.Advisory = l
-		default:
-			v.OtherLinks = append(v.OtherLinks, l)
+	// KEV notes are usually bare links, vendor advisory first, but some are
+	// sentences with a link inside ("For more information, please see:
+	// https://..."), so every link is taken from the text. The NVD link most
+	// end with is already in the links section.
+	for _, note := range it.Links {
+		for _, l := range urlPattern.FindAllString(clean(note), -1) {
+			l = strings.TrimRight(l, ".,;:)]'\"")
+			switch {
+			case !isWebLink(l) || strings.HasPrefix(l, "https://nvd.nist.gov/"):
+			case v.Advisory == "":
+				v.Advisory = l
+			case l != v.Advisory && !slices.Contains(v.OtherLinks, l):
+				v.OtherLinks = append(v.OtherLinks, l)
+			}
 		}
 	}
 	var short []string
@@ -373,6 +378,9 @@ func shortName(display string) string {
 	}
 	return display
 }
+
+// urlPattern finds http(s) links in KEV note text.
+var urlPattern = regexp.MustCompile(`https?://[^\s<>"]+`)
 
 func isWebLink(s string) bool {
 	u, err := url.Parse(s)

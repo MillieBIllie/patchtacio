@@ -154,3 +154,23 @@ func TestNeverInventsFixedVersion(t *testing.T) {
 		}
 	}
 }
+
+// Some KEV notes are sentences with a link inside (Citrix, 2026); the link
+// inside is the advisory, and later ones are kept as further reading.
+func TestLinksInsideNoteText(t *testing.T) {
+	it := fortios()
+	it.Links = []string{
+		"Customers must conduct forensic triage. For more information, please see: https://community.citrix.com/bulletin-cve-2026-88772.",
+		"https://support.citrix.com/article?articleNumber=CTX697096",
+		"BOD 26-04: https://www.cisa.gov/news-events/directives/bod-26-04",
+		"https://nvd.nist.gov/vuln/detail/CVE-2026-88772",
+	}
+	v := newItemView(it, today)
+	if v.Advisory != "https://community.citrix.com/bulletin-cve-2026-88772" {
+		t.Errorf("advisory = %q", v.Advisory)
+	}
+	want := []string{"https://support.citrix.com/article?articleNumber=CTX697096", "https://www.cisa.gov/news-events/directives/bod-26-04"}
+	if strings.Join(v.OtherLinks, " ") != strings.Join(want, " ") {
+		t.Errorf("other links = %q", v.OtherLinks)
+	}
+}

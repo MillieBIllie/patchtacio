@@ -18,10 +18,12 @@ import (
 	"unicode/utf8"
 
 	"github.com/milliebillie/patchtacio/internal/catalog"
+	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/feeds/eol"
 	"github.com/milliebillie/patchtacio/internal/feeds/kev"
 	"github.com/milliebillie/patchtacio/internal/httpcache"
+	"github.com/milliebillie/patchtacio/internal/notify"
 	"github.com/milliebillie/patchtacio/internal/paths"
 )
 
@@ -105,6 +107,10 @@ func newTestEnv(t *testing.T) *testEnv {
 		isTerminal: func() bool { return false },
 		pick: func(context.Context, []catalog.Product, []string) ([]string, error) {
 			return nil, errors.New("test did not set a picker")
+		},
+		// Never real channels in tests: no desktop pop-ups, no network.
+		channels: func(*config.Notify) ([]notify.Channel, error) {
+			return nil, errors.New("test did not set channels (call useFakeChannels)")
 		},
 		log: slog.New(slog.DiscardHandler),
 	}
