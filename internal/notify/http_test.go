@@ -118,6 +118,26 @@ func TestWebhookPayloads(t *testing.T) {
 	}
 }
 
+// Feed text must not become a disguised link in Discord or Teams.
+func TestWebhookNoMaskedLinks(t *testing.T) {
+	for _, kind := range []string{"discord", "teams"} {
+		rec, u := serve(t)
+		m := sample()
+		m.Items[0].Name = "Acme Flaw, see [https://vendor.example/fix](https://evil.example/x)"
+		if err := NewWebhook(kind, env(map[string]string{config.EnvWebhookURL: u})).Send(context.Background(), m); err != nil {
+			t.Fatal(err)
+		}
+		var v any
+		if err := json.Unmarshal(rec.bodies[0], &v); err != nil {
+			t.Fatal(err)
+		}
+		raw, _ := json.Marshal(v) // decoded, so \u200b is compared as the character
+		if strings.Contains(string(raw), "](") {
+			t.Errorf("%s payload still has a markdown link: %s", kind, raw)
+		}
+	}
+}
+
 func TestWebhookTest(t *testing.T) {
 	rec, u := serve(t)
 	if err := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: u})).SendNotice(context.Background(), advice.TestNotice()); err != nil {
