@@ -1,8 +1,9 @@
 # Patchtacio
 
 > **Status: pre-alpha.** Patchtacio can show the CISA KEV entries for the products you run
-> (`patchtacio init`, then `patchtacio check`) and send alerts about new ones
-> (`patchtacio check --notify`), but does not run on a schedule or check end-of-life dates yet.
+> (`patchtacio init`, then `patchtacio check`), check end-of-life dates for products whose version
+> you give, and send alerts about both (`patchtacio check --notify`), but does not run on a
+> schedule yet.
 > See [docs/ROADMAP.md](docs/ROADMAP.md) for what's coming.
 
 Patchtacio is a free, open source, **local-only** tool for small IT teams in schools, local

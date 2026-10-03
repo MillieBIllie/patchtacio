@@ -45,8 +45,8 @@ Design decisions: [docs/decisions/0002-m3-alerts.md](decisions/0002-m3-alerts.md
 - [x] Notifiers: SMTP, webhook (Slack/Teams/Discord), ntfy, desktop notification
 - [x] `patchtacio ack <id>`; daily/weekly digest option
 - [x] `patchtacio test-alert` to verify notification setup
-- [ ] End-of-life alerts: map the user's version to an endoflife.date release cycle, alert before
-      and after EOL (split out of M3: KEV only for now)
+- [x] End-of-life alerts: map the user's version to an endoflife.date release cycle, alert before
+      and after EOL ([decision 0003](decisions/0003-eol-alerts.md))
 
 **Done when:** a new KEV entry for a ticked product produces exactly one clear alert.
 
