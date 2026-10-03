@@ -1,5 +1,5 @@
 // Package store is Patchtacio's SQLite database: feed cache metadata and
-// cross-process locks (M1); findings and acknowledgements arrive in M3.
+// cross-process locks (M1); findings, acknowledgements and alert deliveries (M3).
 //
 // It uses the pure-Go modernc.org/sqlite driver (CGO_ENABLED=0), WAL mode and
 // a busy timeout so a scheduled check and a manual run can share the file.
