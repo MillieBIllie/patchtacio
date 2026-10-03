@@ -25,9 +25,9 @@ CREATE TABLE acknowledgements (
 
 -- Alerts delivered, once per finding, destination and kind ('new',
 -- 'due-soon', 'overdue'). The channel column holds the destination key:
--- 'desktop', or the type plus a short SHA-256 of the recipients or URL
--- ('webhook/1f2e...'), so a new address or URL hears everything again and a
--- webhook token never reaches the database. A channel that failed
+-- 'desktop', or the type plus a short keyed hash of the recipients or URL
+-- ('webhook/1f2e...', see migration 0003), so a new address or URL hears
+-- everything again and a webhook token never reaches the database. A channel that failed
 -- has no row, so the next run retries it without repeating the others. The
 -- newest sent_at per channel is when it last sent anything (digest timing).
 CREATE TABLE deliveries (
@@ -40,12 +40,3 @@ CREATE TABLE deliveries (
 
 CREATE INDEX deliveries_channel_sent ON deliveries (channel, sent_at);
 
--- Notices that are not about a finding (e.g. "the KEV list could not be
--- updated, alerts may be missing"), per destination key and kind, so a
--- lasting problem is reported at most once a day rather than every run.
-CREATE TABLE notices (
-    channel TEXT NOT NULL,
-    kind    TEXT NOT NULL,
-    sent_at TEXT NOT NULL,
-    PRIMARY KEY (channel, kind)
-) STRICT;

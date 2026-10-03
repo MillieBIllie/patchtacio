@@ -40,8 +40,8 @@ func NewDesktop() *Desktop {
 // Name implements Channel.
 func (d *Desktop) Name() string { return config.ChannelDesktop }
 
-// Key implements Channel: this computer.
-func (d *Desktop) Key() string { return config.ChannelDesktop }
+// Destination implements Channel: this computer.
+func (d *Desktop) Destination() []string { return nil }
 
 // Send implements Channel.
 func (d *Desktop) Send(ctx context.Context, m advice.Message) error {

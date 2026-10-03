@@ -144,7 +144,11 @@ func (a *app) sendAlerts(ctx context.Context, st *store.Store, cfg *config.Confi
 	}
 	defer release()
 
-	d := &notify.Dispatcher{Store: st, Channels: chans, Digest: cfg.Notify.Digest, Now: a.now, Location: a.loc}
+	secret, err := st.InstallSecret(ctx)
+	if err != nil {
+		return nil, err
+	}
+	d := &notify.Dispatcher{Store: st, Channels: chans, Digest: cfg.Notify.Digest, Now: a.now, Location: a.loc, Secret: secret}
 	var reps []alertReport
 	var errs []error
 	if problem != nil {

@@ -10,6 +10,7 @@ package notify
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -26,11 +27,12 @@ import (
 type Channel interface {
 	// Name is the channel type: "email", "webhook", "ntfy" or "desktop".
 	Name() string
-	// Key identifies where the channel delivers ("email/<hash of the
-	// recipients>"), and deliveries are recorded under it: a new address or
-	// URL is a new destination that has heard nothing yet, so it gets
-	// everything again rather than silently missing what went elsewhere.
-	Key() string
+	// Destination describes where the channel delivers (the recipients, or
+	// the URL); nil for this computer. Deliveries are recorded under a keyed
+	// hash of it: a new address or URL is a new destination that has heard
+	// nothing yet, so it gets everything again rather than silently missing
+	// what went elsewhere.
+	Destination() []string
 	// Send delivers one message.
 	Send(ctx context.Context, m advice.Message) error
 	// SendNotice delivers a message that is not about a finding: a test, or
@@ -71,6 +73,8 @@ type Dispatcher struct {
 	Digest   string           // DigestOff (default), DigestDaily or DigestWeekly
 	Now      func() time.Time // defaults to time.Now
 	Location *time.Location   // the reader's time zone, for calendar dates
+	// Secret keys the destination hashes (store.InstallSecret). Required.
+	Secret []byte
 }
 
 // Result is what happened on one channel.
@@ -86,6 +90,9 @@ type Result struct {
 // Run delivers what is due for the current findings and returns one result
 // per channel. The error is non-nil if any channel failed.
 func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, error) {
+	if len(d.Secret) == 0 {
+		return nil, errors.New("notify: dispatcher has no install secret")
+	}
 	now := d.now()
 	today := calendarDay(now, d.Location)
 	ids := make([]string, len(cands))
@@ -101,7 +108,7 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 	var errs []error
 	for _, ch := range d.Channels {
 		r := Result{Channel: ch.Name()}
-		key := ch.Key()
+		key := d.key(ch)
 		due := Plan(key, cands, states, today)
 		if len(due) == 0 {
 			results = append(results, r)
@@ -141,12 +148,15 @@ func (d *Dispatcher) Run(ctx context.Context, cands []Candidate) ([]Result, erro
 // Use it for problems that last, such as a feed that cannot be updated. Held
 // channels report Held = 1.
 func (d *Dispatcher) Notice(ctx context.Context, kind string, n advice.Notice, every time.Duration) ([]Result, error) {
+	if len(d.Secret) == 0 {
+		return nil, errors.New("notify: dispatcher has no install secret")
+	}
 	now := d.now()
 	var results []Result
 	var errs []error
 	for _, ch := range d.Channels {
 		r := Result{Channel: ch.Name()}
-		key := ch.Key()
+		key := d.key(ch)
 		last, err := d.Store.LastNotice(ctx, key, kind)
 		last = notInFuture(last, now)
 		switch {
@@ -319,12 +329,18 @@ func notInFuture(t, now time.Time) time.Time {
 	return t
 }
 
-// destinationKey is name plus a short SHA-256 of the destination's details.
-// Only the hash is stored, so a webhook URL's token never reaches the
-// database.
-func destinationKey(name string, parts ...string) string {
-	h := sha256.Sum256([]byte(strings.Join(parts, "\x00")))
-	return name + "/" + hex.EncodeToString(h[:8])
+// key is the name deliveries to ch are recorded under: the channel type and
+// a short HMAC-SHA-256 of its destination, keyed with the install secret.
+// Only the hash is stored, so no token reaches the database, and without the
+// secret a guessed topic or URL cannot be checked against it.
+func (d *Dispatcher) key(ch Channel) string {
+	parts := ch.Destination()
+	if len(parts) == 0 {
+		return ch.Name()
+	}
+	mac := hmac.New(sha256.New, d.Secret)
+	mac.Write([]byte(strings.Join(parts, "\x00")))
+	return ch.Name() + "/" + hex.EncodeToString(mac.Sum(nil)[:8])
 }
 
 // calendarDay is t's date in loc, as UTC midnight (how feed dates are kept).
