@@ -371,6 +371,17 @@ func TestNoticeOncePerDay(t *testing.T) {
 	}
 }
 
+// A notice recorded while the clock was far ahead must not silence the next.
+func TestNoticeIgnoresFutureTimes(t *testing.T) {
+	ctx := context.Background()
+	ch := &fakeChannel{name: "email"}
+	d, now, ms := setup(t, DigestOff, ch)
+	ms.notices["email|kev-stale"] = now.AddDate(1, 0, 0)
+	if res, err := d.Notice(ctx, "kev-stale", advice.FeedNotice("CISA KEV catalog", time.Time{}, ""), 24*time.Hour); err != nil || res[0].Sent != 1 {
+		t.Errorf("future-dated notice suppressed the next: %+v, %v", res, err)
+	}
+}
+
 func TestDeadline(t *testing.T) {
 	today := time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC)
 	for _, tt := range []struct {

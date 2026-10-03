@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync"
 	"testing"
@@ -229,5 +230,30 @@ func TestTruncate(t *testing.T) {
 	}
 	if truncate("short", 10) != "short" {
 		t.Error("short text changed")
+	}
+}
+
+func TestScrub(t *testing.T) {
+	u, err := url.Parse("https://prod-12.westeurope.logic.azure.com/workflows/0a1b2c3d4e5f60718293a4b5c6d7e8f9/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=AbCdEfGhIjKlMnOpQrStUvWxYz0123456789")
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := http.Header{"Authorization": {"Bearer tk_abcdef123456"}}
+	for _, echoed := range []string{
+		"bad signature AbCdEfGhIjKlMnOpQrStUvWxYz0123456789",
+		"no flow 0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+		"sp=/triggers/manual/run rejected",
+		"token tk_abcdef123456 expired",
+	} {
+		got := scrub(echoed, u, h)
+		for _, secret := range []string{"AbCdEfGhIjKl", "0a1b2c3d4e5f", "tk_abcdef", "/triggers/manual/run"} {
+			if strings.Contains(got, secret) {
+				t.Errorf("scrub(%q) = %q still contains %q", echoed, got, secret)
+			}
+		}
+	}
+	// Fixed words stay, so the message still means something.
+	if got := scrub("the workflow trigger is disabled", u, h); got != "the workflow trigger is disabled" {
+		t.Errorf("over-redacted: %q", got)
 	}
 }
