@@ -33,6 +33,29 @@ matters, what to do (the vendor advisory for the fixed version, CISA's required 
 restricting access until you can update), and how to acknowledge it. Patchtacio matches by
 product name and does not compare versions yet, and every alert says so.
 
+## End of life
+
+If you give a product's version in your configuration, `check` also looks up when that release
+stops getting security updates (data from [endoflife.date](https://endoflife.date)):
+
+```yaml
+products:
+  - id: fortinet-fortios
+    version: "7.4.2"        # matched to release 7.4
+  - id: microsoft-windows-server
+    version: "2019"
+```
+
+- A release that has **ended**, or ends within **90 days**, is a finding: `check` lists it, exits
+  `1`, and `check --notify` alerts once, reminds 30 days before the date and once after it.
+- The alert says when security updates stop and names the newest supported release if
+  endoflife.date lists one (otherwise it points to the vendor's lifecycle page).
+- Acknowledge it with its ID, for example `patchtacio ack eol/fortinet-fortios/7.2`.
+- A version matches a release only exactly (`2019`, `2012 R2`) or by its leading numbers (`7.4.2`
+  is release `7.4`). If yours matches none, `check` lists the release names to use. Nothing is
+  guessed, and a product without a version is shown as not checked, never as supported.
+- Design decisions: [docs/decisions/0003-eol-alerts.md](decisions/0003-eol-alerts.md).
+
 ## Acknowledging
 
 When you have dealt with a finding (patched, mitigated, or the product is not exposed):
