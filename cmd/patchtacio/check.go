@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,10 +21,11 @@ import (
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/match"
+	"github.com/milliebillie/patchtacio/internal/store"
 )
 
 func newCheckCmd(a *app) *cobra.Command {
-	var offline, asJSON bool
+	var offline, asJSON, sendAlerts bool
 	var since string
 	cmd := &cobra.Command{
 		Use:   "check",
@@ -33,7 +35,10 @@ func newCheckCmd(a *app) *cobra.Command {
 			"Matching is by product name: versions are not compared yet, so check each entry against the\n" +
 			"version you run.\n\n" +
 			"Exit codes: 1 at least one match; 0 no match and the data is up to date;\n" +
-			"3 no match, but the KEV data is out of date (warning printed); 2 error or no KEV data.",
+			"3 no match, but the KEV data is out of date (warning printed); 2 error or no KEV data.\n\n" +
+			"With --notify, new findings and reminders are also sent on the channels in the notify: section\n" +
+			"of your configuration: at most one message per channel per run, each finding alerted once.\n" +
+			"If a channel fails, check exits 2 and that channel retries next run.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			var sinceDate feeds.Date
@@ -54,6 +59,12 @@ func newCheckCmd(a *app) *cobra.Command {
 			cfg, err := a.loadConfig(cat, cmd.ErrOrStderr())
 			if err != nil {
 				return err
+			}
+			if sendAlerts {
+				// Fail before any network work if alerts cannot be sent.
+				if _, err := a.configuredChannels(cfg); err != nil {
+					return err
+				}
 			}
 
 			u, closeFn, err := a.openUpdater(cmd.Context())
@@ -83,10 +94,25 @@ func newCheckCmd(a *app) *cobra.Command {
 			stale := code != exitOK
 
 			findings := match.New(cat).KEV(kc.Vulnerabilities, cfg.IDs())
+			// Every run records what matched, so `patchtacio ack` works after
+			// a plain check; only --notify sends anything.
+			if err := u.Store.RecordFindings(cmd.Context(), storedFindings(findings)); err != nil {
+				return fmt.Errorf("save findings: %w", err)
+			}
 			if !sinceDate.IsZero() {
 				findings = slices.DeleteFunc(findings, func(f match.Finding) bool { return f.Vuln.DateAdded.Before(sinceDate.Time) })
 			}
 			rep := a.newCheckReport(cat, cfg, kc.Version, kc.Released, st, stale, sinceDate, findings)
+			if err := markAcknowledged(cmd.Context(), u.Store, &rep); err != nil {
+				return err
+			}
+			var alertErr error
+			if sendAlerts {
+				rep.Alerts, alertErr = a.sendAlerts(cmd.Context(), u.Store, cfg, findings)
+				if rep.Alerts == nil && alertErr != nil {
+					return alertErr // nothing was attempted (could not read alert state)
+				}
+			}
 			if asJSON {
 				enc := json.NewEncoder(cmd.OutOrStdout())
 				enc.SetIndent("", "  ")
@@ -95,6 +121,13 @@ func newCheckCmd(a *app) *cobra.Command {
 				}
 			} else {
 				a.printCheck(cmd.OutOrStdout(), rep)
+				if sendAlerts {
+					a.printAlerts(cmd.OutOrStdout(), rep.Alerts)
+				}
+			}
+			if alertErr != nil {
+				_, _ = fmt.Fprintln(warn, "Warning: some alerts could not be sent; they will be retried on the next run.")
+				return outcome(exitToolError) // a scheduled run must not fail silently
 			}
 			if len(findings) > 0 {
 				return outcome(exitFindings) // stale warnings, if any, are already printed
@@ -104,6 +137,7 @@ func newCheckCmd(a *app) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&offline, "offline", false, "do not use the network; check against the saved copy")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print machine-readable JSON, with CISA's required action and links")
+	cmd.Flags().BoolVar(&sendAlerts, "notify", false, "also send alerts for new findings and reminders (see the notify: section of the configuration)")
 	cmd.Flags().StringVar(&since, "since", "", "only show entries added to KEV on or after this date (YYYY-MM-DD)")
 	return cmd
 }
@@ -147,6 +181,7 @@ type checkReport struct {
 	Since            feeds.Date     `json:"since,omitzero"`
 	Products         []checkProduct `json:"products"`
 	Findings         []checkFinding `json:"findings"`
+	Alerts           []alertReport  `json:"alerts,omitempty"` // with --notify
 	today            time.Time      // for "passed" due dates
 	byProduct        map[string]int // finding count per product
 	newest           map[string]feeds.Date
@@ -160,6 +195,7 @@ type checkProduct struct {
 }
 
 type checkFinding struct {
+	ID                string     `json:"id"` // finding ID: kev/<product>/<CVE>
 	ProductID         string     `json:"productId"`
 	Product           string     `json:"product"`
 	CVEID             string     `json:"cveID"`
@@ -175,6 +211,7 @@ type checkFinding struct {
 	Notes             []string   `json:"notes"` // KEV notes: usually the vendor advisory link first
 	CWEs              []string   `json:"cwes"`
 	NVDURL            string     `json:"nvdURL"`
+	Acknowledged      bool       `json:"acknowledged"` // patchtacio ack: no more alerts or reminders
 }
 
 func (a *app) newCheckReport(cat *catalog.Catalog, cfg *config.Config, kevVersion string, released time.Time,
@@ -201,6 +238,7 @@ func (a *app) newCheckReport(cat *catalog.Catalog, cfg *config.Config, kevVersio
 		}
 		v := f.Vuln
 		rep.Findings = append(rep.Findings, checkFinding{
+			ID:                store.FindingID("kev", f.Product.ID, v.CVEID),
 			ProductID:         f.Product.ID,
 			Product:           f.Product.Display,
 			CVEID:             v.CVEID,
@@ -266,7 +304,7 @@ func (a *app) printCheck(w io.Writer, rep checkReport) {
 
 	_, _ = fmt.Fprintln(w)
 	tw = tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	_, _ = fmt.Fprintln(tw, "PRODUCT\tCVE\tADDED TO KEV\tCISA DUE DATE\tRANSOMWARE\tVULNERABILITY")
+	_, _ = fmt.Fprintln(tw, "PRODUCT\tCVE\tADDED TO KEV\tCISA DUE DATE\tRANSOMWARE\tACK\tVULNERABILITY")
 	for _, f := range rep.Findings {
 		due := calDate(f.DueDate)
 		if f.DuePassed {
@@ -276,12 +314,33 @@ func (a *app) printCheck(w io.Writer, rep checkReport) {
 		if ransomware == "known" {
 			ransomware = "known use"
 		}
-		_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\n",
-			clean(shortName(f.Product)), clean(f.CVEID), calDate(f.DateAdded), due, ransomware, clean(truncate(f.VulnerabilityName, 70)))
+		ack := "-"
+		if f.Acknowledged {
+			ack = "yes"
+		}
+		_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+			clean(shortName(f.Product)), clean(f.CVEID), calDate(f.DateAdded), due, ransomware, ack, clean(truncate(f.VulnerabilityName, 70)))
 	}
 	_ = tw.Flush()
 	_, _ = fmt.Fprintln(w, "\nCISA due dates are deadlines for US federal agencies; use them as a guide to urgency.")
 	_, _ = fmt.Fprintln(w, "For CISA's required action and the vendor advisory link for each entry, run: patchtacio check --json")
+	_, _ = fmt.Fprintln(w, "When you have dealt with an entry, run: patchtacio ack <CVE ID> (ACK yes: no more alerts or reminders).")
+}
+
+// markAcknowledged sets Acknowledged on the report's findings.
+func markAcknowledged(ctx context.Context, st *store.Store, rep *checkReport) error {
+	ids := make([]string, len(rep.Findings))
+	for i, f := range rep.Findings {
+		ids[i] = f.ID
+	}
+	states, err := st.States(ctx, ids)
+	if err != nil {
+		return fmt.Errorf("read acknowledgements: %w", err)
+	}
+	for i := range rep.Findings {
+		rep.Findings[i].Acknowledged = states[rep.Findings[i].ID].Acked()
+	}
+	return nil
 }
 
 // ransomwareUse renders KEV's knownRansomwareCampaignUse. CISA says "Known" or

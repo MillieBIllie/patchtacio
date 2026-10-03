@@ -8,11 +8,13 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/feeds/eol"
 	"github.com/milliebillie/patchtacio/internal/feeds/kev"
 	"github.com/milliebillie/patchtacio/internal/httpcache"
 	"github.com/milliebillie/patchtacio/internal/logging"
+	"github.com/milliebillie/patchtacio/internal/notify"
 	"github.com/milliebillie/patchtacio/internal/paths"
 	"github.com/milliebillie/patchtacio/internal/store"
 	"github.com/milliebillie/patchtacio/internal/version"
@@ -27,6 +29,8 @@ type app struct {
 	loc       *time.Location // for dates shown to the user
 	sources   func() []feeds.Source
 	newClient func(*slog.Logger) *httpcache.Client
+	// channels builds the configured alert channels; fakes in tests.
+	channels func(*config.Notify) ([]notify.Channel, error)
 
 	// The product picker and whether it can run; fakes in tests.
 	pick       pickFunc
@@ -47,6 +51,7 @@ func defaultApp() *app {
 			return []feeds.Source{kev.New(), eol.New()}
 		},
 		newClient:  func(l *slog.Logger) *httpcache.Client { return httpcache.New(version.UserAgent(), l) },
+		channels:   realChannels,
 		pick:       huhPicker(os.Stdin, os.Stdout, os.Getenv("ACCESSIBLE") != ""),
 		isTerminal: stdinIsTerminal,
 		log:        slog.New(slog.DiscardHandler),
