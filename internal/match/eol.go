@@ -19,11 +19,13 @@ type EOLState string
 const (
 	EOLEnded      EOLState = "ended"       // security support has ended
 	EOLEnding     EOLState = "ending"      // ends within EOLWarnDays
-	EOLSupported  EOLState = "supported"   // ends later, or no end date announced
+	EOLSupported  EOLState = "supported"   // ends on a stated date after that
+	EOLNoEndDate  EOLState = "no-end-date" // still maintained, no end date announced
 	EOLNoVersion  EOLState = "no-version"  // the user gave no version
-	EOLNoMatch    EOLState = "no-match"    // the version matches no release on endoflife.date
-	EOLNoData     EOLState = "no-data"     // the catalog's slug is not in the saved data
-	EOLNotTracked EOLState = "not-tracked" // endoflife.date does not track this product
+	EOLNoMatch    EOLState = "no-match"    // the version matches no single release on endoflife.date
+	EOLNoData     EOLState = "no-data"     // no endoflife.date data could be read
+	EOLNotListed  EOLState = "not-listed"  // the data is there, but no longer lists this product
+	EOLNotTracked EOLState = "not-tracked" // the catalog has no endoflife.date slug for it
 )
 
 // IsFinding reports whether the state should be alerted.
@@ -70,19 +72,20 @@ func EOL(cat *catalog.Catalog, ec *eol.Catalog, ticked []Ticked, today time.Time
 		switch {
 		case cp.EOLSlug == "":
 			st.State = EOLNotTracked
-		case ep == nil:
+		case st.Version == "":
+			st.State = EOLNoVersion
+		case ec == nil:
 			st.State = EOLNoData
+		case ep == nil:
+			st.State = EOLNotListed
 		default:
 			st.Page, st.Policy = ep.Link, ep.ReleasePolicy
 			for _, r := range ep.Releases {
 				st.Releases = append(st.Releases, r.Name)
 			}
-			switch r := matchRelease(ep.Releases, st.Version); {
-			case st.Version == "":
-				st.State = EOLNoVersion
-			case r == nil:
+			if r := matchRelease(ep.Releases, st.Version); r == nil {
 				st.State = EOLNoMatch
-			default:
+			} else {
 				st.Release = r
 				st.State = releaseState(r, today)
 				st.Successor = successor(ep.Releases, r, today)
@@ -101,14 +104,21 @@ func matchRelease(rs []eol.Release, version string) *eol.Release {
 		return nil
 	}
 	var best *eol.Release
+	tie := false
 	for i := range rs {
 		name := strings.ToLower(rs[i].Name)
 		if name == "" || (v != name && !strings.HasPrefix(v, name+".")) {
 			continue
 		}
-		if best == nil || len(name) > len(best.Name) {
-			best = &rs[i]
+		switch {
+		case best == nil || len(name) > len(best.Name):
+			best, tie = &rs[i], false
+		case len(name) == len(best.Name):
+			tie = true // two releases match equally well: refuse to pick one
 		}
+	}
+	if tie {
+		return nil
 	}
 	return best
 }
@@ -119,8 +129,10 @@ func releaseState(r *eol.Release, today time.Time) EOLState {
 	switch {
 	case r.IsEOL != nil && *r.IsEOL:
 		return EOLEnded
+	case r.EOLFrom.IsZero() && r.IsMaintained != nil && !*r.IsMaintained:
+		return EOLEnded // no longer maintained, though no date is given
 	case r.EOLFrom.IsZero():
-		return EOLSupported
+		return EOLNoEndDate
 	case r.EOLFrom.Before(today):
 		return EOLEnded
 	case !r.EOLFrom.After(today.AddDate(0, 0, EOLWarnDays)):
@@ -138,7 +150,7 @@ func successor(rs []eol.Release, cur *eol.Release, today time.Time) *eol.Release
 		if r.Name == cur.Name {
 			return nil // nothing newer is supported
 		}
-		if releaseState(r, today) == EOLSupported || releaseState(r, today) == EOLEnding {
+		if s := releaseState(r, today); s == EOLSupported || s == EOLEnding || s == EOLNoEndDate {
 			if !r.ReleaseDate.IsZero() && !cur.ReleaseDate.IsZero() && r.ReleaseDate.Before(cur.ReleaseDate.Time) {
 				continue
 			}

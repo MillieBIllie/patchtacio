@@ -2,6 +2,7 @@ package advice
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -43,13 +44,20 @@ func newEOLView(it EOLItem, today time.Time) eolView {
 		date:  day(it.EOLDate),
 	}
 	v.Name = short + " " + v.Release
-	if isWebLink(clean(it.Page)) {
-		v.Page = clean(it.Page)
+	// Feed links: https only.
+	if l := clean(it.Page); isWebLink(l) && strings.HasPrefix(l, "https://") {
+		v.Page = l
 	}
-	if isWebLink(clean(it.Policy)) {
-		v.Policy = clean(it.Policy)
+	if l := clean(it.Policy); isWebLink(l) && strings.HasPrefix(l, "https://") {
+		v.Policy = l
 	}
-	if !it.EOLDate.IsZero() {
+	switch {
+	case it.EOLDate.IsZero():
+	case it.Ended && v.date.After(today):
+		// Marked ended but dated in the future: the data disagrees with
+		// itself, so say it has ended without a date that contradicts it.
+		v.date = time.Time{}
+	default:
 		v.Date = date(it.EOLDate)
 		v.DaysLeft = int(v.date.Sub(today).Hours() / 24)
 		if v.date.Before(today) {

@@ -42,7 +42,8 @@ func TestEOL(t *testing.T) {
 		{"atlassian-confluence", "9.1", EOLEnding, "9.1", ""},    // ends today: not yet ended
 		{"microsoft-windows-server", "2012 R2", EOLEnded, "2012-r2", ""},
 		{"microsoft-windows-server", "2022", EOLSupported, "2022", ""},
-		{"vmware-esxi", "8.0", EOLNoData, "", ""},           // slug not in the fixture
+		{"vmware-esxi", "8.0", EOLNotListed, "", ""},        // data loaded, slug not in it
+		{"vmware-esxi", "", EOLNoVersion, "", ""},           // no version wins over missing data
 		{"citrix-netscaler", "14.1", EOLNotTracked, "", ""}, // no endoflife.date slug
 	}
 	for _, tt := range tests {
@@ -73,5 +74,19 @@ func TestEOL(t *testing.T) {
 	}
 	if got := EOL(cat, nil, []Ticked{{ID: "fortinet-fortios", Version: "7.2"}}, today); got[0].State != EOLNoData {
 		t.Errorf("no data at all: %s", got[0].State)
+	}
+}
+
+func TestMatchReleaseAmbiguousAndUnmaintained(t *testing.T) {
+	no, today := false, time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC)
+	rs := []eol.Release{{Name: "2012-R2"}, {Name: "2012-r2"}, {Name: "5", IsMaintained: &no}, {Name: "6"}}
+	if r := matchRelease(rs, "2012 R2"); r != nil {
+		t.Errorf("two equal matches picked %q; want none", r.Name)
+	}
+	if s := releaseState(&rs[2], today); s != EOLEnded {
+		t.Errorf("not maintained, no date: %s, want ended", s)
+	}
+	if s := releaseState(&rs[3], today); s != EOLNoEndDate {
+		t.Errorf("no date, maintenance not stated: %s, want no-end-date", s)
 	}
 }

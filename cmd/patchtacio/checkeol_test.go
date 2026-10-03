@@ -48,7 +48,7 @@ func TestCheckEndOfLife(t *testing.T) {
 		"Fortinet FortiOS 7.2.8", "release 7.2", "security updates stopped on 30 Sep 2026; newest supported release: 8.0",
 		"Atlassian Confluence 9.1.1", "security updates stop on 3 Oct 2026 (in 2 days)",
 		"Microsoft Windows Server 2012 R2", "release 2012-r2",
-		"VMware ESXi 8.0", "no saved endoflife.date data",
+		"VMware ESXi 8.0", "endoflife.date does not list this product",
 		"patchtacio ack eol/<product>/<release>")
 	if strings.Contains(out, "NetScaler ADC and NetScaler Gateway (formerly Citrix ADC) 14") {
 		t.Error("a product endoflife.date does not track is listed under end of life")
@@ -126,6 +126,24 @@ func TestNotifyEndOfLife(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("no endoflife.date notice: %v", chans.notices)
+	}
+}
+
+// A product endoflife.date no longer lists is never silently dropped: the
+// run says so, exits 3 (not 0), and --notify sends a notice.
+func TestEndOfLifeNotListed(t *testing.T) {
+	e := newTestEnv(t)
+	chans := e.useFakeChannels()
+	writeConfig(t, "version: 1\nproducts:\n  - id: vmware-esxi\n    version: \"8.0\"\nnotify:\n  desktop: true\n")
+	out, errOut, code := e.exec(t, "check", "--notify")
+	requireCode(t, code, exitStale, out, errOut)
+	requireContains(t, errOut, "endoflife.date no longer lists VMware ESXi")
+	if len(chans.notices) != 1 || !strings.Contains(chans.notices[0], "End of life cannot be checked for VMware ESXi") {
+		t.Errorf("notices: %v", chans.notices)
+	}
+	jsonOut, _, _ := e.exec(t, "check", "--json", "--offline")
+	if !strings.Contains(jsonOut, `"eolStale": true`) || !strings.Contains(jsonOut, `"state": "not-listed"`) {
+		t.Errorf("JSON does not say the end-of-life answer is missing:\n%.800s", jsonOut)
 	}
 }
 
