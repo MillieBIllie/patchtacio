@@ -70,9 +70,13 @@ func newSecretSetCmd(a *app) *cobra.Command {
 				}
 				value = string(b)
 			} else {
-				line, err := bufio.NewReader(io.LimitReader(cmd.InOrStdin(), 8192)).ReadString('\n')
+				const limit = 8192
+				line, err := bufio.NewReader(io.LimitReader(cmd.InOrStdin(), limit+1)).ReadString('\n')
 				if err != nil && !errors.Is(err, io.EOF) {
 					return fmt.Errorf("read %s from standard input: %w", sec.Name, err)
+				}
+				if len(strings.TrimRight(line, "\r\n")) >= limit {
+					return fmt.Errorf("%s is longer than %d bytes; nothing saved", sec.Name, limit)
 				}
 				value = line
 			}
@@ -83,11 +87,11 @@ func newSecretSetCmd(a *app) *cobra.Command {
 			if strings.ContainsAny(value, "\r\n") {
 				return fmt.Errorf("%s must be one line; nothing saved", sec.Name)
 			}
-			if err := a.secrets.Set(sec, value); err != nil {
+			if err := a.secretStore().Set(sec, value); err != nil {
 				return err
 			}
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Saved %s in the keychain.", sec.Name)
-			if _, src, _ := a.secrets.Lookup(sec.Env); src == secrets.FromEnv {
+			if _, src, _ := a.secretStore().Lookup(sec.Env); src == secrets.FromEnv {
 				_, _ = fmt.Fprintf(cmd.OutOrStdout(), " Note: %s is also set in the environment, and that value is used first.", sec.Env)
 			}
 			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "\nTry it with: patchtacio test-alert")
@@ -106,7 +110,7 @@ func newSecretDeleteCmd(a *app) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := a.secrets.Delete(sec); err != nil {
+			if err := a.secretStore().Delete(sec); err != nil {
 				return err
 			}
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Removed %s from the keychain (if it was there).\n", sec.Name)
@@ -124,7 +128,7 @@ func newSecretStatusCmd(a *app) *cobra.Command {
 			tw := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
 			_, _ = fmt.Fprintln(tw, "SECRET\tFROM\tUSED FOR")
 			for _, sec := range secrets.All {
-				_, src, err := a.secrets.Lookup(sec.Env)
+				_, src, err := a.secretStore().Lookup(sec.Env)
 				where := string(src)
 				switch {
 				case src == secrets.FromEnv:

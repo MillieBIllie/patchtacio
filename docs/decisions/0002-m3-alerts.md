@@ -17,10 +17,15 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
 ## Delivery and dedupe
 
 - Deliveries are stored per **finding, destination and kind** (`new`, `due-soon`, `overdue`).
-  The destination key is the channel type plus a short SHA-256 of the recipients (email) or URL
-  (webhook, ntfy), or `desktop`. A changed address or URL is a new destination that gets
+  The destination key is the channel type plus a short HMAC-SHA-256 of the recipients (email) or
+  URL (webhook, ntfy), or `desktop`. A changed address or URL is a new destination that gets
   everything again, instead of silently missing what went elsewhere. Only the hash is stored, so a
   webhook token never reaches the database.
+  - The HMAC key is a random per-install secret in `install.key` (owner-only), beside the database
+    but not in it, so a copy of the database alone cannot be used to confirm a guessed ntfy topic.
+    Someone with the whole data folder has the key too; that is the limit of this protection.
+  - A damaged key file is replaced, with a warning: every destination then counts as new and gets
+    one summary again (noisy, never silent).
   - A channel that fails records nothing and is retried alone on the next run.
   - A channel that worked is never repeated because another one failed.
 - **One message per channel per run.** Several findings become one summary, and findings sharing
@@ -65,16 +70,25 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
 
 ## Channels and secrets
 
-- Secrets come only from environment variables, read when a channel sends:
-  `PATCHTACIO_SMTP_PASSWORD`, `PATCHTACIO_WEBHOOK_URL`, `PATCHTACIO_NTFY_URL`, and
-  `PATCHTACIO_NTFY_TOKEN`. The ntfy topic URL is treated as a secret because on ntfy.sh the topic
-  name is the only protection.
-- **OS keychain** (`patchtacio secret set|delete|status`): each secret is looked up in its
+- Secrets come from environment variables (`PATCHTACIO_SMTP_PASSWORD`, `PATCHTACIO_WEBHOOK_URL`,
+  `PATCHTACIO_NTFY_URL`, `PATCHTACIO_NTFY_TOKEN`) or the OS keychain, read when a channel sends,
+  never from the config file. The ntfy topic URL is treated as a secret because on ntfy.sh the
+  topic name is the only protection.
+- **OS keychain** (`patchtacio secret set|delete|status`): a secret is looked up in its
   environment variable first, then the keychain (service `patchtacio`, account = the variable
-  name). `secret set` never takes the value as an argument (shell history, process list): it asks
-  without echo, or reads one line from stdin. `status` shows where a secret comes from, never its
-  value. A keychain that cannot be reached (a server without a desktop session) just means "not
-  set"; the environment variable still works.
+  name).
+  - **Opt-in per secret.** The keychain is asked only for secrets saved with `secret set`, listed
+    by name in `secrets-in-keychain` in the config folder. Someone who uses environment variables
+    never meets a keychain unlock prompt.
+  - **Never stalls a run.** Each read has a 5-second limit, and all secrets are read before the
+    notify lock is taken. On Linux the keychain is skipped without a D-Bus session bus, so
+    `dbus-launch` is never started. A keychain that cannot be read just means "not set", and the
+    run says so ("saved with `secret set`, but this run could not read it"), because scheduled tasks
+    often cannot reach the user's keychain.
+  - `secret set` never takes the value as an argument (shell history, process list): it asks
+    without echo, or reads one line (at most 8 KB) from stdin. `status` never shows values.
+- The notify lock's heartbeat stops after 30 minutes, so a run that hangs (a channel or keychain
+  that never answers) cannot block every later run.
 - Webhook and ntfy URLs:
   - must be `https://`; `http://` is allowed only to a server on the same computer.
   - Redirects are never followed, because the token would travel with them.

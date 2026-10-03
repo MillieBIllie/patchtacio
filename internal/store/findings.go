@@ -7,9 +7,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/milliebillie/patchtacio/internal/atomicfile"
 )
 
 // Finding is one stored finding. FirstSeen and LastSeen are set by
@@ -322,25 +326,66 @@ func (s *Store) RecordNotice(ctx context.Context, channel, kind string) error {
 	return nil
 }
 
-// InstallSecret returns this installation's random secret, creating it on
-// first use. It keys the hashes of alert destinations.
-func (s *Store) InstallSecret(ctx context.Context) ([]byte, error) {
+// InstallKeyFile is the file, beside the database, holding the install
+// secret. It is separate so a copy of the database alone (attached to a bug
+// report, say) does not carry the key its destination hashes are made with.
+const InstallKeyFile = "install.key"
+
+// InstallSecret returns this installation's random secret, creating the
+// owner-only key file on first use. A damaged file is replaced with a new
+// secret and reset is true: every alert destination then counts as new and
+// gets one summary again, which is noisy but never silent.
+func (s *Store) InstallSecret(_ context.Context) (secret []byte, reset bool, err error) {
+	path := filepath.Join(s.dir, InstallKeyFile)
+	for range 3 {
+		b, err := os.ReadFile(filepath.Clean(path)) // our own file in the data directory
+		switch {
+		case err == nil:
+			if key, err := hex.DecodeString(strings.TrimSpace(string(b))); err == nil && len(key) >= 32 {
+				return key, false, nil
+			}
+			key, err := newKey()
+			if err != nil {
+				return nil, false, err
+			}
+			if err := atomicfile.Write(path, []byte(hex.EncodeToString(key)+"\n")); err != nil {
+				return nil, false, fmt.Errorf("replace damaged %s: %w", InstallKeyFile, err)
+			}
+			return key, true, nil
+		case errors.Is(err, os.ErrNotExist):
+			key, err := newKey()
+			if err != nil {
+				return nil, false, err
+			}
+			// O_EXCL: of two first runs at once, one creates it and the other
+			// reads what it wrote on the next pass.
+			f, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600) //nolint:gosec // our own file beside the database
+			if errors.Is(err, os.ErrExist) {
+				time.Sleep(50 * time.Millisecond)
+				continue
+			}
+			if err != nil {
+				return nil, false, fmt.Errorf("create %s: %w", InstallKeyFile, err)
+			}
+			_, werr := f.WriteString(hex.EncodeToString(key) + "\n")
+			serr := f.Sync()
+			cerr := f.Close()
+			if err := errors.Join(werr, serr, cerr); err != nil {
+				_ = os.Remove(path)
+				return nil, false, fmt.Errorf("write %s: %w", InstallKeyFile, err)
+			}
+			return key, false, nil
+		default:
+			return nil, false, fmt.Errorf("read %s: %w", InstallKeyFile, err)
+		}
+	}
+	return nil, false, fmt.Errorf("could not read or create %s", InstallKeyFile)
+}
+
+func newKey() ([]byte, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		return nil, fmt.Errorf("make install secret: %w", err)
 	}
-	// Two first runs at once both try; the first insert wins for both.
-	if _, err := s.db.ExecContext(ctx, `INSERT INTO settings (key, value) VALUES ('install_secret', ?)
-		ON CONFLICT (key) DO NOTHING`, hex.EncodeToString(b)); err != nil {
-		return nil, fmt.Errorf("save install secret: %w", err)
-	}
-	var v string
-	if err := s.db.QueryRowContext(ctx, `SELECT value FROM settings WHERE key = 'install_secret'`).Scan(&v); err != nil {
-		return nil, fmt.Errorf("read install secret: %w", err)
-	}
-	secret, err := hex.DecodeString(v)
-	if err != nil || len(secret) < 16 {
-		return nil, fmt.Errorf("install secret in the database is damaged")
-	}
-	return secret, nil
+	return b, nil
 }

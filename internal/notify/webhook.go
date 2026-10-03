@@ -86,8 +86,10 @@ func webhookPayload(kind string, c advice.Chat) ([]byte, error) {
 		v = map[string]any{
 			"username": "Patchtacio",
 			"embeds": []map[string]any{{
-				"title":       noMaskedLinks(truncate(c.Title, discordTitleLimit)),
-				"description": noMaskedLinks(truncate(c.Body, discordDescLimit)),
+				// Links are broken before cutting, so the added characters
+				// cannot push the text past Discord's limit.
+				"title":       truncate(noMaskedLinks(c.Title), discordTitleLimit),
+				"description": truncate(noMaskedLinks(c.Body), discordDescLimit),
 				"color":       discordWarningColor,
 			}},
 			// Never ping anyone, whatever the text says.

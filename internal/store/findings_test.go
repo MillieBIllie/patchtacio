@@ -3,6 +3,9 @@ package store
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -145,14 +148,28 @@ func TestStatesManyIDs(t *testing.T) {
 
 func TestInstallSecret(t *testing.T) {
 	ctx := context.Background()
-	s, _ := clock(t)
-	a, err := s.InstallSecret(ctx)
-	if err != nil || len(a) != 32 {
-		t.Fatalf("InstallSecret = %d bytes, %v", len(a), err)
+	s, file := openTemp(t)
+	a, reset, err := s.InstallSecret(ctx)
+	if err != nil || len(a) != 32 || reset {
+		t.Fatalf("InstallSecret = %d bytes, reset %v, %v", len(a), reset, err)
 	}
-	b, err := s.InstallSecret(ctx)
+	b, _, err := s.InstallSecret(ctx)
 	if err != nil || string(a) != string(b) {
 		t.Error("the install secret changed between calls")
+	}
+	keyFile := filepath.Join(filepath.Dir(file), InstallKeyFile)
+	if runtime.GOOS != "windows" {
+		if st, err := os.Stat(keyFile); err != nil || st.Mode().Perm() != 0o600 {
+			t.Errorf("key file mode: %v, %v", st, err)
+		}
+	}
+	// Damaged: replaced, and the caller is told.
+	if err := os.WriteFile(keyFile, []byte("not hex"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	c, reset, err := s.InstallSecret(ctx)
+	if err != nil || !reset || len(c) != 32 || string(c) == string(a) {
+		t.Errorf("damaged key: reset %v, %d bytes, %v", reset, len(c), err)
 	}
 }
 
@@ -182,9 +199,6 @@ func TestNotices(t *testing.T) {
 func TestMigrationAfterDevBuild0002(t *testing.T) {
 	ctx := context.Background()
 	s, file := openTemp(t)
-	if _, err := s.db.ExecContext(ctx, `DROP TABLE settings`); err != nil {
-		t.Fatal(err)
-	}
 	if _, err := s.db.ExecContext(ctx, `PRAGMA user_version = 2`); err != nil {
 		t.Fatal(err)
 	}
@@ -196,7 +210,7 @@ func TestMigrationAfterDevBuild0002(t *testing.T) {
 		t.Fatalf("reopen: %v", err)
 	}
 	defer func() { _ = s2.Close() }()
-	if _, err := s2.InstallSecret(ctx); err != nil {
-		t.Errorf("settings missing after migration: %v", err)
+	if _, err := s2.LastNotice(ctx, "email/x", "kev-out-of-date"); err != nil {
+		t.Errorf("notices missing after migration: %v", err)
 	}
 }

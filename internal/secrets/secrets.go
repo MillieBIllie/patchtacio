@@ -4,25 +4,50 @@
 // Service on Linux desktops). Secrets never go in the configuration file
 // (CLAUDE.md rule 5), and values are never printed or logged.
 //
+// The keychain is opt-in per secret: it is asked only for secrets saved with
+// `patchtacio secret set`, listed by name (never value) in a marker file, so
+// nobody who uses environment variables meets a keychain unlock prompt. Each
+// keychain call has a time limit, so a prompt nobody answers can never stall
+// a scheduled run (and with it every later alert).
+//
 // It uses github.com/zalando/go-keyring: pure Go on Linux, macOS and Windows
 // (no cgo); on macOS it drives /usr/bin/security, sending the secret over
 // stdin rather than as an argument.
 package secrets
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"slices"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/zalando/go-keyring"
 
+	"github.com/milliebillie/patchtacio/internal/atomicfile"
 	"github.com/milliebillie/patchtacio/internal/config"
 )
 
 // Service is the keychain service name entries are stored under; the
 // account is the environment variable's name.
 const Service = "patchtacio"
+
+// MarkerFileName is the file, in the config directory, listing which secrets
+// are in the keychain (names only).
+const MarkerFileName = "secrets-in-keychain"
+
+// Time limits for keychain calls. Reads happen in unattended runs and must
+// give up quickly; saving and removing are interactive and may wait for the
+// user to unlock the keychain.
+var (
+	readTimeout  = 5 * time.Second // a variable so tests need not wait
+	writeTimeout = 2 * time.Minute
+)
 
 // Secret is one secret Patchtacio can use.
 type Secret struct {
@@ -59,13 +84,29 @@ const (
 	NotSet       Source = ""
 )
 
-// Store looks secrets up, caching keychain answers for the life of the
-// process (a run may ask several times; on macOS each ask runs a program).
-type Store struct {
-	Env func(string) string // the environment; defaults to os.Getenv
+// backend is the keychain; tests swap it.
+type backend struct {
+	get    func(service, user string) (string, error)
+	set    func(service, user, password string) error
+	delete func(service, user string) error
+	// reachable reports why the keychain cannot be used here, or nil.
+	reachable func() error
+}
 
-	mu    sync.Mutex
-	cache map[string]lookup
+var realBackend = backend{get: keyring.Get, set: keyring.Set, delete: keyring.Delete, reachable: keychainReachable}
+
+// Store looks secrets up, caching answers for the life of the process (a run
+// may ask several times; on macOS each ask runs a program).
+type Store struct {
+	Env        func(string) string // the environment; defaults to os.Getenv
+	MarkerFile string              // "" = keychain never used
+
+	kc      backend
+	mu      sync.Mutex
+	cache   map[string]lookup
+	marked  []string
+	loaded  bool
+	markErr error
 }
 
 type lookup struct {
@@ -74,13 +115,25 @@ type lookup struct {
 	err   error
 }
 
-// New returns a Store over the real environment and keychain.
-func New() *Store { return &Store{Env: os.Getenv} }
+// New returns a Store over the real environment and keychain, with the
+// marker file in configDir.
+func New(configDir string) *Store {
+	return &Store{Env: os.Getenv, MarkerFile: filepath.Join(configDir, MarkerFileName), kc: realBackend}
+}
+
+// Mock returns a Store over an in-memory keychain (go-keyring's mock) that
+// is always reachable, with its marker file in dir. For tests only.
+func Mock(dir string, env func(string) string) *Store {
+	keyring.MockInit()
+	b := realBackend
+	b.reachable = func() error { return nil }
+	return &Store{Env: env, MarkerFile: filepath.Join(dir, MarkerFileName), kc: b}
+}
 
 // Lookup returns the value of the secret held in env, and where it came
-// from. A keychain that cannot be reached (a server without a desktop
-// session, for example) is not an error here: the secret is simply not set,
-// and err says why for diagnostics.
+// from. A keychain that cannot be reached, or does not answer in time, is
+// not an error here: the secret is simply not set, and err says why, for
+// diagnostics (see Problems).
 func (s *Store) Lookup(env string) (string, Source, error) {
 	getenv := s.Env
 	if getenv == nil {
@@ -97,20 +150,39 @@ func (s *Store) Lookup(env string) (string, Source, error) {
 	if l, ok := s.cache[env]; ok {
 		return l.value, l.src, l.err
 	}
-	l := lookup{}
-	v, err := keyring.Get(Service, env)
-	switch {
-	case err == nil && v != "":
-		l = lookup{value: v, src: FromKeychain}
-	case err == nil || errors.Is(err, keyring.ErrNotFound):
-	default:
-		l.err = fmt.Errorf("keychain: %w", err)
-	}
+	l := s.fromKeychain(env)
 	if s.cache == nil {
 		s.cache = map[string]lookup{}
 	}
 	s.cache[env] = l
 	return l.value, l.src, l.err
+}
+
+// fromKeychain asks the keychain, only for a secret `secret set` saved.
+// Callers hold s.mu.
+func (s *Store) fromKeychain(env string) lookup {
+	s.loadMarks()
+	if s.markErr != nil {
+		return lookup{err: s.markErr}
+	}
+	if !slices.Contains(s.marked, env) {
+		return lookup{}
+	}
+	if s.kc.get == nil {
+		return lookup{err: errors.New("keychain: not available")}
+	}
+	if err := s.kc.reachable(); err != nil {
+		return lookup{err: fmt.Errorf("keychain: %w", err)}
+	}
+	v, err := withTimeout(readTimeout, func() (string, error) { return s.kc.get(Service, env) })
+	switch {
+	case err == nil && v != "":
+		return lookup{value: v, src: FromKeychain}
+	case err == nil || errors.Is(err, keyring.ErrNotFound):
+		return lookup{err: errors.New("keychain: saved with `patchtacio secret set` but no longer in the keychain")}
+	default:
+		return lookup{err: fmt.Errorf("keychain: %w", err)}
+	}
 }
 
 // Getenv is Lookup for code that only wants the value: it has the shape of
@@ -120,20 +192,58 @@ func (s *Store) Getenv(env string) string {
 	return v
 }
 
-// Set saves a secret in the keychain.
+// Problems returns, per environment variable, why a secret saved in the
+// keychain could not be read in this run (for example a scheduled task that
+// cannot reach the user's keychain). Call it after the lookups.
+func (s *Store) Problems() map[string]error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := map[string]error{}
+	for env, l := range s.cache {
+		if l.err != nil {
+			out[env] = l.err
+		}
+	}
+	return out
+}
+
+// Prefetch looks up every secret now, so later lookups (for example while a
+// lock is held) are answered from memory.
+func (s *Store) Prefetch() {
+	for _, sec := range All {
+		_, _, _ = s.Lookup(sec.Env)
+	}
+}
+
+// Set saves a secret in the keychain and marks it as kept there.
 func (s *Store) Set(sec Secret, value string) error {
-	if err := keyring.Set(Service, sec.Env, value); err != nil {
+	if s.kc.set == nil {
+		return errors.New("keychain: not available")
+	}
+	if err := s.kc.reachable(); err != nil {
+		return fmt.Errorf("save %s in the keychain: %w; use the %s environment variable instead", sec.Name, err, sec.Env)
+	}
+	if _, err := withTimeout(writeTimeout, func() (string, error) { return "", s.kc.set(Service, sec.Env, value) }); err != nil {
 		return fmt.Errorf("save %s in the keychain: %w", sec.Name, explain(err))
+	}
+	if err := s.mark(sec.Env, true); err != nil {
+		return fmt.Errorf("saved %s in the keychain, but could not record that: %w", sec.Name, err)
 	}
 	s.forget(sec.Env)
 	return nil
 }
 
-// Delete removes a secret from the keychain. Removing one that is not there
-// is not an error.
+// Delete removes a secret from the keychain and its mark. Removing one that
+// is not there is not an error.
 func (s *Store) Delete(sec Secret) error {
-	if err := keyring.Delete(Service, sec.Env); err != nil && !errors.Is(err, keyring.ErrNotFound) {
-		return fmt.Errorf("remove %s from the keychain: %w", sec.Name, explain(err))
+	if s.kc.delete != nil && s.kc.reachable() == nil {
+		if _, err := withTimeout(writeTimeout, func() (string, error) { return "", s.kc.delete(Service, sec.Env) }); err != nil &&
+			!errors.Is(err, keyring.ErrNotFound) {
+			return fmt.Errorf("remove %s from the keychain: %w", sec.Name, explain(err))
+		}
+	}
+	if err := s.mark(sec.Env, false); err != nil {
+		return fmt.Errorf("removed %s from the keychain, but could not record that: %w", sec.Name, err)
 	}
 	s.forget(sec.Env)
 	return nil
@@ -143,6 +253,82 @@ func (s *Store) forget(env string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.cache, env)
+}
+
+// loadMarks reads the marker file once. Callers hold s.mu.
+func (s *Store) loadMarks() {
+	if s.loaded {
+		return
+	}
+	s.loaded = true
+	if s.MarkerFile == "" {
+		return
+	}
+	b, err := os.ReadFile(filepath.Clean(s.MarkerFile)) // our own file in the config directory
+	if errors.Is(err, os.ErrNotExist) {
+		return
+	}
+	if err != nil {
+		s.markErr = fmt.Errorf("read %s: %w", s.MarkerFile, err)
+		return
+	}
+	sc := bufio.NewScanner(bytes.NewReader(b))
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if _, ok := ByName(line); ok && !strings.HasPrefix(line, "#") {
+			s.marked = append(s.marked, line)
+		}
+	}
+}
+
+// mark adds or removes env in the marker file.
+func (s *Store) mark(env string, on bool) error {
+	if s.MarkerFile == "" {
+		return errors.New("no marker file")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.loadMarks()
+	if s.markErr != nil {
+		return s.markErr
+	}
+	s.marked = slices.DeleteFunc(s.marked, func(m string) bool { return m == env })
+	if on {
+		s.marked = append(s.marked, env)
+	}
+	slices.Sort(s.marked)
+	var b strings.Builder
+	b.WriteString("# Secrets Patchtacio looks up in the OS keychain (names only, never values).\n")
+	b.WriteString("# Managed by `patchtacio secret set` and `patchtacio secret delete`.\n")
+	for _, m := range s.marked {
+		b.WriteString(m + "\n")
+	}
+	if err := os.MkdirAll(filepath.Dir(s.MarkerFile), 0o700); err != nil {
+		return fmt.Errorf("create config directory: %w", err)
+	}
+	return atomicfile.Write(s.MarkerFile, []byte(b.String()))
+}
+
+// withTimeout runs f, giving up after d. A call that never returns is left
+// running; it ends with the process.
+func withTimeout(d time.Duration, f func() (string, error)) (string, error) {
+	type result struct {
+		v   string
+		err error
+	}
+	ch := make(chan result, 1)
+	go func() {
+		v, err := f()
+		ch <- result{v, err}
+	}()
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case r := <-ch:
+		return r.v, r.err
+	case <-t.C:
+		return "", fmt.Errorf("no answer within %s (is the keychain locked, waiting for a password?)", d)
+	}
 }
 
 func explain(err error) error {

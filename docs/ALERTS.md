@@ -86,7 +86,11 @@ patchtacio secret status               # where each secret comes from (never its
 patchtacio secret delete webhook-url
 ```
 
-On a server without a desktop session there is usually no keychain; use the environment variables.
+Patchtacio asks the keychain only for secrets you saved with `patchtacio secret set`, and gives up
+after 5 seconds if it does not answer (a locked keychain waiting for a password, say). On a
+server without a desktop session there is usually no keychain, and **scheduled runs often cannot
+reach your keychain** even where you can: if `check --notify` says a saved secret could not be
+read, set the environment variable for the scheduled task instead.
 
 | Channel | Environment variable (or `patchtacio secret set <name>`) |
 |---|---|
