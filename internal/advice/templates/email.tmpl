@@ -29,7 +29,7 @@ New:
 Reminders (nobody has acknowledged these yet):
 {{range $i, $it := .Reminders}}{{inc $i}}. {{template "entry" $it}}{{end}}{{end}}
 {{- if .More}}
-And {{.More}} more not listed here: run `patchtacio check` to see them all.
+And {{.More}} more, not listed here and not sent again: run `patchtacio check` to see them all.
 {{end}}
 For each entry, CISA's deadline is the one it set for US government agencies. Use it as a guide to how urgent each one is.
 {{end}}

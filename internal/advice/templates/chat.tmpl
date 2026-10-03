@@ -18,7 +18,7 @@ New:
 Reminders (nobody has acknowledged these yet):
 {{range $i, $it := .Reminders}}{{inc $i}}. {{template "entry" $it}}{{end}}{{end}}
 {{- if .More}}
-And {{.More}} more: run `patchtacio check` to see them all.
+And {{.More}} more, not listed here and not sent again: run `patchtacio check` to see them all.
 {{end}}
 When you have dealt with one, run: patchtacio ack <CVE ID>
 {{- end}}

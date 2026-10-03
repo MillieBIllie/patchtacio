@@ -131,7 +131,7 @@ New:
    If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
    Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10005
 
-And 5 more not listed here: run `patchtacio check` to see them all.
+And 5 more, not listed here and not sent again: run `patchtacio check` to see them all.
 
 For each entry, CISA's deadline is the one it set for US government agencies. Use it as a guide to how urgent each one is.
 
@@ -196,7 +196,7 @@ New:
    If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
    Details: https://nvd.nist.gov/vuln/detail/CVE-2026-10015
 
-And 20 more: run `patchtacio check` to see them all.
+And 20 more, not listed here and not sent again: run `patchtacio check` to see them all.
 
 When you have dealt with one, run: patchtacio ack <CVE ID>
 
