@@ -9,12 +9,14 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/atomicfile"
 	"github.com/milliebillie/patchtacio/internal/catalog"
 	"github.com/milliebillie/patchtacio/internal/config"
@@ -42,6 +44,7 @@ type watchInstall struct {
 	Program     string    `json:"program"`
 	Args        []string  `json:"args"`
 	Launch      string    `json:"launch,omitempty"` // Windows: windowless, headless or console
+	Starts      string    `json:"starts,omitempty"` // the program the scheduler starts, when not Program (patchtaciow.exe, conhost.exe)
 	InstalledAt time.Time `json:"installedAt"`
 }
 
@@ -129,7 +132,7 @@ func (a *app) openScheduler() (schedule.Scheduler, watchDirs, error) {
 	if err != nil {
 		return nil, watchDirs{}, err
 	}
-	s, err := a.scheduler(d.Logs, d.Cache)
+	s, err := a.scheduler(d.Logs, "") // "": the user's own temp directory
 	if err != nil {
 		return nil, watchDirs{}, err
 	}
@@ -191,6 +194,11 @@ func dirOverrides() []schedule.EnvVar {
 
 func (a *app) watchInstall(cmd *cobra.Command, at string) error {
 	out, warn := cmd.OutOrStdout(), cmd.ErrOrStderr()
+	if os.Geteuid() == 0 {
+		// Through sudo, root-owned units, logs and records would land in the
+		// user's folders, and the user's own runs could not write them.
+		return errors.New("run `patchtacio watch --install` as the user who should get the alerts, not as root or with sudo")
+	}
 	hour, minute, err := a.parseAt(at)
 	if err != nil {
 		return err
@@ -217,14 +225,16 @@ func (a *app) watchInstall(cmd *cobra.Command, at string) error {
 	if err != nil {
 		return err
 	}
-	args := []string{"watch", "run"}
-	if a.configFile != "" {
-		abs, err := filepath.Abs(a.configFile)
-		if err != nil {
-			return fmt.Errorf("--config: %w", err)
-		}
-		args = append(args, "--config", abs)
+	// Always name the configuration install checked: the job may not see the
+	// same PATCHTACIO_CONFIG_DIR (a Windows task cannot be given it).
+	cfgPath, err := a.configPath()
+	if err != nil {
+		return err
 	}
+	if cfgPath, err = filepath.Abs(cfgPath); err != nil {
+		return fmt.Errorf("find the configuration: %w", err)
+	}
+	args := []string{"watch", "run", "--config", cfgPath}
 	job := schedule.Job{Program: prog, Args: args, Env: dirOverrides(), Hour: hour, Minute: minute}
 
 	s, dirs, err := a.openScheduler()
@@ -236,6 +246,9 @@ func (a *app) watchInstall(cmd *cobra.Command, at string) error {
 		return fmt.Errorf("set up the daily check: %w", err)
 	}
 	rec := watchInstall{Method: res.Method, At: job.At(), Program: prog, Args: args, Launch: res.Launch, InstalledAt: a.now().UTC()}
+	if res.Job.Program != "" && res.Job.Program != prog {
+		rec.Starts = res.Job.Program
+	}
 	if err := writeJSON(filepath.Join(dirs.Data, watchInstallFile), rec); err != nil {
 		_, _ = fmt.Fprintf(warn, "Warning: the check is set up, but `watch --status` will know less about it: %s\n", firstLine(err.Error()))
 	}
@@ -253,7 +266,7 @@ func (a *app) watchInstall(cmd *cobra.Command, at string) error {
 	for _, n := range res.Notes {
 		_, _ = fmt.Fprintf(out, "Note: %s\n", n)
 	}
-	for _, w := range a.secretWarnings(cfg.Notify) {
+	for _, w := range a.secretWarnings(cfg.Notify, runtime.GOOS) {
 		_, _ = fmt.Fprintf(warn, "Warning: %s\n", w)
 	}
 	_, _ = fmt.Fprintln(out, "Try it now with `patchtacio watch --run-now`, then check `patchtacio watch --status` a minute later.")
@@ -262,8 +275,9 @@ func (a *app) watchInstall(cmd *cobra.Command, at string) error {
 
 // secretWarnings names secrets the scheduled check may not be able to read:
 // ones found only in an environment variable (the job does not inherit this
-// terminal's environment) and required ones not set at all.
-func (a *app) secretWarnings(n *config.Notify) []string {
+// terminal's environment), ones in a Linux keychain (locked while the user is
+// logged out), and required ones not set at all.
+func (a *app) secretWarnings(n *config.Notify, goos string) []string {
 	type need struct {
 		env      string
 		channel  string
@@ -285,8 +299,11 @@ func (a *app) secretWarnings(n *config.Notify) []string {
 		_, src, _ := a.secretStore().Lookup(nd.env)
 		switch {
 		case src == secrets.FromEnv:
-			out = append(out, fmt.Sprintf("%s comes from an environment variable. The scheduled check sees it only if it is set "+
-				"for your user account, not just in this terminal; `patchtacio secret set %s` keeps it in the keychain instead.", nd.env, sec.Name))
+			out = append(out, fmt.Sprintf("%s comes from an environment variable, which the scheduled check does not see. "+
+				"Save it with `patchtacio secret set %s` (a server without a keychain: see docs/SCHEDULING.md).", nd.env, sec.Name))
+		case src == secrets.FromKeychain && goos == "linux":
+			out = append(out, fmt.Sprintf("%s is in the keychain, which a scheduled run can read only while you are logged in and it is unlocked. "+
+				"If the check runs while you are logged out (linger), give it the secret in a file only you can read instead (docs/SCHEDULING.md).", nd.env))
 		case src == secrets.NotSet && !nd.optional:
 			out = append(out, fmt.Sprintf("%s is not set, so %s alerts will fail: save it with `patchtacio secret set %s`.", nd.env, nd.channel, sec.Name))
 		}
@@ -363,7 +380,7 @@ func (a *app) watchStatus(cmd *cobra.Command) error {
 	now := a.now()
 	if inst != nil {
 		_, _ = fmt.Fprintf(out, "The daily check is set up (%s): `patchtacio check --notify` every day at %s.\n", st.Method, inst.At)
-		_, _ = fmt.Fprintf(out, "  Runs:      %s\n", commandLine(inst.Program, inst.Args))
+		_, _ = fmt.Fprintf(out, "  Runs:      %s\n", clean(commandLine(inst.Program, inst.Args)))
 		if inst.Launch != "" {
 			_, _ = fmt.Fprintf(out, "  Started:   %s\n", launchText(inst.Launch))
 		}
@@ -371,11 +388,18 @@ func (a *app) watchStatus(cmd *cobra.Command) error {
 			next := schedule.Job{Hour: h, Minute: m}.NextRun(now.In(a.loc))
 			_, _ = fmt.Fprintf(out, "  Next run:  %s\n", next.Format("Mon 2 Jan 2006 15:04"))
 		}
-		if _, err := os.Stat(inst.Program); err != nil {
-			problems = append(problems, fmt.Sprintf("the program it runs, %s, is missing. Run `patchtacio watch --install` again from the copy you use now.", inst.Program))
+		for _, p := range []string{inst.Program, inst.Starts} {
+			if _, err := os.Stat(p); p != "" && err != nil {
+				problems = append(problems, fmt.Sprintf("the program it runs, %s, is missing. Run `patchtacio watch --install` again from the copy you use now.", clean(p)))
+			}
 		}
 	} else {
 		_, _ = fmt.Fprintf(out, "The daily check is set up (%s).\n", st.Method)
+		if last == nil {
+			// Without either record nothing shows whether it has ever run,
+			// and "not yet" must not stay healthy for ever.
+			problems = append(problems, "Patchtacio cannot tell when it was set up or whether it has ever run; run `patchtacio watch --install` again.")
+		}
 	}
 
 	if last == nil {
@@ -413,7 +437,7 @@ func overdueHelp(method string) string {
 	case schedule.MethodSystemd:
 		return "Was the computer off, or were you logged out without linger? `systemctl --user status patchtacio-check.timer` shows more."
 	case schedule.MethodTask:
-		return "Was the computer off, or were you logged out? Task Scheduler's history for \"" + schedule.TaskName + "\" shows more."
+		return "Was the computer off, or were you logged out? The History tab of the \"" + schedule.TaskName + " (your user name)\" task in Task Scheduler shows more."
 	default:
 		return "Was the computer off or asleep at the scheduled time?"
 	}
@@ -431,7 +455,7 @@ func runResult(r *watchRun) string {
 		return "finished, but some data was out of date (see the log)"
 	default:
 		if r.Error != "" {
-			return "failed: " + r.Error
+			return "failed: " + clean(r.Error)
 		}
 		return "failed (exit code " + strconv.Itoa(r.ExitCode) + "); see the log"
 	}
@@ -501,6 +525,17 @@ func (a *app) watchRun(cmd *cobra.Command) error {
 	_, _ = fmt.Fprintf(w, "=== %s finished, exit code %d ===\n", rec.FinishedAt.In(started.Location()).Format(time.RFC3339), rec.ExitCode)
 	if werr := writeJSON(filepath.Join(d.Data, watchRunFile), rec); werr != nil {
 		_, _ = fmt.Fprintf(w, "Warning: cannot record this run for `watch --status`: %s\n", firstLine(werr.Error()))
+	}
+	if rec.ExitCode == exitToolError {
+		// A failed run may not have reached any channel (no configuration, a
+		// keychain it cannot read), and the log is read only when someone
+		// looks. A desktop notification needs no secrets; on a computer
+		// without a desktop it simply fails.
+		if nerr := a.desktopNotice(cmd.Context(), advice.RunFailedNotice(started.In(a.loc))); nerr != nil {
+			_, _ = fmt.Fprintf(w, "Could not show a desktop notification about this failure: %s\n", firstLine(logging.RedactString(nerr.Error())))
+		} else {
+			_, _ = fmt.Fprintln(w, "Showed a desktop notification about this failure.")
+		}
 	}
 	return err
 }

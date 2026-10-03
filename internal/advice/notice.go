@@ -94,3 +94,19 @@ func FeedNotice(f Feed, lastGood time.Time, problem string) Notice {
 		Short:   fitName("Patchtacio could not update %s"+since+". Alerts may be missing. Run patchtacio feeds update", title),
 	}
 }
+
+// RunFailedNotice says the scheduled check could not finish. It goes to the
+// desktop, which needs no secrets, because a failed run may not have been
+// able to reach the configured channels at all.
+func RunFailedNotice(when time.Time) Notice {
+	var b strings.Builder
+	fmt.Fprintf(&b, "Patchtacio's daily check on %s could not finish, so alerts may be missing. This is not an all clear.\n\n", date(when))
+	b.WriteString("What to do:\n")
+	b.WriteString("  1. Run: patchtacio watch --status\n")
+	b.WriteString("  2. It names the log file, which says what went wrong.\n")
+	return Notice{
+		Subject: "[Check needed] Patchtacio's daily check failed on " + date(when),
+		Body:    b.String(),
+		Short:   "Patchtacio's daily check failed on " + date(when) + ". Alerts may be missing. Run patchtacio watch --status",
+	}
+}
