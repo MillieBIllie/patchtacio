@@ -27,12 +27,24 @@ func OpenLogFile(path string, maxBytes int64, keep int) (*os.File, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return nil, fmt.Errorf("create log directory: %w", err)
 	}
-	if fi, err := os.Stat(path); err == nil && fi.Size() > maxBytes && keep > 0 {
-		rotate(path, keep)
+	if fi, err := os.Lstat(path); err == nil {
+		// A symlink could point the log at another file (the cache directory
+		// can be moved with PATCHTACIO_CACHE_DIR, even somewhere shared).
+		if !fi.Mode().IsRegular() {
+			return nil, fmt.Errorf("log file %s is not a regular file", path)
+		}
+		if fi.Size() > maxBytes && keep > 0 {
+			rotate(path, keep)
+		}
 	}
 	f, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600)
 	if err != nil {
 		return nil, fmt.Errorf("open log file: %w", err)
+	}
+	// An existing file keeps its mode on open; make it the user's alone.
+	if err := f.Chmod(0o600); err != nil {
+		_ = f.Close()
+		return nil, fmt.Errorf("restrict log file: %w", err)
 	}
 	return f, nil
 }

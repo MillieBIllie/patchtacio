@@ -39,20 +39,23 @@ func WindowsLaunch(j Job, gui, conhost string) (Job, string) {
 	}
 }
 
-// TaskXML is the Task Scheduler definition for j, registered for the user
-// with the given SID. start is the first day the trigger applies (its date
+// TaskXML is the Task Scheduler definition for j, named name and registered
+// for the user with the given SID. start is the first day the trigger applies (its date
 // only is used; the time comes from j).
 //
 // The task runs only while the user is logged on (no stored password, and
 // Credential Manager and notifications still work), also on battery, catches
 // up on a missed run, stops after 30 minutes, and never runs twice at once.
-func TaskXML(j Job, userSID string, start time.Time) (string, error) {
-	return taskXML(j, TaskName, userSID, start)
-}
-
-func taskXML(j Job, name, userSID string, start time.Time) (string, error) {
+func TaskXML(j Job, name, userSID string, start time.Time) (string, error) {
 	if err := j.Validate(); err != nil {
 		return "", err
+	}
+	// Task Scheduler expands %VAR% in the command and its arguments, with no
+	// way to escape it.
+	for _, v := range append([]string{j.Program}, j.Args...) {
+		if strings.Contains(v, "%") {
+			return "", fmt.Errorf("%q contains %%, which Task Scheduler would replace; move Patchtacio or its configuration to a path without %%", v)
+		}
 	}
 	if userSID == "" {
 		return "", fmt.Errorf("no user to register the task for")

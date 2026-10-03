@@ -30,7 +30,7 @@ const (
 	SystemdTimer   = "patchtacio-check.timer"
 	CronMarker     = "# patchtacio-check"
 	LaunchdLabel   = "io.github.milliebillie.patchtacio.check"
-	TaskName       = "Patchtacio check"
+	TaskName       = "Patchtacio check" // followed by the user name: see TaskNameFor
 )
 
 // Methods, as Status and Result report them.
@@ -108,6 +108,9 @@ func (j Job) NextRun(now time.Time) time.Time {
 // Result says how a job was installed.
 type Result struct {
 	Method string
+	// Job is what the scheduler actually runs: on Windows, patchtaciow.exe or
+	// conhost.exe rather than the job given to Install.
+	Job    Job
 	Launch string   // Windows: how the task starts the program (Launch* constants)
 	Files  []string // files written, for the user's information
 	Notes  []string // things the user should know or do (linger, console window)
@@ -139,11 +142,18 @@ var ErrUnsupported = errors.New("scheduled checks are not supported on this oper
 
 // Runner runs a program with arguments (never through a shell), feeding it
 // stdin, and returns its standard output. A failure's error includes the
-// program's output, cleaned of control characters.
+// program's standard error (never standard output, which can hold a whole
+// crontab), cleaned of control characters.
 type Runner func(ctx context.Context, stdin []byte, name string, args ...string) ([]byte, error)
+
+// runTimeout limits each scheduler command.
+const runTimeout = 30 * time.Second
 
 // ExecRunner runs real programs.
 func ExecRunner(ctx context.Context, stdin []byte, name string, args ...string) ([]byte, error) {
+	// systemctl, loginctl and launchctl can hang on a stuck D-Bus.
+	ctx, cancel := context.WithTimeout(ctx, runTimeout)
+	defer cancel()
 	cmd := exec.CommandContext(ctx, name, args...) //nolint:gosec // fixed scheduler programs, arguments as a list, never a shell
 	if stdin != nil {
 		cmd.Stdin = bytes.NewReader(stdin)
@@ -155,7 +165,11 @@ func ExecRunner(ctx context.Context, stdin []byte, name string, args ...string) 
 		if errors.Is(err, exec.ErrNotFound) {
 			return nil, fmt.Errorf("%s: %w", name, err)
 		}
-		return out.Bytes(), &RunError{Name: name, Err: err, Output: tidy(errOut.String() + " " + out.String())}
+		code := -1
+		if ee, ok := errors.AsType[*exec.ExitError](err); ok {
+			code = ee.ExitCode()
+		}
+		return out.Bytes(), &RunError{Name: name, Code: code, Err: err, Output: tidy(errOut.String())}
 	}
 	return out.Bytes(), nil
 }
@@ -163,8 +177,9 @@ func ExecRunner(ctx context.Context, stdin []byte, name string, args ...string) 
 // RunError is a program that ran and failed.
 type RunError struct {
 	Name   string
+	Code   int // exit code, or -1
 	Err    error
-	Output string
+	Output string // standard error, tidied
 }
 
 func (e *RunError) Error() string {
@@ -200,4 +215,24 @@ func plainWord(s string) bool {
 		}
 	}
 	return true
+}
+
+// TaskNameFor is the Windows task name for a user: "Patchtacio check (jo)".
+// Task names are machine-wide, and one PC (in a school, say) has many users,
+// each with their own check. A DOMAIN\ prefix is dropped, and characters a
+// task name cannot hold are replaced.
+func TaskNameFor(user string) string {
+	if i := strings.LastIndexAny(user, `\/`); i >= 0 {
+		user = user[i+1:]
+	}
+	user = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) || strings.ContainsRune(`\/:*?"<>|%`, r) {
+			return '-'
+		}
+		return r
+	}, strings.TrimSpace(user))
+	if user == "" {
+		return TaskName
+	}
+	return TaskName + " (" + user + ")"
 }

@@ -111,3 +111,31 @@ func TestNewFileKeepsTimeAndRedacts(t *testing.T) {
 		}
 	}
 }
+
+func TestOpenLogFileRefusesSymlinkAndTightensMode(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "patchtacio.log")
+	if err := os.Symlink(filepath.Join(dir, "elsewhere"), path); err == nil {
+		if f, err := OpenLogFile(path, 100, 3); err == nil {
+			_ = f.Close()
+			t.Error("followed a symlink")
+		}
+		_ = os.Remove(path)
+	}
+	if runtime.GOOS == "windows" {
+		return
+	}
+	writeFile(t, path, "old\n")
+	if err := os.Chmod(path, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	f, err := OpenLogFile(path, 100, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = f.Close()
+	fi, _ := os.Stat(path)
+	if perm := fi.Mode().Perm(); perm != 0o600 {
+		t.Errorf("existing log left at mode %o", perm)
+	}
+}

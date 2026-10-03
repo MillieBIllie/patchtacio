@@ -22,7 +22,7 @@ func TestTaskSchedulerAcceptsDefinition(t *testing.T) {
 		t.Fatal(err)
 	}
 	o.SystemRoot = "" // no conhost: register the program itself
-	w := &Windows{O: o, Name: fmt.Sprintf("Patchtacio integration test %d", os.Getpid())}
+	w := &Windows{O: o, Name: fmt.Sprintf("Patchtacio integration test (%d)", os.Getpid())}
 	ctx := context.Background()
 	t.Cleanup(func() { _, _ = w.Uninstall(ctx) })
 

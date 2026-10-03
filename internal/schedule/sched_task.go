@@ -12,14 +12,14 @@ import (
 // with schtasks.
 type Windows struct {
 	O    Options
-	Name string // task name; "" means TaskName (tests use their own)
+	Name string // task name; "" means TaskNameFor the user (tests use their own)
 }
 
 func (w *Windows) name() string {
 	if w.Name != "" {
 		return w.Name
 	}
-	return TaskName
+	return TaskNameFor(w.O.UserName)
 }
 
 func (w *Windows) schtasks(ctx context.Context, args ...string) error {
@@ -45,29 +45,25 @@ func (w *Windows) Launch(j Job) (Job, string) {
 // Install implements Scheduler.
 func (w *Windows) Install(ctx context.Context, j Job) (Result, error) {
 	run, how := w.Launch(j)
-	def, err := taskXML(run, w.name(), w.O.UserSID, w.O.Now())
+	def, err := TaskXML(run, w.name(), w.O.UserSID, w.O.Now())
 	if err != nil {
 		return Result{}, err
 	}
-	if err := os.MkdirAll(w.O.TempDir, 0o700); err != nil {
-		return Result{}, fmt.Errorf("create %s: %w", w.O.TempDir, err)
-	}
-	f, err := os.CreateTemp(w.O.TempDir, "patchtacio-task-*.xml")
+	// The definition goes in a fresh private directory: whoever could swap
+	// the file before schtasks reads it would choose what the task runs.
+	dir, err := os.MkdirTemp(w.O.TempDir, "patchtacio-task-")
 	if err != nil {
 		return Result{}, fmt.Errorf("write the task definition: %w", err)
 	}
-	defer func() { _ = os.Remove(f.Name()) }()
-	_, werr := f.Write(UTF16(def))
-	if cerr := f.Close(); werr == nil {
-		werr = cerr
+	defer func() { _ = os.RemoveAll(dir) }()
+	path := filepath.Join(dir, "task.xml")
+	if err := os.WriteFile(path, UTF16(def), 0o600); err != nil {
+		return Result{}, fmt.Errorf("write the task definition: %w", err)
 	}
-	if werr != nil {
-		return Result{}, fmt.Errorf("write the task definition: %w", werr)
+	if err := w.schtasks(ctx, "/Create", "/TN", w.name(), "/XML", path, "/F"); err != nil {
+		return Result{}, fmt.Errorf("create the scheduled task %q: %w", w.name(), err)
 	}
-	if err := w.schtasks(ctx, "/Create", "/TN", w.name(), "/XML", f.Name(), "/F"); err != nil {
-		return Result{}, fmt.Errorf("create the scheduled task: %w", err)
-	}
-	r := Result{Method: MethodTask, Launch: how}
+	r := Result{Method: MethodTask, Launch: how, Job: run}
 	if how == LaunchConsole {
 		r.Notes = append(r.Notes, ConsoleNote)
 	}

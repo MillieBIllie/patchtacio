@@ -25,6 +25,8 @@
 		<key>Minute</key>
 		<integer>5</integer>
 	</dict>
+	<key>Umask</key>
+	<integer>63</integer>
 	<key>ProcessType</key>
 	<string>Background</string>
 	<key>StandardOutPath</key>
