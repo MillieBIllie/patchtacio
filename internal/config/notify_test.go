@@ -57,7 +57,11 @@ func TestNotifyValidateProblems(t *testing.T) {
 	}
 	local := Notify{Email: &Email{Host: "127.0.0.1", Security: "none", Port: 25, From: "a@example.org", To: []string{"b@example.org"}}}
 	if p := local.Validate(); len(p) != 0 {
-		t.Errorf("plaintext to localhost must be allowed: %v", p)
+		t.Errorf("plaintext to 127.0.0.1 must be allowed: %v", p)
+	}
+	byName := Notify{Email: &Email{Host: "localhost", Security: "none", Port: 25, From: "a@example.org", To: []string{"b@example.org"}}}
+	if p := byName.Validate(); len(p) == 0 {
+		t.Error("plaintext to the name localhost must be refused (DNS could resolve it elsewhere)")
 	}
 }
 

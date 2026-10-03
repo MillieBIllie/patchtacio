@@ -3,4 +3,4 @@ arg: --app-name=Patchtacio
 arg: --urgency=critical
 arg: --
 arg: [Action needed by 12 Oct 2026] Acme "Widget"; $(rm -rf ~) & '
-arg: -n Patchtacio: Acme exploited flaw CVE-2026-1. `whoami` <toast/>
+arg: -n Patchtacio: Acme exploited flaw CVE-2026-1. `whoami` &lt;toast/&gt;

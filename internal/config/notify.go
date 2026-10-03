@@ -30,7 +30,7 @@ const (
 type Email struct {
 	Host     string   `yaml:"host"`
 	Port     int      `yaml:"port,omitempty"`     // default 587 (465 when security is tls)
-	Security string   `yaml:"security,omitempty"` // "starttls" (default), "tls", or "none" (localhost only)
+	Security string   `yaml:"security,omitempty"` // "starttls" (default), "tls", or "none" (127.0.0.1 or ::1 only)
 	Username string   `yaml:"username,omitempty"` // password from PATCHTACIO_SMTP_PASSWORD
 	From     string   `yaml:"from"`
 	To       []string `yaml:"to"`
@@ -102,7 +102,7 @@ func (n *Notify) Validate() []string {
 		case "starttls", "tls":
 		case "none":
 			if !IsLoopback(e.Host) {
-				bad("email.security none (no encryption) is only allowed for a mail server on this computer (localhost); use starttls or tls")
+				bad("email.security none (no encryption) is only allowed for a mail server on this computer, written as 127.0.0.1 or ::1; use starttls or tls")
 			}
 		default:
 			bad("email.security must be starttls, tls or none, not %q", e.Security)
@@ -146,11 +146,11 @@ func (n *Notify) Validate() []string {
 	return problems
 }
 
-// IsLoopback reports whether host names this computer.
+// IsLoopback reports whether host is a loopback IP address (127.0.0.1,
+// ::1). The name "localhost" does not count: if the hosts file lacks it, DNS
+// can send it to another computer, which would then get plaintext mail or a
+// bearer token.
 func IsLoopback(host string) bool {
-	if strings.EqualFold(host, "localhost") {
-		return true
-	}
 	ip := net.ParseIP(strings.Trim(host, "[]"))
 	return ip != nil && ip.IsLoopback()
 }

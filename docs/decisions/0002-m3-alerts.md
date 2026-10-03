@@ -63,7 +63,7 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
   - Only a 429 is retried, once. Any other failure may mean the message was already posted.
 - SMTP:
   - STARTTLS is required when configured, with no plaintext fallback.
-  - Plaintext is allowed only to localhost.
+  - Plaintext is allowed only to 127.0.0.1 or ::1. The name "localhost" is refused, because DNS could resolve it to another computer.
   - Uses the standard library (`net/smtp`), so no new dependency.
 - Teams uses Workflows webhooks with an Adaptive Card, because Microsoft is retiring the
   Microsoft 365 connector webhooks.
