@@ -257,3 +257,37 @@ func TestCPEPattern(t *testing.T) {
 		}
 	}
 }
+
+func TestMatchesCPE(t *testing.T) {
+	p := Product{CPEPrefixes: []string{
+		"cpe:2.3:a:ivanti:endpoint_manager",
+		"cpe:2.3:o:microsoft:windows",
+		`cpe:2.3:a:veeam:veeam_backup_\&_replication`,
+	}}
+	tests := []struct {
+		cpe  string
+		want bool
+	}{
+		{"cpe:2.3:a:ivanti:endpoint_manager:2022:su5:*:*:*:*:*:*", true},
+		{"cpe:2.3:a:ivanti:endpoint_manager", true},
+		{"CPE:2.3:A:Ivanti:Endpoint_Manager:-:*:*:*:*:*:*:*", false}, // "CPE" is not the CPE 2.3 prefix
+		{"cpe:2.3:a:Ivanti:Endpoint_Manager:-:*:*:*:*:*:*:*", true},
+		// String prefixes of a listed product are other products.
+		{"cpe:2.3:a:ivanti:endpoint_manager_mobile:12.0:*:*:*:*:*:*:*", false},
+		{"cpe:2.3:o:microsoft:windows_server_2019:-:*:*:*:*:*:*:*", false},
+		{"cpe:2.3:o:microsoft:windows:-:*:*:*:*:*:*:*", true},
+		{"cpe:2.3:o:microsoft:windows_10_1809:-:*:*:*:*:*:x64:*", false},
+		// The part matters: an application is not the OS of the same name.
+		{"cpe:2.3:a:microsoft:windows:-:*:*:*:*:*:*:*", false},
+		// An escaped colon or ampersand stays inside the product name.
+		{`cpe:2.3:a:veeam:veeam_backup_\&_replication:12.1:*:*:*:*:*:*:*`, true},
+		{`cpe:2.3:a:ivanti:endpoint\:manager:1:*:*:*:*:*:*:*`, false},
+		{"cpe:/a:ivanti:endpoint_manager:2022", false},
+		{"", false},
+	}
+	for _, tt := range tests {
+		if got := p.MatchesCPE(tt.cpe); got != tt.want {
+			t.Errorf("MatchesCPE(%q) = %v, want %v", tt.cpe, got, tt.want)
+		}
+	}
+}
