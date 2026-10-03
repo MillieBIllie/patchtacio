@@ -2,8 +2,8 @@
 
 `patchtacio check --notify` checks your products against the CISA KEV catalog and sends what is
 new on the channels you configure: email, a chat webhook (Slack, Microsoft Teams, Discord), the
-ntfy phone app, or a desktop notification. M4 will run it on a schedule; until then, run it
-yourself or from cron / Task Scheduler.
+ntfy phone app, or a desktop notification. To run it every day, use `patchtacio watch --install`
+([SCHEDULING.md](SCHEDULING.md)).
 
 ## What you get, and when
 
@@ -113,7 +113,7 @@ Patchtacio asks the keychain only for secrets you saved with `patchtacio secret 
 after 5 seconds if it does not answer (a locked keychain waiting for a password, say). On a
 server without a desktop session there is usually no keychain, and **scheduled runs often cannot
 reach your keychain** even where you can: if `check --notify` says a saved secret could not be
-read, set the environment variable for the scheduled task instead.
+read, set the environment variable for the scheduled task instead ([SCHEDULING.md](SCHEDULING.md#secrets-in-scheduled-runs)).
 
 | Channel | Environment variable (or `patchtacio secret set <name>`) |
 |---|---|

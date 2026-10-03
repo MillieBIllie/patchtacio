@@ -2,8 +2,8 @@
 
 > **Status: pre-alpha.** Patchtacio can show the CISA KEV entries for the products you run
 > (`patchtacio init`, then `patchtacio check`), check end-of-life dates for products whose version
-> you give, and send alerts about both (`patchtacio check --notify`), but does not run on a
-> schedule yet.
+> you give, send alerts about both (`patchtacio check --notify`), and run that every day with your
+> computer's scheduler (`patchtacio watch --install`). There are no release builds yet.
 > See [docs/ROADMAP.md](docs/ROADMAP.md) for what's coming.
 
 Patchtacio is a free, open source, **local-only** tool for small IT teams in schools, local
@@ -53,6 +53,16 @@ matches and the data is up to date, and `3` when nothing matches but the data is
 Email, Slack, Microsoft Teams, Discord, ntfy and desktop notifications; reminders as CISA's
 deadline approaches and passes; optional daily or weekly digest. Setup and details:
 [docs/ALERTS.md](docs/ALERTS.md).
+
+### Every day, automatically
+
+```sh
+./patchtacio watch --install         # check --notify daily, with systemd/cron, launchd or Task Scheduler
+./patchtacio watch --status          # when it last ran, how it went, where the log is
+./patchtacio watch --uninstall
+```
+
+Per user, no administrator rights. Details per operating system: [docs/SCHEDULING.md](docs/SCHEDULING.md).
 
 Without a terminal (scripts, Docker), pass the products directly. `patchtacio catalog list` shows
 the IDs:
