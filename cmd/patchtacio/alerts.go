@@ -117,15 +117,17 @@ const (
 	noticeKEVStale = "kev-out-of-date"
 	noticeEvery    = 24 * time.Hour
 	notifyLockName = "notify"
-	// Two passes (notice, then alerts) over four slow channels take about 12
-	// minutes at worst. A laptop that sleeps mid-send can outlast it; the
-	// cost is a possible duplicate alert, never a missed one.
-	notifyLockTTL = 30 * time.Minute
 )
 
-// notifyLockWait is how long a run waits for another to finish sending; a
-// variable so tests need not wait.
-var notifyLockWait = time.Minute
+// The notify lock is kept alive by a heartbeat every quarter TTL while a run
+// sends, so a crashed run frees it within the TTL however long sends take.
+// If a laptop sleeps past the TTL another run may take over: the cost is a
+// possible duplicate alert, never a missed one. Variables so tests need not
+// wait.
+var (
+	notifyLockTTL  = 5 * time.Minute
+	notifyLockWait = time.Minute // how long a run waits for another to finish
+)
 
 // sendAlerts sends, under a cross-process lock so two runs never send the
 // same alert, a notice if the feed could not be updated (problem != nil) and
@@ -199,7 +201,11 @@ func (a *app) notifyLock(ctx context.Context, st *store.Store) (func(), error) {
 			return nil, err
 		}
 		if ok {
-			return func() { _ = st.ReleaseLock(context.WithoutCancel(ctx), notifyLockName, owner) }, nil
+			stop := a.heartbeatNotifyLock(ctx, st, owner)
+			return func() {
+				stop()
+				_ = st.ReleaseLock(context.WithoutCancel(ctx), notifyLockName, owner)
+			}, nil
 		}
 		if time.Now().After(deadline) {
 			return nil, errors.New("another `patchtacio check --notify` is sending alerts right now; " +
@@ -212,6 +218,35 @@ func (a *app) notifyLock(ctx context.Context, st *store.Store) (func(), error) {
 			return nil, ctx.Err()
 		case <-t.C:
 		}
+	}
+}
+
+// heartbeatNotifyLock refreshes the lock until stop is called.
+func (a *app) heartbeatNotifyLock(ctx context.Context, st *store.Store, owner string) (stop func()) {
+	done := make(chan struct{})
+	finished := make(chan struct{})
+	go func() {
+		defer close(finished)
+		t := time.NewTicker(notifyLockTTL / 4)
+		defer t.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-t.C:
+				ok, err := st.HeartbeatLock(context.WithoutCancel(ctx), notifyLockName, owner)
+				if err != nil || !ok {
+					// Sending goes on: stopping halfway would be worse than a
+					// possible duplicate from a run that took over.
+					a.log.Warn("lost the alert-sending lock; another run may send the same alerts", "err", err)
+					return
+				}
+			}
+		}
+	}()
+	return func() {
+		close(done)
+		<-finished
 	}
 }
 

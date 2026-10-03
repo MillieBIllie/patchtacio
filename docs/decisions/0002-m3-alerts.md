@@ -44,7 +44,7 @@ Record 0001 left finding identity and dedupe to M3. These are the choices made, 
   It is sent only when the saved copy is actually out of date, not after one failed fetch.
   Otherwise someone who only reads email would take silence as an all clear (CLAUDE.md rule 3).
 - `--since` narrows the report, never the alerts.
-- A store lock (`notify`, 30-minute TTL) is held around sending, so a scheduled and a manual run
+- A store lock (`notify`, 5-minute TTL kept alive by a heartbeat, as the feed updater does) is held around sending, so a scheduled and a manual run
   cannot both send the same alert. The second waits up to a minute, then exits 2 without sending.
 
 ## Acknowledgements
