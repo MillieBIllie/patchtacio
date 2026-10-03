@@ -47,9 +47,12 @@ func (n *Ntfy) Send(ctx context.Context, m advice.Message) error {
 	return n.post(ctx, c.Title, truncateBytes(c.Body, ntfyLimit), n.Priority, "warning")
 }
 
-// SendTest implements Channel.
-func (n *Ntfy) SendTest(ctx context.Context) error {
-	return n.post(ctx, advice.TestSubject, advice.TestBody, 3, "white_check_mark")
+// SendNotice implements Channel. Tests go at default priority.
+func (n *Ntfy) SendNotice(ctx context.Context, no advice.Notice) error {
+	if no.Test {
+		return n.post(ctx, no.Subject, no.Body, 3, "white_check_mark")
+	}
+	return n.post(ctx, no.Subject, truncateBytes(no.Body, ntfyLimit), n.Priority, "warning")
 }
 
 func (n *Ntfy) post(ctx context.Context, title, body string, priority int, tag string) error {

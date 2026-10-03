@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/config"
 )
 
@@ -220,7 +221,7 @@ func TestEmailImplicitTLSWithLogin(t *testing.T) {
 func TestEmailStartTLS(t *testing.T) {
 	s := &smtpServer{starttls: true}
 	e := newTestEmail(t, s, "starttls", "", nil)
-	if err := e.SendTest(context.Background()); err != nil {
+	if err := e.SendNotice(context.Background(), advice.TestNotice()); err != nil {
 		t.Fatal(err)
 	}
 	s.mu.Lock()
@@ -234,7 +235,7 @@ func TestEmailStartTLS(t *testing.T) {
 func TestEmailRefusesWithoutStartTLS(t *testing.T) {
 	s := &smtpServer{starttls: false}
 	e := newTestEmail(t, s, "starttls", "alerts@school.example", map[string]string{config.EnvSMTPPassword: "hunter2"})
-	err := e.SendTest(context.Background())
+	err := e.SendNotice(context.Background(), advice.TestNotice())
 	if err == nil || !strings.Contains(err.Error(), "does not offer STARTTLS") {
 		t.Fatalf("want a STARTTLS refusal, got %v", err)
 	}
@@ -253,11 +254,11 @@ func TestEmailRefusesWithoutStartTLS(t *testing.T) {
 func TestEmailPlainToLocalhost(t *testing.T) {
 	s := &smtpServer{}
 	e := newTestEmail(t, s, "none", "", nil)
-	if err := e.SendTest(context.Background()); err != nil {
+	if err := e.SendNotice(context.Background(), advice.TestNotice()); err != nil {
 		t.Fatal(err)
 	}
 	e.Config.Host = "mail.example.org"
-	if err := e.SendTest(context.Background()); err == nil {
+	if err := e.SendNotice(context.Background(), advice.TestNotice()); err == nil {
 		t.Error("plaintext to another computer must be refused")
 	}
 }
@@ -265,7 +266,7 @@ func TestEmailPlainToLocalhost(t *testing.T) {
 func TestEmailMissingPassword(t *testing.T) {
 	s := &smtpServer{implicit: true}
 	e := newTestEmail(t, s, "tls", "alerts@school.example", nil)
-	err := e.SendTest(context.Background())
+	err := e.SendNotice(context.Background(), advice.TestNotice())
 	if err == nil || !strings.Contains(err.Error(), config.EnvSMTPPassword) {
 		t.Errorf("want an error naming %s, got %v", config.EnvSMTPPassword, err)
 	}

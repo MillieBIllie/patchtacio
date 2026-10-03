@@ -64,9 +64,9 @@ func (e *Email) Send(ctx context.Context, m advice.Message) error {
 	return e.send(ctx, subject, body)
 }
 
-// SendTest implements Channel.
-func (e *Email) SendTest(ctx context.Context) error {
-	return e.send(ctx, advice.TestSubject, advice.TestBody)
+// SendNotice implements Channel.
+func (e *Email) SendNotice(ctx context.Context, n advice.Notice) error {
+	return e.send(ctx, n.Subject, n.Body)
 }
 
 func (e *Email) send(ctx context.Context, subject, body string) error {

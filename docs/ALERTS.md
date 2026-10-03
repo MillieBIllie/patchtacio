@@ -18,6 +18,13 @@ yourself or from cron / Task Scheduler.
   message per day or week per channel.
 - If a channel fails, `check --notify` exits `2` (so a scheduled run is noticed) and retries
   that channel on the next run. The other channels are not repeated.
+- **If the KEV list cannot be updated**, every channel also gets a "[Check needed]" notice saying
+  alerts may be missing, at most once a day while the problem lasts. Silence never means "all clear".
+- **A new destination hears everything.** Deliveries are recorded per destination (the email
+  recipients, the webhook or ntfy URL), so after changing `to:` or the webhook URL the new
+  destination gets one summary of everything not acknowledged.
+- `--since` narrows what `check` shows, never what `--notify` sends. Two overlapping
+  `check --notify` runs never send the same alert: the second waits up to a minute, then exits `2`.
 
 CISA's deadlines are set for US government agencies. Alerts show them as a guide to urgency.
 

@@ -15,6 +15,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/notify"
 	"github.com/milliebillie/patchtacio/internal/paths"
+	"github.com/milliebillie/patchtacio/internal/store"
 )
 
 // fakeChannels records what each configured channel was asked to send.
@@ -22,6 +23,7 @@ type fakeChannels struct {
 	mu      sync.Mutex
 	sent    map[string][]advice.Message
 	tests   []string
+	notices []string
 	failing map[string]bool
 }
 
@@ -41,13 +43,17 @@ func (c fakeChan) Send(_ context.Context, m advice.Message) error {
 	c.f.sent[c.name] = append(c.f.sent[c.name], m)
 	return nil
 }
-func (c fakeChan) SendTest(context.Context) error {
+func (c fakeChan) SendNotice(_ context.Context, n advice.Notice) error {
 	c.f.mu.Lock()
 	defer c.f.mu.Unlock()
 	if c.f.failing[c.name] {
 		return errors.New("connection refused")
 	}
-	c.f.tests = append(c.f.tests, c.name)
+	if n.Test {
+		c.f.tests = append(c.f.tests, c.name)
+	} else {
+		c.f.notices = append(c.f.notices, c.name+": "+n.Subject)
+	}
 	return nil
 }
 
@@ -284,5 +290,95 @@ func TestTestAlert(t *testing.T) {
 
 	if _, errOut, code := e.exec(t, "test-alert", "--channel", "desktop"); code != exitToolError || !strings.Contains(errOut, "not configured") {
 		t.Errorf("unconfigured channel: code %d, %s", code, errOut)
+	}
+}
+
+// A feed that cannot be updated is reported on the alert channels, at most
+// once a day, so silence is never mistaken for an all clear; alerts from the
+// saved copy still go out.
+func TestNotifyStaleFeedSendsNotice(t *testing.T) {
+	e := newTestEnv(t)
+	chans := e.useFakeChannels()
+	e.exec(t, "init", "--products", "citrix-netscaler")
+	addNotify(t, "notify:\n  webhook:\n    kind: discord\n")
+	e.exec(t, "check", "--notify") // fresh: summary, no notice
+	if len(chans.notices) != 0 {
+		t.Fatalf("notice while fresh: %v", chans.notices)
+	}
+
+	e.setDown(503)
+	e.clock = e.clock.Add(72 * time.Hour) // KEV is stale after 48 h
+	out, errOut, code := e.exec(t, "check", "--notify")
+	requireCode(t, code, exitFindings, out, errOut)
+	requireContains(t, out, "Notice by webhook: sent a notice that the KEV data could not be updated.")
+	if len(chans.notices) != 1 || !strings.Contains(chans.notices[0], "[Check needed] Patchtacio could not update the CISA KEV catalog since 1 Oct 2026") {
+		t.Fatalf("notices: %v", chans.notices)
+	}
+
+	e.clock = e.clock.Add(3 * time.Hour)
+	out, _, _ = e.exec(t, "check", "--notify")
+	requireContains(t, out, "already sent today")
+	if len(chans.notices) != 1 {
+		t.Errorf("notice repeated within the day: %v", chans.notices)
+	}
+	e.clock = e.clock.Add(24 * time.Hour)
+	e.exec(t, "check", "--notify")
+	if len(chans.notices) != 2 {
+		t.Errorf("no notice the next day: %v", chans.notices)
+	}
+}
+
+func TestNotifyNoDataSendsNotice(t *testing.T) {
+	e := newTestEnv(t)
+	chans := e.useFakeChannels()
+	e.exec(t, "init", "--products", "citrix-netscaler")
+	addNotify(t, "notify:\n  desktop: true\n")
+	e.setDown(503)
+	out, errOut, code := e.exec(t, "check", "--notify")
+	requireCode(t, code, exitToolError, out, errOut)
+	if len(chans.notices) != 1 || !strings.Contains(chans.notices[0], "could not update") {
+		t.Errorf("notices: %v\n%s\n%s", chans.notices, out, errOut)
+	}
+}
+
+// --since narrows what check shows, never what it alerts.
+func TestNotifyIgnoresSince(t *testing.T) {
+	e := newTestEnv(t)
+	chans := e.useFakeChannels()
+	e.exec(t, "init", "--products", "citrix-netscaler,vmware-vcenter")
+	addNotify(t, "notify:\n  webhook:\n    kind: slack\n")
+	out, errOut, code := e.exec(t, "check", "--notify", "--since", "2026-09-01")
+	requireCode(t, code, exitFindings, out, errOut)
+	if msgs := chans.messages("webhook"); len(msgs) != 1 || len(msgs[0].Items) != 3 {
+		t.Errorf("--since limited the alert: %+v", msgs)
+	}
+}
+
+// Two overlapping runs never both send: the second waits, then gives up and
+// says so.
+func TestNotifyLockHeld(t *testing.T) {
+	e := newTestEnv(t)
+	chans := e.useFakeChannels()
+	e.exec(t, "init", "--products", "citrix-netscaler")
+	addNotify(t, "notify:\n  webhook:\n    kind: slack\n")
+	e.exec(t, "check") // creates the database
+
+	st, err := store.Open(context.Background(), filepath.Join(os.Getenv(paths.EnvDataDir), dbFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = st.Close() }()
+	if ok, err := st.AcquireLock(context.Background(), notifyLockName, "other-run", time.Hour); !ok || err != nil {
+		t.Fatalf("take lock: %v %v", ok, err)
+	}
+	old := notifyLockWait
+	notifyLockWait = 0
+	defer func() { notifyLockWait = old }()
+
+	out, errOut, code := e.exec(t, "check", "--notify")
+	requireCode(t, code, exitToolError, out, errOut)
+	requireContains(t, errOut, "no alerts were sent", "another `patchtacio check --notify` is sending alerts")
+	if len(chans.messages("webhook")) != 0 {
+		t.Error("sent while another run held the lock")
 	}
 }

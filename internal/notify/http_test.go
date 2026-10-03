@@ -119,7 +119,7 @@ func TestWebhookPayloads(t *testing.T) {
 
 func TestWebhookTest(t *testing.T) {
 	rec, u := serve(t)
-	if err := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: u})).SendTest(context.Background()); err != nil {
+	if err := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: u})).SendNotice(context.Background(), advice.TestNotice()); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(string(rec.bodies[0]), "test") {
@@ -162,7 +162,7 @@ func TestHTTPErrorsNeverShowTheSecretURL(t *testing.T) {
 
 	// Server error: status and body shown, URL not.
 	_, u := serve(t, http.StatusInternalServerError)
-	err := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: u})).SendTest(ctx)
+	err := NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: u})).SendNotice(ctx, advice.TestNotice())
 	check("500", err)
 	if err != nil && !strings.Contains(err.Error(), "HTTP 500") {
 		t.Errorf("500: %v", err)
@@ -170,7 +170,7 @@ func TestHTTPErrorsNeverShowTheSecretURL(t *testing.T) {
 
 	// An error page echoing the path and token: both scrubbed.
 	_, u = serve(t, http.StatusNotFound)
-	err = NewNtfy(4, env(map[string]string{config.EnvNtfyURL: u, config.EnvNtfyToken: "tk_SECRETTOKEN"})).SendTest(ctx)
+	err = NewNtfy(4, env(map[string]string{config.EnvNtfyURL: u, config.EnvNtfyToken: "tk_SECRETTOKEN"})).SendNotice(ctx, advice.TestNotice())
 	check("echo", err)
 	if err != nil && strings.Contains(err.Error(), "tk_") {
 		t.Errorf("echo: token leaked: %v", err)
@@ -178,25 +178,25 @@ func TestHTTPErrorsNeverShowTheSecretURL(t *testing.T) {
 
 	// Plain http to "localhost" by name is refused: DNS could send it elsewhere.
 	check("localhost name", NewWebhook("slack", env(map[string]string{
-		config.EnvWebhookURL: "http://localhost:1/services/T000/B000/SECRETTOKEN"})).SendTest(ctx))
+		config.EnvWebhookURL: "http://localhost:1/services/T000/B000/SECRETTOKEN"})).SendNotice(ctx, advice.TestNotice()))
 
 	// Redirect: not followed, so the token never travels elsewhere.
 	rec, u := serve(t, http.StatusFound)
-	check("redirect", NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: u})).SendTest(ctx))
+	check("redirect", NewWebhook("slack", env(map[string]string{config.EnvWebhookURL: u})).SendNotice(ctx, advice.TestNotice()))
 	if rec.count() != 1 {
 		t.Errorf("redirect: %d requests", rec.count())
 	}
 
 	// Unreachable server.
 	check("unreachable", NewWebhook("slack", env(map[string]string{
-		config.EnvWebhookURL: "http://127.0.0.1:1/services/T000/B000/SECRETTOKEN"})).SendTest(ctx))
+		config.EnvWebhookURL: "http://127.0.0.1:1/services/T000/B000/SECRETTOKEN"})).SendNotice(ctx, advice.TestNotice()))
 
 	// Plain http to another computer is refused before anything is sent.
 	check("http remote", NewWebhook("slack", env(map[string]string{
-		config.EnvWebhookURL: "http://hooks.example.com/services/T000/B000/SECRETTOKEN"})).SendTest(ctx))
+		config.EnvWebhookURL: "http://hooks.example.com/services/T000/B000/SECRETTOKEN"})).SendNotice(ctx, advice.TestNotice()))
 
 	// A missing variable is named.
-	err = NewNtfy(4, env(nil)).SendTest(ctx)
+	err = NewNtfy(4, env(nil)).SendNotice(ctx, advice.TestNotice())
 	if err == nil || !strings.Contains(err.Error(), config.EnvNtfyURL) {
 		t.Errorf("missing URL: %v", err)
 	}
@@ -204,14 +204,14 @@ func TestHTTPErrorsNeverShowTheSecretURL(t *testing.T) {
 
 func TestRateLimitRetriedOnce(t *testing.T) {
 	rec, u := serve(t, http.StatusTooManyRequests)
-	if err := NewWebhook("discord", env(map[string]string{config.EnvWebhookURL: u})).SendTest(context.Background()); err != nil {
+	if err := NewWebhook("discord", env(map[string]string{config.EnvWebhookURL: u})).SendNotice(context.Background(), advice.TestNotice()); err != nil {
 		t.Fatal(err)
 	}
 	if rec.count() != 2 {
 		t.Errorf("%d requests, want 2", rec.count())
 	}
 	rec, u = serve(t, http.StatusTooManyRequests, http.StatusTooManyRequests)
-	err := NewWebhook("discord", env(map[string]string{config.EnvWebhookURL: u})).SendTest(context.Background())
+	err := NewWebhook("discord", env(map[string]string{config.EnvWebhookURL: u})).SendNotice(context.Background(), advice.TestNotice())
 	if err == nil || rec.count() != 2 {
 		t.Errorf("a second 429 must fail without a third try: %v, %d requests", err, rec.count())
 	}

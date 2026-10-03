@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/notify"
 )
@@ -55,7 +56,7 @@ func newTestAlertCmd(a *app) *cobra.Command {
 				if len(only) > 0 && !slices.Contains(only, c.Name()) {
 					continue
 				}
-				if err := c.SendTest(cmd.Context()); err != nil {
+				if err := c.SendNotice(cmd.Context(), advice.TestNotice()); err != nil {
 					failed++
 					_, _ = fmt.Fprintf(w, "%s: failed: %s\n", c.Name(), firstLine(err.Error()))
 					continue

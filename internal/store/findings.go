@@ -297,3 +297,25 @@ func nullString(s string) any {
 	}
 	return s
 }
+
+// LastNotice returns when a notice of kind last went to channel (zero = never).
+func (s *Store) LastNotice(ctx context.Context, channel, kind string) (time.Time, error) {
+	var sent sql.NullString
+	err := s.db.QueryRowContext(ctx, `SELECT sent_at FROM notices WHERE channel = ? AND kind = ?`, channel, kind).Scan(&sent)
+	if errors.Is(err, sql.ErrNoRows) {
+		return time.Time{}, nil
+	}
+	if err != nil {
+		return time.Time{}, fmt.Errorf("last notice on %s: %w", channel, err)
+	}
+	return parseTime(sent)
+}
+
+// RecordNotice records that a notice of kind went to channel now.
+func (s *Store) RecordNotice(ctx context.Context, channel, kind string) error {
+	if _, err := s.db.ExecContext(ctx, `INSERT INTO notices (channel, kind, sent_at) VALUES (?, ?, ?)
+		ON CONFLICT (channel, kind) DO UPDATE SET sent_at = excluded.sent_at`, channel, kind, timeArg(s.now())); err != nil {
+		return fmt.Errorf("record notice on %s: %w", channel, err)
+	}
+	return nil
+}
