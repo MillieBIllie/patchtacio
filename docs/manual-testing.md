@@ -42,8 +42,8 @@ Where to look in each scheduler:
 - Linux: `systemctl --user list-timers patchtacio-check.timer`, `journalctl --user -u patchtacio-check`;
   cron: `crontab -l`.
 - macOS: `launchctl print gui/$(id -u)/io.github.milliebillie.patchtacio.check`.
-- Windows: Task Scheduler → Task Scheduler Library → "Patchtacio check" → History; or
-  `schtasks /Query /TN "Patchtacio check" /V /FO LIST`.
+- Windows: Task Scheduler → Task Scheduler Library → "Patchtacio check (<your user name>)" → History;
+  or `schtasks /Query /TN "Patchtacio check (<your user name>)" /V /FO LIST`.
 
 ## Automated pieces
 
