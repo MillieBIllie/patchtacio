@@ -51,3 +51,25 @@ func ReadFile(t *testing.T, path string) []byte {
 	}
 	return b
 }
+
+// GoldenText compares text with the golden file at path, byte for byte.
+// Run `go test ./... -update` to rewrite golden files after a deliberate change.
+func GoldenText(t *testing.T, path, got string) {
+	t.Helper()
+	if *update {
+		if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(got), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	want, err := os.ReadFile(filepath.Clean(path)) // fixture path chosen by the test
+	if err != nil {
+		t.Fatalf("read golden (run with -update to create it): %v", err)
+	}
+	if got != string(want) {
+		t.Errorf("output differs from %s; run `go test -update` if the change is intended.\n--- got ---\n%s", path, got)
+	}
+}
