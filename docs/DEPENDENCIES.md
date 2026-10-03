@@ -27,10 +27,14 @@ Dependabot opens one grouped `build(deps)` PR a week for Go modules.
   - `github.com/remyoudompheng/bigfft` (modernc)
 - **`github.com/atotto/clipboard`** comes in through `charm.land/bubbles` text inputs, which the
   picker's search box uses (checked in bubbles v2.0.0 and clipboard v0.1.4):
-  - On Linux and macOS, its `init` looks up `wl-copy`/`wl-paste`, `xclip`, `xsel` or the Termux
-    tools on `PATH` when Patchtacio starts, but runs nothing.
-  - Pressing **Ctrl+V while searching in the `init` picker** runs one of them to read the
-    clipboard. On Windows it calls the clipboard API in `user32.dll`; no program is started.
+  - On Linux and the BSDs, its `init` looks up, in order, `wl-copy`/`wl-paste` (only when
+    `WAYLAND_DISPLAY` is set), `xclip`, `xsel`, the Termux tools, then `clip.exe` +
+    `powershell.exe` (for WSL) on `PATH` when Patchtacio starts, but runs nothing.
+  - On macOS there is no lookup: it always uses `pbpaste` from `PATH`.
+  - Pressing **Ctrl+V while searching in the `init` picker** runs the chosen program to read the
+    clipboard; under WSL with none of the Linux tools installed, that is
+    `powershell.exe Get-Clipboard`. On Windows it calls the clipboard API in `user32.dll`; no
+    program is started.
   - Nothing else in Patchtacio triggers it. Revisit this if a form ever runs without a person at
     the keyboard, or if a later huh version changes the binding.
 
