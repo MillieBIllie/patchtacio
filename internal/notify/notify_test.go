@@ -358,7 +358,7 @@ func TestNoticeOncePerDay(t *testing.T) {
 	good := &fakeChannel{name: "email"}
 	bad := &fakeChannel{name: "webhook", fail: true}
 	d, now, _ := setup(t, DigestOff, good, bad)
-	n := advice.FeedNotice("CISA KEV catalog", time.Date(2026, 9, 28, 0, 0, 0, 0, time.UTC), "connection refused")
+	n := advice.FeedNotice(advice.KEVFeed, time.Date(2026, 9, 28, 0, 0, 0, 0, time.UTC), "connection refused")
 	res, err := d.Notice(ctx, "kev-stale", n, 24*time.Hour)
 	if err == nil || res[0].Sent != 1 || res[1].Err == nil {
 		t.Fatalf("first: %+v, %v", res, err)
@@ -386,7 +386,7 @@ func TestNoticeIgnoresFutureTimes(t *testing.T) {
 	ch := &fakeChannel{name: "email"}
 	d, now, ms := setup(t, DigestOff, ch)
 	ms.notices[d.key(ch)+"|kev-stale"] = now.AddDate(1, 0, 0)
-	if res, err := d.Notice(ctx, "kev-stale", advice.FeedNotice("CISA KEV catalog", time.Time{}, ""), 24*time.Hour); err != nil || res[0].Sent != 1 {
+	if res, err := d.Notice(ctx, "kev-stale", advice.FeedNotice(advice.KEVFeed, time.Time{}, ""), 24*time.Hour); err != nil || res[0].Sent != 1 {
 		t.Errorf("future-dated notice suppressed the next: %+v, %v", res, err)
 	}
 }

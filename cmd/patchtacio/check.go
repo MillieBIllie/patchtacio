@@ -16,6 +16,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/catalog"
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/feeds"
@@ -74,18 +75,27 @@ func newCheckCmd(a *app) *cobra.Command {
 				return err
 			}
 			defer closeFn()
-			// M2 checks KEV only, so it updates and reports on KEV only.
-			u.Sources = slices.DeleteFunc(u.Sources, func(s feeds.Source) bool { return s.Name() != "kev" })
+			// KEV always; endoflife.date only when a product has a version to
+			// look up, so KEV-only users fetch nothing more.
+			needEOL := wantsEOL(cat, cfg)
+			u.Sources = slices.DeleteFunc(u.Sources, func(s feeds.Source) bool {
+				return s.Name() != "kev" && (s.Name() != "eol" || !needEOL)
+			})
 			results, err := u.Update(cmd.Context(), offline)
 			if err != nil {
 				return fmt.Errorf("update feeds: %w", err)
 			}
 			warn := cmd.ErrOrStderr()
-			code := exitOK
+			kevCode, eolCode := exitOK, exitOK
 			for _, r := range results {
 				// Success lines are for `feeds update`; check prints only what
 				// changes how far the result can be trusted.
-				code = worse(code, a.reportResult(io.Discard, warn, r, offline))
+				c := a.reportResult(io.Discard, warn, r, offline)
+				if r.Status.Name == "eol" {
+					eolCode = worse(eolCode, c)
+				} else {
+					kevCode = worse(kevCode, c)
+				}
 			}
 			kc, st, err := a.loadKEV(cmd.Context(), u)
 			if err != nil {
@@ -93,8 +103,9 @@ func newCheckCmd(a *app) *cobra.Command {
 				if sendAlerts {
 					// No data means no alerts: say so on the alert channels,
 					// or silence would read as an all clear.
-					reps, alertErr := a.sendAlerts(cmd.Context(), u.Store, cfg, nil, false,
-						&feedProblem{title: st.Title, lastGood: st.CheckedAt, why: logging.RedactString(err.Error())})
+					reps, alertErr := a.sendAlerts(cmd.Context(), u.Store, cfg, nil, nil, false, []feedProblem{{
+						kind: noticeKEVStale, feed: advice.KEVFeed, lastGood: st.CheckedAt, why: logging.RedactString(err.Error()),
+					}})
 					out := cmd.OutOrStdout()
 					if asJSON {
 						out = io.Discard // stdout stays JSON (or empty)
@@ -103,13 +114,31 @@ func newCheckCmd(a *app) *cobra.Command {
 				}
 				return outcome(exitToolError)
 			}
-			code = worse(code, stateCode(st.State)) // in case a source reported no result
-			stale := code != exitOK
+			kevCode = worse(kevCode, stateCode(st.State)) // in case a source reported no result
+			stale := kevCode != exitOK
+			var problems []feedProblem
+			if st.State != feeds.Fresh {
+				// Only when the copy is actually out of date: one failed fetch
+				// while it is still fresh is not worth an alert.
+				problems = append(problems, feedProblem{kind: noticeKEVStale, feed: advice.KEVFeed, lastGood: st.CheckedAt, why: staleWhy(st)})
+			}
 
 			findings := match.New(cat).KEV(kc.Vulnerabilities, cfg.IDs())
+			var eols []match.EOLStatus
+			if needEOL {
+				ec, est, err := a.loadEOL(cmd.Context(), u)
+				if err != nil {
+					_, _ = fmt.Fprintf(warn, "Cannot check end of life: %s\n", firstLine(logging.RedactString(err.Error())))
+					eolCode = worse(eolCode, exitToolError)
+				}
+				if est.State != feeds.Fresh {
+					problems = append(problems, feedProblem{kind: noticeEOLStale, feed: advice.EOLFeed, lastGood: est.CheckedAt, why: staleWhy(est)})
+				}
+				eols = match.EOL(cat, ec, ticked(cfg), a.today())
+			}
 			// Every run records what matched, so `patchtacio ack` works after
 			// a plain check; only --notify sends anything.
-			if err := u.Store.RecordFindings(cmd.Context(), storedFindings(findings)); err != nil {
+			if err := u.Store.RecordFindings(cmd.Context(), append(storedFindings(findings), storedEOLFindings(eols)...)); err != nil {
 				return fmt.Errorf("save findings: %w", err)
 			}
 			allFindings := slices.Clone(findings) // --since narrows the report, never the alerts (DeleteFunc works in place)
@@ -117,22 +146,18 @@ func newCheckCmd(a *app) *cobra.Command {
 				findings = slices.DeleteFunc(findings, func(f match.Finding) bool { return f.Vuln.DateAdded.Before(sinceDate.Time) })
 			}
 			rep := a.newCheckReport(cat, cfg, kc.Version, kc.Released, st, stale, sinceDate, findings)
+			rep.EndOfLife = a.eolReport(cat, cfg, eols, needEOL)
+			for _, e := range rep.EndOfLife {
+				if e.State.IsFinding() {
+					rep.eolFindings++
+				}
+			}
 			if err := markAcknowledged(cmd.Context(), u.Store, &rep); err != nil {
 				return err
 			}
 			var alertErr error
 			if sendAlerts {
-				var problem *feedProblem
-				// Only when the copy is actually out of date: one failed
-				// fetch while it is still fresh is not worth an alert.
-				if st.State != feeds.Fresh {
-					why := st.StaleReason
-					if why == "" {
-						why = st.LastError
-					}
-					problem = &feedProblem{title: st.Title, lastGood: st.CheckedAt, why: logging.RedactString(why)}
-				}
-				rep.Alerts, alertErr = a.sendAlerts(cmd.Context(), u.Store, cfg, allFindings, true, problem)
+				rep.Alerts, alertErr = a.sendAlerts(cmd.Context(), u.Store, cfg, allFindings, eols, true, problems)
 			}
 			if asJSON {
 				enc := json.NewEncoder(cmd.OutOrStdout())
@@ -142,6 +167,7 @@ func newCheckCmd(a *app) *cobra.Command {
 				}
 			} else {
 				a.printCheck(cmd.OutOrStdout(), rep)
+				a.printEOL(cmd.OutOrStdout(), rep)
 			}
 			if sendAlerts {
 				out := cmd.OutOrStdout()
@@ -153,10 +179,10 @@ func newCheckCmd(a *app) *cobra.Command {
 			if alertErr != nil {
 				return outcome(exitToolError) // a scheduled run must not fail silently
 			}
-			if len(findings) > 0 {
+			if len(findings) > 0 || rep.eolFindings > 0 {
 				return outcome(exitFindings) // stale warnings, if any, are already printed
 			}
-			return outcome(code)
+			return outcome(worse(kevCode, eolCode))
 		},
 	}
 	cmd.Flags().BoolVar(&offline, "offline", false, "do not use the network; check against the saved copy")
@@ -205,7 +231,9 @@ type checkReport struct {
 	Since            feeds.Date     `json:"since,omitzero"`
 	Products         []checkProduct `json:"products"`
 	Findings         []checkFinding `json:"findings"`
+	EndOfLife        []eolEntry     `json:"endOfLife"`        // products with endoflife.date data
 	Alerts           []alertReport  `json:"alerts,omitempty"` // with --notify
+	eolFindings      int
 	today            time.Time      // for "passed" due dates
 	byProduct        map[string]int // finding count per product
 	newest           map[string]feeds.Date
@@ -381,9 +409,14 @@ func (a *app) explainKeychain(warn io.Writer) {
 
 // markAcknowledged sets Acknowledged on the report's findings.
 func markAcknowledged(ctx context.Context, st *store.Store, rep *checkReport) error {
-	ids := make([]string, len(rep.Findings))
-	for i, f := range rep.Findings {
-		ids[i] = f.ID
+	ids := make([]string, 0, len(rep.Findings)+len(rep.EndOfLife))
+	for _, f := range rep.Findings {
+		ids = append(ids, f.ID)
+	}
+	for _, e := range rep.EndOfLife {
+		if e.ID != "" {
+			ids = append(ids, e.ID)
+		}
 	}
 	states, err := st.States(ctx, ids)
 	if err != nil {
@@ -391,6 +424,11 @@ func markAcknowledged(ctx context.Context, st *store.Store, rep *checkReport) er
 	}
 	for i := range rep.Findings {
 		rep.Findings[i].Acknowledged = states[rep.Findings[i].ID].Acked()
+	}
+	for i := range rep.EndOfLife {
+		if id := rep.EndOfLife[i].ID; id != "" {
+			rep.EndOfLife[i].Acknowledged = states[id].Acked()
+		}
 	}
 	return nil
 }

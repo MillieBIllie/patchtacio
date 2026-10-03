@@ -216,6 +216,19 @@ func (a *app) loadKEV(ctx context.Context, u *feeds.Updater) (*kev.Catalog, feed
 	return kc, st, nil
 }
 
+// loadEOL reads the saved endoflife.date data.
+func (a *app) loadEOL(ctx context.Context, u *feeds.Updater) (*eol.Catalog, feeds.Status, error) {
+	raw, st, err := u.ReadCache(ctx, "eol")
+	if err != nil {
+		return nil, st, err
+	}
+	ec, err := eol.ParseCatalog(raw)
+	if err != nil {
+		return nil, st, fmt.Errorf("the saved copy of %s could not be read: %w", st.Title, err)
+	}
+	return ec, st, nil
+}
+
 func kevEntries(kc *kev.Catalog) []catalog.KEVEntry {
 	out := make([]catalog.KEVEntry, len(kc.Vulnerabilities))
 	for i, v := range kc.Vulnerabilities {
