@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/paths"
 	"github.com/milliebillie/patchtacio/internal/schedule"
@@ -26,6 +27,7 @@ type fakeScheduler struct {
 	notes      []string
 	installErr error
 	runs       int
+	started    string // what the scheduler starts, if not the job's program
 }
 
 func (f *fakeScheduler) Install(_ context.Context, j schedule.Job) (schedule.Result, error) {
@@ -36,7 +38,11 @@ func (f *fakeScheduler) Install(_ context.Context, j schedule.Job) (schedule.Res
 		return schedule.Result{}, err
 	}
 	f.installed, f.job = true, j
-	return schedule.Result{Method: f.method, Launch: f.launch, Notes: f.notes}, nil
+	run := j
+	if f.started != "" {
+		run.Program = f.started
+	}
+	return schedule.Result{Method: f.method, Launch: f.launch, Job: run, Notes: f.notes}, nil
 }
 
 func (f *fakeScheduler) Uninstall(context.Context) ([]string, error) {
@@ -101,6 +107,7 @@ func TestWatchInstallNeedsConfigAndChannels(t *testing.T) {
 func TestWatchInstall(t *testing.T) {
 	e := newTestEnv(t)
 	f, prog := e.useFakeScheduler(t)
+	defaultCfg := filepath.Join(os.Getenv(paths.EnvConfigDir), config.FileName)
 	f.notes = []string{"The check runs only while you are logged in."}
 	e.exec(t, "init", "--products", "citrix-netscaler")
 	addNotify(t, "notify:\n  desktop: true\n")
@@ -109,7 +116,7 @@ func TestWatchInstall(t *testing.T) {
 	requireCode(t, code, exitOK, out, errOut)
 	requireContains(t, out,
 		"Set up the daily check (systemd user timer): `patchtacio check --notify` every day at 08:17.",
-		"Runs:      "+commandLine(prog, []string{"watch", "run"}),
+		"Runs:      "+commandLine(prog, []string{"watch", "run", "--config", defaultCfg}),
 		"Next run:  Fri 2 Oct 2026 08:17", // clock: 1 Oct 09:00
 		filepath.Join("logs", "patchtacio.log"),
 		"Note: The check runs only while you are logged in.",
@@ -117,7 +124,8 @@ func TestWatchInstall(t *testing.T) {
 	if errOut != "" {
 		t.Errorf("no warnings expected for a desktop channel:\n%s", errOut)
 	}
-	if f.job.Program != prog || !slices.Equal(f.job.Args, []string{"watch", "run"}) || f.job.At() != "08:17" {
+	// The configuration install checked is named, so the job reads the same one.
+	if f.job.Program != prog || !slices.Equal(f.job.Args, []string{"watch", "run", "--config", defaultCfg}) || f.job.At() != "08:17" {
 		t.Errorf("job %+v", f.job)
 	}
 	// The test's PATCHTACIO_*_DIR overrides travel with the job.
@@ -379,4 +387,76 @@ func TestWatchRunLogsAndRecords(t *testing.T) {
 	}
 	log = string(readFile(t, filepath.Join(os.Getenv(paths.EnvCacheDir), "logs", logFileName)))
 	requireContains(t, log, "Error: no products chosen yet", "finished, exit code 2")
+}
+
+func TestWatchRunFailureShowsDesktopNotice(t *testing.T) {
+	e := newTestEnv(t)
+	var shown []advice.Notice
+	e.app.desktopNotice = func(_ context.Context, n advice.Notice) error { shown = append(shown, n); return nil }
+	_, _, code := e.exec(t, "watch", "run") // no configuration at all
+	requireCode(t, code, exitToolError, "", "")
+	if len(shown) != 1 || !strings.Contains(shown[0].Subject, "daily check failed on 1 Oct 2026") {
+		t.Fatalf("desktop notices %+v", shown)
+	}
+	log := string(readFile(t, filepath.Join(os.Getenv(paths.EnvCacheDir), "logs", logFileName)))
+	requireContains(t, log, "Showed a desktop notification about this failure.")
+
+	// A run with findings is not a failure: no notice.
+	shown = nil
+	e.useFakeChannels()
+	e.exec(t, "init", "--products", "citrix-netscaler")
+	addNotify(t, "notify:\n  desktop: true\n")
+	_, _, code = e.exec(t, "watch", "run")
+	requireCode(t, code, exitFindings, "", "")
+	if len(shown) != 0 {
+		t.Errorf("notice after a successful run: %+v", shown)
+	}
+}
+
+func TestWatchStatusWithoutRecords(t *testing.T) {
+	e := newTestEnv(t)
+	f, _ := e.useFakeScheduler(t)
+	f.installed = true // set up, but neither record exists (data folder moved, say)
+	out, _, code := e.exec(t, "watch", "--status")
+	requireCode(t, code, exitToolError, out, "")
+	requireContains(t, out, "cannot tell when it was set up")
+}
+
+func TestWatchStatusChecksStartedProgram(t *testing.T) {
+	e := newTestEnv(t)
+	f, prog := e.useFakeScheduler(t)
+	f.method, f.launch = schedule.MethodTask, schedule.LaunchWindowless
+	gui := filepath.Join(filepath.Dir(prog), schedule.WindowlessName)
+	if err := os.WriteFile(gui, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	f.started = gui
+	e.exec(t, "init", "--products", "citrix-netscaler")
+	addNotify(t, "notify:\n  desktop: true\n")
+	e.exec(t, "watch", "--install")
+	if out, _, code := e.exec(t, "watch", "--status"); code != exitOK {
+		t.Fatalf("status with both programs present: exit %d\n%s", code, out)
+	}
+	if err := os.Remove(gui); err != nil {
+		t.Fatal(err)
+	}
+	out, _, code := e.exec(t, "watch", "--status")
+	requireCode(t, code, exitToolError, out, "")
+	requireContains(t, out, schedule.WindowlessName+", is missing")
+}
+
+func TestSecretWarningsLinuxKeychain(t *testing.T) {
+	e := newTestEnv(t)
+	e.app.secrets = secrets.Mock(os.Getenv(paths.EnvConfigDir), func(string) string { return "" })
+	sec, _ := secrets.ByName(config.EnvWebhookURL)
+	if err := e.app.secrets.Set(sec, "https://hooks.slack.com/services/T/B/x"); err != nil {
+		t.Fatal(err)
+	}
+	n := &config.Notify{Webhook: &config.Webhook{Kind: "slack"}}
+	if w := e.app.secretWarnings(n, "linux"); len(w) != 1 || !strings.Contains(w[0], "logged out") {
+		t.Errorf("linux keychain: %q", w)
+	}
+	if w := e.app.secretWarnings(n, "windows"); len(w) != 0 {
+		t.Errorf("windows keychain needs no warning: %q", w)
+	}
 }

@@ -17,6 +17,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/catalog"
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/feeds"
@@ -112,7 +113,9 @@ func newTestEnv(t *testing.T) *testEnv {
 		channels: func(*config.Notify) ([]notify.Channel, error) {
 			return nil, errors.New("test did not set channels (call useFakeChannels)")
 		},
-		log: slog.New(slog.DiscardHandler),
+		// Never a real desktop pop-up from a test.
+		desktopNotice: func(context.Context, advice.Notice) error { return errors.New("test did not set desktopNotice") },
+		log:           slog.New(slog.DiscardHandler),
 	}
 	return e
 }

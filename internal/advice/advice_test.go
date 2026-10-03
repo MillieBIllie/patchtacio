@@ -223,3 +223,21 @@ func TestEOLContradictionsAndLinks(t *testing.T) {
 		t.Errorf("links:\n%s", body)
 	}
 }
+
+func TestRunFailedNotice(t *testing.T) {
+	n := RunFailedNotice(time.Date(2026, 10, 3, 8, 17, 0, 0, time.UTC))
+	if n.Subject != "[Check needed] Patchtacio's daily check failed on 3 Oct 2026" {
+		t.Errorf("subject %q", n.Subject)
+	}
+	if !strings.Contains(n.Body, "not an all clear") || !strings.Contains(n.Body, "patchtacio watch --status") {
+		t.Errorf("body must say it is not an all clear and what to run:\n%s", n.Body)
+	}
+	if len(n.Short) > 160 {
+		t.Errorf("short text is %d characters, over 160", len(n.Short))
+	}
+	for _, s := range []string{n.Subject, n.Body, n.Short} {
+		if strings.Contains(s, "!") || strings.Contains(strings.ToLower(s), "safe") {
+			t.Errorf("banned wording in %q", s)
+		}
+	}
+}

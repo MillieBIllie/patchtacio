@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/config"
 	"github.com/milliebillie/patchtacio/internal/feeds"
 	"github.com/milliebillie/patchtacio/internal/feeds/eol"
@@ -49,6 +50,8 @@ type app struct {
 	executable func() (string, error)
 	lookPath   func(string) (string, error)
 	randIntN   func(int) int
+	// desktopNotice tells the desktop a scheduled run failed; fake in tests.
+	desktopNotice func(context.Context, advice.Notice) error
 
 	// Set from global flags before a command runs.
 	verbosity  int
@@ -64,14 +67,15 @@ func defaultApp() *app {
 		sources: func() []feeds.Source {
 			return []feeds.Source{kev.New(), eol.New()}
 		},
-		newClient:  func(l *slog.Logger) *httpcache.Client { return httpcache.New(version.UserAgent(), l) },
-		pick:       huhPicker(os.Stdin, os.Stdout, os.Getenv("ACCESSIBLE") != ""),
-		isTerminal: stdinIsTerminal,
-		scheduler:  realScheduler,
-		executable: os.Executable,
-		lookPath:   exec.LookPath,
-		randIntN:   rand.IntN, // spreads install times; not security relevant
-		log:        slog.New(slog.DiscardHandler),
+		newClient:     func(l *slog.Logger) *httpcache.Client { return httpcache.New(version.UserAgent(), l) },
+		pick:          huhPicker(os.Stdin, os.Stdout, os.Getenv("ACCESSIBLE") != ""),
+		isTerminal:    stdinIsTerminal,
+		scheduler:     realScheduler,
+		executable:    os.Executable,
+		lookPath:      exec.LookPath,
+		randIntN:      rand.IntN, // spreads install times; not security relevant
+		desktopNotice: notify.NewDesktop().SendNotice,
+		log:           slog.New(slog.DiscardHandler),
 	}
 	a.channels = func(n *config.Notify) ([]notify.Channel, error) { return realChannels(n, a.secretStore().Getenv) }
 	return a
