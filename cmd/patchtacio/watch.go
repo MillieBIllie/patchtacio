@@ -483,6 +483,9 @@ func (a *app) watchRun(cmd *cobra.Command) error {
 	_, _ = fmt.Fprintf(w, "\n=== %s scheduled check started (patchtacio %s) ===\n", started.Format(time.RFC3339), version.Get().Version)
 
 	check := newCheckCmd(a)
+	// Run on its own, check does not inherit the root's settings: without
+	// these cobra would log "Error: findings at or above threshold" and usage.
+	check.SilenceErrors, check.SilenceUsage = true, true
 	check.SetArgs([]string{"--notify"})
 	check.SetIn(strings.NewReader(""))
 	check.SetOut(w)

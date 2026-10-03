@@ -357,6 +357,11 @@ func TestWatchRunLogsAndRecords(t *testing.T) {
 		"=== 2026-10-01T09:00:00Z scheduled check started (patchtacio",
 		"KEV entries match your products",
 		"=== 2026-10-01T09:00:00Z finished, exit code 1 ===")
+	for _, noise := range []string{"Usage:", "Error:"} {
+		if strings.Contains(log, noise) {
+			t.Errorf("log of a run with findings contains %q:\n%s", noise, log)
+		}
+	}
 	rec, err := readJSON[watchRun](dataFile(watchRunFile))
 	if err != nil || rec == nil || rec.ExitCode != exitFindings || rec.Error != "" {
 		t.Errorf("run record %+v, %v", rec, err)
