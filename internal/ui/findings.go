@@ -10,6 +10,8 @@ type findingsData struct {
 	Err        string
 	NoProducts bool
 	Open       []Finding // not acknowledged
+	Recent     []Finding // of Open: added to KEV in the last 30 days
+	Older      []Finding // of Open: the rest
 	Acked      []Finding
 	EOLCards   []EOLEntry // ended or ending
 	EOLOther   []EOLEntry // supported, unknown, not checked
@@ -42,6 +44,11 @@ func (s *Server) findingsPage(w http.ResponseWriter, r *http.Request, sess *sess
 				d.Acked = append(d.Acked, f)
 			} else {
 				d.Open = append(d.Open, f)
+				if f.Recent {
+					d.Recent = append(d.Recent, f)
+				} else {
+					d.Older = append(d.Older, f)
+				}
 			}
 		}
 		for _, e := range d.Report.EOL {

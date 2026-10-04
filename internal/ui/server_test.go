@@ -346,6 +346,7 @@ func TestLaunchLinkWorksOnceAndExpires(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	_, _ = io.Copy(io.Discard, resp.Body)
 	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusForbidden {
 		t.Errorf("second use of the launch link: %d", resp.StatusCode)
@@ -394,6 +395,7 @@ func TestOtherHostNamesAreRefused(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		_, _ = io.Copy(io.Discard, resp.Body)
 		_ = resp.Body.Close()
 		if resp.StatusCode != http.StatusMisdirectedRequest {
 			t.Errorf("Host %s: %d", host, resp.StatusCode)
@@ -414,6 +416,7 @@ func TestPostsNeedTheCSRFTokenAndOurOrigin(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		_, _ = io.Copy(io.Discard, resp.Body)
 		_ = resp.Body.Close()
 		return resp.StatusCode
 	}
@@ -771,6 +774,7 @@ func TestMethodsAndUnknownPaths(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	_, _ = io.Copy(io.Discard, resp.Body)
 	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusMethodNotAllowed {
 		t.Errorf("PUT: %d", resp.StatusCode)

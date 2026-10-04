@@ -17,7 +17,7 @@ so check each finding against the version you run.</p>
     <span class="small" data-ticked="#products">{{.Ticked}} ticked</span>
   </div>
   <table id="products" class="products">
-    <thead><tr><th scope="col">Run it?</th><th scope="col">Product</th><th scope="col">Version</th><th scope="col">Notes</th></tr></thead>
+    <thead><tr><th scope="col">Use</th><th scope="col">Product</th><th scope="col">Version</th><th scope="col">Notes</th></tr></thead>
     <tbody>
     {{range .Rows}}
       <tr data-search="{{.Search}}">
@@ -31,6 +31,7 @@ so check each finding against the version you run.</p>
     </tbody>
   </table>
   <p class="small">Missing a product? The list grows with each release; see "Adding a product" in the Patchtacio documentation.</p>
-  <p><button type="submit" class="primary" {{if .Problem}}disabled{{end}}>Save products</button></p>
+  <div class="savebar"><button type="submit" class="primary" {{if .Problem}}disabled{{end}}>Save products</button>
+    <span class="small">Ticked products are saved with their versions and notes.</span></div>
 </form>
 {{end}}{{end}}

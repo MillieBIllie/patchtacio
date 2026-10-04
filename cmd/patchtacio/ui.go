@@ -263,7 +263,10 @@ func (b *uiBackend) Report(ctx context.Context, update bool) (*ui.Report, error)
 		if err != nil {
 			return nil, err
 		}
-		r.Findings = append(r.Findings, ui.Finding{ID: f.ID, CVE: f.CVEID, Acked: f.Acknowledged, Card: card})
+		r.Findings = append(r.Findings, ui.Finding{
+			ID: f.ID, CVE: f.CVEID, Acked: f.Acknowledged, Card: card, Added: calDate(f.DateAdded),
+			Recent: !f.DateAdded.IsZero() && !f.DateAdded.Before(today.AddDate(0, 0, -recentDays)),
+		})
 	}
 	for _, e := range rep.EndOfLife {
 		entry := ui.EOLEntry{ID: e.ID, Product: e.Product, Version: e.Version, Release: e.Release, What: eolWhat(e, rep.today), Acked: e.Acknowledged}
@@ -289,6 +292,9 @@ func (b *uiBackend) Report(ctx context.Context, update bool) (*ui.Report, error)
 	}
 	return r, nil
 }
+
+// recentDays is how new a KEV entry is to be listed first in the UI.
+const recentDays = 30
 
 // warningLines turns check's warnings into one entry per warning (indented
 // lines continue the one before) and points the CLI hints at the UI.
@@ -340,7 +346,7 @@ func (b *uiBackend) Schedule(ctx context.Context) (*ui.Schedule, error) {
 	}
 	s := &ui.Schedule{
 		Installed: ws.Installed, Method: ws.Method, At: ws.At, Command: ws.Command, LastRun: ws.LastRun,
-		LogFile: ws.LogFile, Notes: ws.Notes, Problems: ws.Problems,
+		LogFile: ws.LogFile, Notes: ws.Notes, Problems: uiHints(ws.Problems),
 	}
 	if !ws.NextRun.IsZero() {
 		s.NextRun = ws.NextRun.Format("Mon 2 Jan 2006 15:04")
@@ -349,6 +355,17 @@ func (b *uiBackend) Schedule(ctx context.Context) (*ui.Schedule, error) {
 		s.Notes = append([]string{"Started as " + ws.Launch + "."}, s.Notes...)
 	}
 	return s, nil
+}
+
+// uiHints points the CLI's "run `patchtacio watch --install` again" at the
+// button on the Daily check page.
+func uiHints(lines []string) []string {
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		out[i] = strings.ReplaceAll(l, "run `patchtacio watch --install` again", "set it up again below")
+		out[i] = strings.ReplaceAll(out[i], "Run `patchtacio watch --install` again", "Set it up again below")
+	}
+	return out
 }
 
 func (b *uiBackend) InstallSchedule(ctx context.Context, at string) (*ui.ScheduleSetup, error) {

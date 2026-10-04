@@ -99,10 +99,12 @@ type ReportProduct struct {
 
 // Finding is one KEV entry matching one of the user's products.
 type Finding struct {
-	ID    string // kev/<product>/<CVE>
-	CVE   string
-	Acked bool
-	Card  advice.Card
+	ID     string // kev/<product>/<CVE>
+	CVE    string
+	Added  string // when CISA added it, e.g. "2 Oct 2026"
+	Recent bool   // added in the last 30 days
+	Acked  bool
+	Card   advice.Card
 }
 
 // EOLEntry is one product's end-of-life answer.

@@ -22,6 +22,14 @@
 </form>
 {{end}}
 
+{{define "open"}}{{/* . is map: F (a Finding), CSRF */}}
+<details class="finding">
+  <summary>{{.F.Card.Headline}} <span class="added">added {{.F.Added}}</span></summary>
+  {{template "card" .F.Card}}
+  {{template "ack" (dict "ID" .F.ID "CSRF" .CSRF)}}
+</details>
+{{end}}
+
 {{define "content"}}{{with .Data}}
 <h1>Findings</h1>
 {{if .Err}}<div class="flash error" role="alert"><strong>Could not check your products</strong><ul><li>{{.Err}}</li></ul></div>
@@ -50,13 +58,19 @@ Download it with the button above (it needs internet access to cisa.gov or githu
   <h2>Known exploited vulnerabilities</h2>
   {{if .Open}}
   <p class="lead">{{plural (len .Open) "entry" "entries"}} on CISA's list of exploited vulnerabilities {{if eq (len .Open) 1}}matches{{else}}match{{end}} your products and {{if eq (len .Open) 1}}is{{else}}are{{end}} not marked as dealt with.
-  Attackers are already using these flaws. Open each one to see what to do.</p>
-  {{range .Open}}
-  <details class="finding">
-    <summary>{{.Card.Headline}}</summary>
-    {{template "card" .Card}}
-    {{template "ack" (dict "ID" .ID "CSRF" $.CSRF)}}
-  </details>
+  Attackers are already using these flaws. Open each one to see what to do; start with the newest.</p>
+  <table class="summary">
+    <thead><tr><th scope="col">Product</th><th scope="col">Matching entries</th></tr></thead>
+    <tbody>{{range .Report.Products}}<tr><td>{{.Display}}{{if .Version}} {{.Version}}{{end}}</td><td>{{.Findings}}</td></tr>{{end}}</tbody>
+  </table>
+  {{if .Recent}}
+  <h3>Added to CISA's list in the last 30 days ({{len .Recent}})</h3>
+  {{range .Recent}}{{template "open" (dict "F" . "CSRF" $.CSRF)}}{{end}}
+  {{end}}
+  {{if .Older}}
+  <h3>{{if .Recent}}Older entries{{else}}Entries{{end}} ({{len .Older}})</h3>
+  <p class="small">Older entries are still exploited. Many are fixed by updates you may already have installed: check your version against the vendor advisory, then mark each as dealt with.</p>
+  {{range .Older}}{{template "open" (dict "F" . "CSRF" $.CSRF)}}{{end}}
   {{end}}
   {{else}}
   <p>None of your products has an open entry on CISA's list in the data Patchtacio has. This is not an all clear:

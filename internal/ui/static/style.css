@@ -85,9 +85,18 @@ dl { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; }
 dt { color: var(--muted); }
 dd { margin: 0; overflow-wrap: anywhere; }
 .busy { cursor: progress; }
+.savebar { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem;
+  padding: .75rem 0; background: var(--bg); border-top: 1px solid var(--line); }
+.added { font-weight: 400; color: var(--muted); font-size: .85rem; white-space: nowrap; }
+table.summary { width: auto; margin: .5rem 0 1rem; }
 @media (max-width: 40rem) {
+  table.products, table.products tbody { display: block; width: 100%; }
   table.products thead { display: none; }
   table.products tr { display: grid; grid-template-columns: 2rem 1fr; gap: .25rem; padding: .5rem 0; border-bottom: 1px solid var(--line); }
   table.products td { border: 0; padding: 0; }
   table.products td:nth-child(3), table.products td:nth-child(4) { grid-column: 2; }
+  table.products td input { width: 100%; }
+  table.products td:nth-child(3) input { width: 100%; }
+  header.top { gap: .5rem 1rem; }
+  .toolbar input { min-width: 0; }
 }
