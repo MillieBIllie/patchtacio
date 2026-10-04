@@ -157,7 +157,8 @@ func TestGolden(t *testing.T) {
 			}
 			short := Short(m)
 			got := "=== email subject\n" + subject + "\n=== email body\n" + body +
-				"=== chat title\n" + chat.Title + "\n=== chat body\n" + chat.Body + "\n=== short\n" + short + "\n"
+				"=== chat title\n" + chat.Title + "\n=== chat body\n" + chat.Body + "\n=== short\n" + short + "\n" +
+				"=== web UI cards\n" + cardsText(t, m)
 			testutil.GoldenText(t, filepath.Join("testdata", name+".golden"), got)
 
 			if n := utf8.RuneCountInString(short); n > ShortLimit {
@@ -240,4 +241,52 @@ func TestRunFailedNotice(t *testing.T) {
 			t.Errorf("banned wording in %q", s)
 		}
 	}
+}
+
+// cardsText renders the web UI cards of m as text, for the golden files.
+func cardsText(t *testing.T, m Message) string {
+	t.Helper()
+	var cards []Card
+	for _, it := range m.Items {
+		c, err := KEVCard(it, m.Today)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cards = append(cards, c)
+	}
+	for _, it := range m.EOL {
+		c, err := EOLCard(it, m.Today)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cards = append(cards, c)
+	}
+	var b strings.Builder
+	for i, c := range cards {
+		if i == 3 {
+			fmt.Fprintf(&b, "(%d more)\n", len(cards)-i)
+			break
+		}
+		fmt.Fprintf(&b, "# %s\n", c.Headline)
+		for _, l := range c.Affected {
+			fmt.Fprintf(&b, "affected: %s\n", l)
+		}
+		if c.Caveat != "" {
+			fmt.Fprintf(&b, "caveat: %s\n", c.Caveat)
+		}
+		for _, w := range c.Why {
+			fmt.Fprintf(&b, "why: %s\n", w)
+		}
+		fmt.Fprintf(&b, "%s:\n", c.ToDo)
+		for j, s := range c.Steps {
+			fmt.Fprintf(&b, "  %d. %s\n", j+1, s)
+		}
+		if c.Deadline != "" {
+			fmt.Fprintf(&b, "deadline: %s\n", c.Deadline)
+		}
+		for _, l := range c.Links {
+			fmt.Fprintf(&b, "link: %s: %s\n", l.Label, l.URL)
+		}
+	}
+	return b.String()
 }

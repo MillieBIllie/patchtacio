@@ -31,3 +31,12 @@ When you have dealt with it, run: patchtacio ack eol/microsoft-windows-server/20
 
 === short
 Patchtacio: Microsoft Windows Server 2016 reached end of life on 30 Sep 2026: no more security updates. Upgrade. Details: patchtacio check
+=== web UI cards
+# [End of life since 30 Sep 2026] Microsoft Windows Server 2016: security updates have stopped
+affected: Microsoft Windows Server, version 2016
+affected: That is release 2016 on endoflife.date.
+why: Security updates for Microsoft Windows Server 2016 stopped on 30 Sep 2026: newly found flaws in it, including ones attackers use, are not fixed any more. Extended support (often paid) is listed until 30 Sep 2029.
+What to do:
+  1. Upgrade to a supported release. The vendor's lifecycle page says which releases are supported; see https://endoflife.date/windows-server
+  2. Until you can upgrade, limit who can reach it (for example, no access from the internet) and keep an eye on its vendor's advisories.
+link: endoflife.date: https://endoflife.date/windows-server

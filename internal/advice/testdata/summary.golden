@@ -55,3 +55,40 @@ When you have dealt with one, run: patchtacio ack <CVE ID>
 
 === short
 Patchtacio: 3 exploited flaws in your products (Fortinet FortiOS, Microsoft Exchange Server +1). Earliest deadline 12 Oct 2026. Details: patchtacio check
+=== web UI cards
+# [Action needed now] Microsoft Exchange Server: actively exploited flaw (CVE-2023-21529)
+affected: Microsoft Exchange Server (on-premises)
+caveat: Patchtacio matched this by product name and has not checked whether your version is affected.
+why: Attackers are already using this flaw: Microsoft Exchange Server Deserialization of Untrusted Data Vulnerability (CVE-2023-21529). CISA added it to its list of exploited vulnerabilities on 13 Apr 2026. Linked to ransomware campaigns.
+What to do:
+  1. Update: check the vendor advisory for the fixed version: https://msrc.microsoft.com/update-guide/vulnerability/CVE-2023-21529
+  2. If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions or discontinue use of the product if mitigations are unavailable."
+  3. If neither is possible, disconnect it or restrict who can reach it until you can update.
+deadline: CISA's deadline for US government agencies, 27 Apr 2026, has passed: act as soon as you can.
+link: Vendor advisory: https://msrc.microsoft.com/update-guide/vulnerability/CVE-2023-21529
+link: CISA KEV entry: https://www.cisa.gov/known-exploited-vulnerabilities-catalog?search_api_fulltext=CVE-2023-21529
+link: NVD: https://nvd.nist.gov/vuln/detail/CVE-2023-21529
+# [Action needed by 12 Oct 2026] Fortinet FortiOS: actively exploited flaw (CVE-2026-24858)
+affected: Fortinet FortiOS (FortiGate firewalls), version 7.4.2 (your note: edge firewall, main office)
+caveat: Patchtacio matched this by product name and has not checked whether your version is affected.
+why: Attackers are already using this flaw: Fortinet Multiple Products Authentication Bypass Using an Alternate Path or Channel Vulnerability (CVE-2026-24858). CISA added it to its list of exploited vulnerabilities on 28 Sep 2026.
+why: Fortinet FortiOS, FortiManager and FortiAnalyzer contain an authentication bypass that may allow an attacker with a FortiCloud account to log into other devices.
+What to do by 12 Oct 2026:
+  1. Update: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+  2. If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+  3. If neither is possible, disconnect it or restrict who can reach it until you can update.
+deadline: CISA set 12 Oct 2026 as the deadline for US government agencies. Use it as a guide to how urgent this is.
+link: Vendor advisory: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+link: CISA KEV entry: https://www.cisa.gov/known-exploited-vulnerabilities-catalog?search_api_fulltext=CVE-2026-24858
+link: NVD: https://nvd.nist.gov/vuln/detail/CVE-2026-24858
+# [Reminder: deadline passed 11 Apr 2025] Ivanti Connect Secure: actively exploited flaw (CVE-2025-22457)
+affected: Ivanti Connect Secure (formerly Pulse Connect Secure VPN)
+caveat: Patchtacio matched this by product name and has not checked whether your version is affected.
+why: Attackers are already using this flaw: Ivanti Connect Secure, Policy Secure, and ZTA Gateways Stack-Based Buffer Overflow Vulnerability (CVE-2025-22457). CISA added it to its list of exploited vulnerabilities on 4 Apr 2025.
+What to do:
+  1. Update: check the vendor's security advisory for CVE-2025-22457 to find the fixed version.
+  2. If you cannot update yet, apply the vendor's mitigations.
+  3. If neither is possible, disconnect it or restrict who can reach it until you can update.
+deadline: CISA's deadline for US government agencies, 11 Apr 2025, has passed: act as soon as you can.
+link: CISA KEV entry: https://www.cisa.gov/known-exploited-vulnerabilities-catalog?search_api_fulltext=CVE-2025-22457
+link: NVD: https://nvd.nist.gov/vuln/detail/CVE-2025-22457
