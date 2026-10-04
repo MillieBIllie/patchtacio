@@ -101,4 +101,12 @@ times read from the Windows event log and Task Scheduler:
   12:30:56; Task Scheduler counted one missed run and started it at 12:36:54. Windows waits up to
   about 10 minutes after startup before running a missed task, so a catch-up is not instant.
 
-Still to do: macOS entirely.
+### 2026-10-04, macOS on GitHub's runner (`macos-latest`)
+
+`TestLaunchdEndToEnd` in the `Scheduling end to end` workflow (run 37185508481, PR #11): a real
+launchd agent installed and loaded, a run started on demand, launchd started the run by itself at
+the scheduled 07:23, the alert reached the test's mail receiver, dedupe sent nothing the second
+time, `--status` exited 0, and uninstall removed the agent.
+
+Still to do on a real Mac: restart, a run missed while asleep or shut down, and the desktop
+notification (the runner test uses email).

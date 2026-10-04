@@ -58,7 +58,8 @@ Design decisions: [docs/decisions/0004-m4-scheduling.md](decisions/0004-m4-sched
 
 **Done when:** install → reboot → scheduled check runs on each OS (manual test checklist in docs/).
 Checklist and results: [docs/manual-testing.md](manual-testing.md). Verified on Windows 11 (restart, shutdown and sleep,
-with missed-run catch-up) and on Linux with systemd and cron (WSL, including restart and catch-up). macOS is still to do.
+with missed-run catch-up), on Linux with systemd and cron (WSL, including restart and catch-up), and on macOS in CI
+(launchd installs and runs the check on schedule). Still to do on a real Mac: restart and missed runs.
 
 ### M5: Local web UI
 - [ ] `patchtacio ui` opens the browser on 127.0.0.1:<random port>
