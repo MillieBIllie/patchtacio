@@ -34,6 +34,8 @@ Tasks for the tester:
 | Test message arrives; a wrong password or URL shows a clear failure | | | |
 | "Download the latest data" fills the Findings page; newest entries first | | | |
 | "Mark as dealt with" moves the entry to "Dealt with"; `patchtacio check` shows ACK yes | | | |
+| "Mark many as dealt with at once" for older Windows entries; the recent ones stay open; "Move all back" undoes it | | | |
+| Data sources table shows both feeds "up to date" after a download | | | |
 | Daily check set up at 07:30; "Run it now" sends the alerts; the page shows the last run | | | |
 | Stop Patchtacio: the page says it has stopped; the window closes (Windows double-click) | | | |
 | The settings file has no password or URL in it | | | |

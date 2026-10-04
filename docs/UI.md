@@ -42,6 +42,14 @@ The **Setup** page shows how far you are, with a tick for each step done.
    what to do and the links. When you have dealt with one, write what you did (optional) and click
    **Mark as dealt with**: Patchtacio stops alerting and reminding you about it. You can move it back
    later.
+
+   Many entries (Windows lists hundreds, most fixed by updates you installed long ago)? Open
+   **Mark many as dealt with at once**: choose the product, keep "only those added more than 30
+   days ago" unless you have checked the new ones too, say what you did, and confirm you checked
+   them against the version you run. **Move all back to open** under "Dealt with" undoes it.
+
+   At the bottom, **Data sources** shows how up to date the downloaded data is and any problem with
+   the last download.
 4. **Daily check.** Pick a time (or leave it empty for one between 08:00 and 08:59) and click
    **Set up the daily check**. Your computer's scheduler then checks every day and sends alerts.
    **Run it now** tests the real setup; reload the page a minute later to see how it went.

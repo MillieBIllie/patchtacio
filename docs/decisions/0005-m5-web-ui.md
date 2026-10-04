@@ -144,10 +144,31 @@ Double-clicking `patchtacio.exe` in Explorer, with no arguments, runs `patchtaci
 The console window stays open while the UI runs and says to keep it open. Closing it stops
 Patchtacio. A Start-menu shortcut belongs to packaging (M6).
 
+## Many findings at once
+
+A first run with Windows Server lists more than 200 KEV entries, most of them fixed by cumulative
+updates the user installed long ago. Acknowledging them one by one is not realistic, and a user who
+gives up never sees the next real alert for what is left.
+
+- The Findings page can mark every open KEV entry of **one product** as dealt with, or only those
+  added to KEV **more than 30 days ago** (the default), so a newly added flaw is never swept up
+  with the old ones by default.
+- It needs a **note** (kept with every entry, as `ack --note` does) and a ticked confirmation that
+  the entries were checked against the version run. Patchtacio does not compare versions, so it
+  never offers to decide that for the user (CLAUDE.md rule 7: nothing is called safe to ignore).
+- The server works out which findings to mark from the saved data, at the moment of the request.
+  The browser sends only the product and the choice, never a list of IDs.
+- "Move all back to open" undoes it per product. End-of-life findings are not included: each is
+  one release and is acknowledged on its own.
+- The CLI keeps `ack <CVE>...`. A product-wide `ack` can follow if someone needs it in scripts.
+
+## Data sources
+
+The Findings page shows each feed's saved copy, its state (up to date, out of date, missing), its
+last successful check, why it is out of date, and the last update's error (redacted), as
+`feeds status` does. It reads only the database and never downloads.
+
 ## Not in M5
 
-- Editing the catalog, importing inventory, or showing `feeds status` in full.
-- Bulk acknowledgement ("all entries for this product"). A first run with Windows Server lists more
-  than 200 KEV entries, so findings are grouped as "added in the last 30 days" and "older", with a
-  count per product, but each is acknowledged on its own.
+- Editing the catalog or importing inventory.
 - Accessibility audit beyond semantic HTML, labels, and working without JavaScript.
