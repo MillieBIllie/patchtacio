@@ -70,6 +70,11 @@ func (s *Server) route(w http.ResponseWriter, r *http.Request, sess *session) {
 			s.ack(w, r, sess, r.URL.Path == "/findings/ack")
 			return
 		}
+	case "/findings/ack-bulk", "/findings/unack-bulk":
+		if post {
+			s.ackBulk(w, r, sess, r.URL.Path == "/findings/ack-bulk")
+			return
+		}
 	case "/schedule":
 		if !post {
 			s.schedulePage(w, r, sess)

@@ -60,9 +60,28 @@ Download it with the button above (it needs internet access to cisa.gov or githu
   <p class="lead">{{plural (len .Open) "entry" "entries"}} on CISA's list of exploited vulnerabilities {{if eq (len .Open) 1}}matches{{else}}match{{end}} your products and {{if eq (len .Open) 1}}is{{else}}are{{end}} not marked as dealt with.
   Attackers are already using these flaws. Open each one to see what to do; start with the newest.</p>
   <table class="summary">
-    <thead><tr><th scope="col">Product</th><th scope="col">Matching entries</th></tr></thead>
-    <tbody>{{range .Report.Products}}<tr><td>{{.Display}}{{if .Version}} {{.Version}}{{end}}</td><td>{{.Findings}}</td></tr>{{end}}</tbody>
+    <thead><tr><th scope="col">Product</th><th scope="col">Open</th><th scope="col">Dealt with</th></tr></thead>
+    <tbody>{{range .Summary}}<tr><td>{{.Display}}{{if .Version}} {{.Version}}{{end}}</td><td>{{.Open}}</td><td>{{.Acked}}</td></tr>{{end}}</tbody>
   </table>
+  {{if .BulkOpen}}
+  <details class="bulk">
+    <summary>Mark many as dealt with at once</summary>
+    <p>For example after installing every update for a product. Patchtacio does not compare versions, so first check
+    that the version you run is not affected (or is patched): it will not alert or remind you about these entries again.</p>
+    <form method="post" action="/findings/ack-bulk" class="bulk-form">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}">
+      <label>Product
+        <select name="product">{{range .BulkOpen}}<option value="{{.ID}}">{{.Display}} ({{.Count}} open, {{.Older}} older than 30 days)</option>{{end}}</select></label>
+      <fieldset class="plain"><legend>Which entries</legend>
+        <label><input type="radio" name="scope" value="older" checked> Only those added more than 30 days ago</label>
+        <label><input type="radio" name="scope" value="all"> All open entries for this product</label>
+      </fieldset>
+      <label>What did you do? (kept with each entry) <input name="note" maxlength="500" required placeholder="e.g. all updates installed on 4 Oct, version 10.0.14393.7426"></label>
+      <label class="confirm"><input type="checkbox" name="confirm" value="yes" required> I have checked these entries against the version I run.</label>
+      <p><button type="submit">Mark them as dealt with</button></p>
+    </form>
+  </details>
+  {{end}}
   {{if .Recent}}
   <h3>Added to CISA's list in the last 30 days ({{len .Recent}})</h3>
   {{range .Recent}}{{template "open" (dict "F" . "CSRF" $.CSRF)}}{{end}}
@@ -78,6 +97,11 @@ Download it with the button above (it needs internet access to cisa.gov or githu
   {{end}}
   {{if .Acked}}
   <h3>Dealt with ({{len .Acked}})</h3>
+  <form method="post" action="/findings/unack-bulk" class="inline">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label>Move all for <select name="product">{{range .BulkAcked}}<option value="{{.ID}}">{{.Display}} ({{.Count}})</option>{{end}}</select></label>
+    <button type="submit">back to open</button>
+  </form>
   <ul class="acked">
   {{range .Acked}}
     <li><details><summary>{{.Card.Headline}}</summary>{{template "card" .Card}}</details>
@@ -112,4 +136,27 @@ Download it with the button above (it needs internet access to cisa.gov or githu
   {{if and (not .EOLCards) (not .EOLOther)}}<p>None of your products is tracked on endoflife.date.</p>{{end}}
 </section>
 {{end}}
-{{end}}{{end}}{{end}}
+{{end}}
+
+<section>
+  <h2>Data sources</h2>
+  {{if .FeedsErr}}<p class="bad">{{.FeedsErr}}</p>{{end}}
+  {{if .Feeds}}
+  <table>
+    <thead><tr><th scope="col">Source</th><th scope="col">State</th><th scope="col">Saved copy</th><th scope="col">Last checked</th></tr></thead>
+    <tbody>
+    {{range .Feeds}}
+      <tr><td>{{.Title}}{{if .Source}}<br><span class="small">{{.Source}}</span>{{end}}</td>
+        <td>{{if .OK}}{{.State}}{{else}}<strong class="bad">{{.State}}</strong>{{end}}</td>
+        <td>{{if .Saved}}{{.Saved}}{{else}}none{{end}}</td>
+        <td>{{.Checked}}</td></tr>
+      {{if or .Reason .Problem}}<tr><td></td><td colspan="3" class="small">
+        {{if .Reason}}Out of date because {{.Reason}}.{{end}}
+        {{if .Problem}}Last problem: {{.Problem}}{{end}}</td></tr>{{end}}
+    {{end}}
+    </tbody>
+  </table>
+  <p class="small">endoflife.date is downloaded only when a product has a version to look up. The daily check downloads both as needed.</p>
+  {{end}}
+</section>
+{{end}}{{end}}

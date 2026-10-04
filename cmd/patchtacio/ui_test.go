@@ -178,9 +178,14 @@ func TestUIEndToEnd(t *testing.T) {
 	id := ids[0][1]
 	page = c.post("/findings/ack", url.Values{"id": {id}, "note": {"patched on 2 Oct"}})
 	requireContains(t, page, "Marked as dealt with.", "Dealt with (1)")
-	// The CLI sees the same acknowledgement.
+	requireContains(t, page, "Data sources", "CISA KEV catalog", "up to date")
+	// Everything else for NetScaler at once.
+	page = c.post("/findings/ack-bulk", url.Values{"product": {"citrix-netscaler"}, "scope": {"all"},
+		"note": {"firmware 14.1-43 installed"}, "confirm": {"yes"}})
+	requireContains(t, page, "for Citrix NetScaler ADC and NetScaler Gateway as dealt with.")
+	// The CLI sees the same acknowledgements.
 	stdout, _, _ := e.exec(t, "check", "--json", "--offline")
-	if !strings.Contains(stdout, `"acknowledged": true`) {
+	if strings.Count(stdout, `"acknowledged": true`) < 2 {
 		t.Errorf("check does not show the acknowledgement:\n%s", stdout)
 	}
 
@@ -198,7 +203,7 @@ func TestUIEndToEnd(t *testing.T) {
 		t.Errorf("run now: %d runs", sched.runs)
 	}
 	home = c.get("/")
-	requireContains(t, home, "2 products chosen.", "Alerts go by: webhook, desktop.", "need your attention", "every day at 07:30")
+	requireContains(t, home, "2 products chosen.", "Alerts go by: webhook, desktop.", "needs your attention", "every day at 07:30")
 
 	// No page ever carries the secret.
 	for _, p := range []string{"/", "/products", "/alerts", "/findings", "/schedule"} {

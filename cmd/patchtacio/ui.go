@@ -18,6 +18,8 @@ import (
 	"github.com/milliebillie/patchtacio/internal/advice"
 	"github.com/milliebillie/patchtacio/internal/catalog"
 	"github.com/milliebillie/patchtacio/internal/config"
+	"github.com/milliebillie/patchtacio/internal/feeds"
+	"github.com/milliebillie/patchtacio/internal/logging"
 	"github.com/milliebillie/patchtacio/internal/match"
 	"github.com/milliebillie/patchtacio/internal/notify"
 	"github.com/milliebillie/patchtacio/internal/secrets"
@@ -257,7 +259,7 @@ func (b *uiBackend) Report(ctx context.Context, update bool) (*ui.Report, error)
 		byID[p.ID] = p
 	}
 	for _, p := range rep.Products {
-		r.Products = append(r.Products, ui.ReportProduct{Display: p.Display, Version: p.Version, Findings: p.Findings})
+		r.Products = append(r.Products, ui.ReportProduct{ID: p.ID, Display: p.Display, Version: p.Version, Findings: p.Findings})
 	}
 	today := b.a.today()
 	for _, f := range rep.Findings {
@@ -273,7 +275,8 @@ func (b *uiBackend) Report(ctx context.Context, update bool) (*ui.Report, error)
 			return nil, err
 		}
 		r.Findings = append(r.Findings, ui.Finding{
-			ID: f.ID, CVE: f.CVEID, Acked: f.Acknowledged, Card: card, Added: calDate(f.DateAdded),
+			ID: f.ID, ProductID: f.ProductID, Product: shortName(f.Product),
+			CVE: f.CVEID, Acked: f.Acknowledged, Card: card, Added: calDate(f.DateAdded),
 			Recent: !f.DateAdded.IsZero() && !f.DateAdded.Before(today.AddDate(0, 0, -recentDays)),
 		})
 	}
@@ -330,9 +333,9 @@ func warningLines(s string) []string {
 	return out
 }
 
-func (b *uiBackend) Ack(ctx context.Context, id, note string) error {
+func (b *uiBackend) Ack(ctx context.Context, ids []string, note string) error {
 	return b.withStore(ctx, func(st *store.Store) error {
-		err := st.Acknowledge(ctx, []string{id}, note)
+		err := st.Acknowledge(ctx, ids, note)
 		if errors.Is(err, store.ErrNoFinding) {
 			return errors.New("this finding is not in Patchtacio's records yet; download the latest data and try again")
 		}
@@ -340,8 +343,35 @@ func (b *uiBackend) Ack(ctx context.Context, id, note string) error {
 	})
 }
 
-func (b *uiBackend) Unack(ctx context.Context, id string) error {
-	return b.withStore(ctx, func(st *store.Store) error { return st.Unacknowledge(ctx, []string{id}) })
+func (b *uiBackend) Unack(ctx context.Context, ids []string) error {
+	return b.withStore(ctx, func(st *store.Store) error { return st.Unacknowledge(ctx, ids) })
+}
+
+func (b *uiBackend) Feeds(ctx context.Context) ([]ui.FeedStatus, error) {
+	u, closeFn, err := b.a.openUpdater(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer closeFn()
+	sts, err := u.Statuses(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]ui.FeedStatus, 0, len(sts))
+	for _, st := range sts {
+		fs := ui.FeedStatus{Title: st.Title, State: stateLabel(st.State), OK: st.State == feeds.Fresh, Checked: b.a.when(st.CheckedAt), Reason: st.StaleReason}
+		if st.State != feeds.Missing {
+			fs.Saved = b.a.describe(st)
+		}
+		if st.LastUpdateFailed {
+			fs.Problem = firstLine(logging.RedactString(st.LastError))
+		}
+		if st.Via == feeds.ViaMirror {
+			fs.Source = "downloaded from its official GitHub mirror"
+		}
+		out = append(out, fs)
+	}
+	return out, nil
 }
 
 func (b *uiBackend) withStore(ctx context.Context, f func(*store.Store) error) error {

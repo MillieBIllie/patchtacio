@@ -89,6 +89,11 @@ dd { margin: 0; overflow-wrap: anywhere; }
   padding: .75rem 0; background: var(--bg); border-top: 1px solid var(--line); }
 .added { font-weight: 400; color: var(--muted); font-size: .85rem; white-space: nowrap; }
 table.summary { width: auto; margin: .5rem 0 1rem; }
+details.bulk { border: 1px dashed var(--line); border-radius: 6px; padding: .5rem 1rem; margin: .5rem 0 1rem; }
+.bulk-form { display: flex; flex-direction: column; gap: .5rem; }
+.bulk-form > label { display: flex; flex-direction: column; gap: .2rem; }
+.bulk-form label.confirm { flex-direction: row; align-items: center; gap: .5rem; }
+fieldset.plain { border: 0; padding: 0; margin: 0; background: none; display: flex; flex-direction: column; gap: .2rem; }
 @media (max-width: 40rem) {
   table.products, table.products tbody { display: block; width: 100%; }
   table.products thead { display: none; }

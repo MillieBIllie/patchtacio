@@ -45,9 +45,13 @@ type Backend interface {
 	// Report checks the configured products against the saved feed data,
 	// after downloading the latest data if update is set. Nothing is sent.
 	Report(ctx context.Context, update bool) (*Report, error)
-	// Ack acknowledges a finding by its ID; Unack removes that.
-	Ack(ctx context.Context, id, note string) error
-	Unack(ctx context.Context, id string) error
+	// Ack acknowledges findings by their IDs, all with the same note;
+	// Unack removes that.
+	Ack(ctx context.Context, ids []string, note string) error
+	Unack(ctx context.Context, ids []string) error
+	// Feeds says how up to date each saved data source is, without
+	// downloading anything.
+	Feeds(ctx context.Context) ([]FeedStatus, error)
 
 	// Schedule says how the daily check is set up and how it last went.
 	Schedule(ctx context.Context) (*Schedule, error)
@@ -96,18 +100,20 @@ type Report struct {
 
 // ReportProduct is one configured product and its number of KEV findings.
 type ReportProduct struct {
-	Display, Version string
-	Findings         int
+	ID, Display, Version string
+	Findings             int
 }
 
 // Finding is one KEV entry matching one of the user's products.
 type Finding struct {
-	ID     string // kev/<product>/<CVE>
-	CVE    string
-	Added  string // when CISA added it, e.g. "2 Oct 2026"
-	Recent bool   // added in the last 30 days
-	Acked  bool
-	Card   advice.Card
+	ID        string // kev/<product>/<CVE>
+	ProductID string
+	Product   string // display name
+	CVE       string
+	Added     string // when CISA added it, e.g. "2 Oct 2026"
+	Recent    bool   // added in the last 30 days
+	Acked     bool
+	Card      advice.Card
 }
 
 // EOLEntry is one product's end-of-life answer.
@@ -119,6 +125,18 @@ type EOLEntry struct {
 	What    string       // in words
 	Card    *advice.Card // when ended or ending
 	Acked   bool
+}
+
+// FeedStatus is one data source's saved copy.
+type FeedStatus struct {
+	Title   string // e.g. "CISA KEV catalog"
+	State   string // "up to date", "out of date" or "missing"
+	OK      bool   // up to date
+	Saved   string // what the saved copy holds, "" when missing
+	Checked string // last successful contact, in words
+	Reason  string // why it is out of date
+	Problem string // the last update's error, if it failed
+	Source  string // where it comes from (a mirror is named)
 }
 
 // Schedule is how the daily check is set up.

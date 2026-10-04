@@ -2,6 +2,7 @@ package ui
 
 import (
 	"net/http"
+	"slices"
 	"strings"
 )
 
@@ -15,6 +16,40 @@ type findingsData struct {
 	Acked      []Finding
 	EOLCards   []EOLEntry // ended or ending
 	EOLOther   []EOLEntry // supported, unknown, not checked
+	Summary    []summaryRow
+	BulkOpen   []bulkProduct
+	BulkAcked  []bulkProduct
+	Feeds      []FeedStatus
+	FeedsErr   string
+}
+
+// bulkProduct is one product in the "many at once" forms.
+type bulkProduct struct {
+	ID, Display  string
+	Count, Older int // findings in the list; of those, added more than 30 days ago
+}
+
+// summaryRow is one product's KEV findings, open and dealt with.
+type summaryRow struct {
+	Display, Version string
+	Open, Acked      int
+}
+
+// countByProduct groups findings by product, in first-seen order.
+func countByProduct(fs []Finding) []bulkProduct {
+	var out []bulkProduct
+	for _, f := range fs {
+		i := slices.IndexFunc(out, func(p bulkProduct) bool { return p.ID == f.ProductID })
+		if i < 0 {
+			out = append(out, bulkProduct{ID: f.ProductID, Display: f.Product})
+			i = len(out) - 1
+		}
+		out[i].Count++
+		if !f.Recent {
+			out[i].Older++
+		}
+	}
+	return out
 }
 
 func (s *Server) findingsPage(w http.ResponseWriter, r *http.Request, sess *session) {
@@ -37,6 +72,11 @@ func (s *Server) findingsPage(w http.ResponseWriter, r *http.Request, sess *sess
 			d.Report = rep
 		}
 	}
+	if fs, err := s.b.Feeds(ctx); err != nil {
+		d.FeedsErr = err.Error()
+	} else {
+		d.Feeds = fs
+	}
 	s.work.Unlock()
 	if d.Report != nil {
 		for _, f := range d.Report.Findings {
@@ -57,6 +97,21 @@ func (s *Server) findingsPage(w http.ResponseWriter, r *http.Request, sess *sess
 			} else {
 				d.EOLOther = append(d.EOLOther, e)
 			}
+		}
+		d.BulkOpen = countByProduct(d.Open)
+		d.BulkAcked = countByProduct(d.Acked)
+		for _, p := range d.Report.Products {
+			row := summaryRow{Display: p.Display, Version: p.Version}
+			for _, f := range d.Report.Findings {
+				switch {
+				case f.ProductID != p.ID:
+				case f.Acked:
+					row.Acked++
+				default:
+					row.Open++
+				}
+			}
+			d.Summary = append(d.Summary, row)
 		}
 	}
 	s.render(w, sess, "findings", "Findings", d)
@@ -93,9 +148,9 @@ func (s *Server) ack(w http.ResponseWriter, r *http.Request, sess *session, ack 
 	}
 	s.work.Lock()
 	if ack {
-		err = s.b.Ack(r.Context(), id, note)
+		err = s.b.Ack(r.Context(), []string{id}, note)
 	} else {
-		err = s.b.Unack(r.Context(), id)
+		err = s.b.Unack(r.Context(), []string{id})
 	}
 	s.work.Unlock()
 	switch {
@@ -107,6 +162,79 @@ func (s *Server) ack(w http.ResponseWriter, r *http.Request, sess *session, ack 
 	default:
 		s.addFlash(sess, Flash{Kind: "ok", Title: "Moved back to the open list.",
 			Lines: []string{"Reminders about it resume with the next daily check."}})
+	}
+	redirect(w, r, "/findings")
+}
+
+// ackBulk marks every open KEV finding of one product as dealt with (or,
+// with scope "older", those added more than 30 days ago), or moves every
+// dealt-with one back. It acts on the findings the page showed, worked out
+// again from the saved data, never on IDs sent by the browser.
+func (s *Server) ackBulk(w http.ResponseWriter, r *http.Request, sess *session, ack bool) {
+	product := r.PostForm.Get("product")
+	scope := r.PostForm.Get("scope")
+	var problems []string
+	note := ""
+	if ack {
+		var err error
+		note, err = oneLine(r.PostForm.Get("note"), maxAckNote)
+		switch {
+		case err != nil:
+			problems = append(problems, "The note "+err.Error()+".")
+		case note == "":
+			problems = append(problems, "Say what you did, for example \"all updates installed on 4 Oct\": it is kept with each entry.")
+		}
+		if r.PostForm.Get("confirm") != "yes" {
+			problems = append(problems, "Tick the box to confirm you have checked these entries against the version you run.")
+		}
+		if scope != "older" && scope != "all" {
+			problems = append(problems, "Choose which entries.")
+		}
+	}
+	if len(problems) > 0 {
+		s.addFlash(sess, Flash{Kind: "error", Title: "Nothing was marked", Lines: problems})
+		redirect(w, r, "/findings")
+		return
+	}
+
+	s.work.Lock()
+	defer s.work.Unlock()
+	ctx := r.Context()
+	rep, err := s.b.Report(ctx, false)
+	if err != nil {
+		s.addFlash(sess, errorFlash("Could not read the findings", err))
+		redirect(w, r, "/findings")
+		return
+	}
+	var ids []string
+	name := product
+	for _, f := range rep.Findings {
+		if f.ProductID != product || f.Acked != !ack || (ack && scope == "older" && f.Recent) {
+			continue
+		}
+		ids = append(ids, f.ID)
+		name = f.Product
+	}
+	if len(ids) == 0 {
+		s.addFlash(sess, Flash{Kind: "error", Title: "Nothing was marked", Lines: []string{"No matching entries for that product."}})
+		redirect(w, r, "/findings")
+		return
+	}
+	if ack {
+		err = s.b.Ack(ctx, ids, note)
+	} else {
+		err = s.b.Unack(ctx, ids)
+	}
+	switch {
+	case err != nil:
+		s.addFlash(sess, errorFlash("Could not change the acknowledgements", err))
+	case ack:
+		s.addFlash(sess, Flash{Kind: "ok", Title: "Marked " + countWord(len(ids), "entry", "entries") + " for " + name + " as dealt with.",
+			Lines: []string{"Patchtacio will not alert or remind you about them again. They are listed under \"Dealt with\", " +
+				"where you can move them back to open (all at once, or one by one)."}})
+	default:
+		s.addFlash(sess, Flash{Kind: "ok", Title: "Moved " + countWord(len(ids), "entry", "entries") + " for " + name + " back to the open list.",
+			Lines: []string{"Reminders about them resume with the next daily check."}})
 	}
 	redirect(w, r, "/findings")
 }

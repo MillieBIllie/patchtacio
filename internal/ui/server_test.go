@@ -30,6 +30,7 @@ type fake struct {
 	problem  string
 	secrets  map[string]string
 	report   *Report
+	feeds    []FeedStatus
 	updated  int
 	acked    map[string]string
 	tested   []string
@@ -144,18 +145,28 @@ func (f *fake) Report(_ context.Context, update bool) (*Report, error) {
 	return &r, nil
 }
 
-func (f *fake) Ack(_ context.Context, id, note string) error {
+func (f *fake) Ack(_ context.Context, ids []string, note string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.acked[id] = note
+	for _, id := range ids {
+		f.acked[id] = note
+	}
 	return nil
 }
 
-func (f *fake) Unack(_ context.Context, id string) error {
+func (f *fake) Unack(_ context.Context, ids []string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	delete(f.acked, id)
+	for _, id := range ids {
+		delete(f.acked, id)
+	}
 	return nil
+}
+
+func (f *fake) Feeds(context.Context) ([]FeedStatus, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.feeds, nil
 }
 
 func (f *fake) Schedule(context.Context) (*Schedule, error) {
@@ -970,5 +981,78 @@ func TestBrowserEnvHasNoSecrets(t *testing.T) {
 	env := strings.Join(browserEnv(), "\n")
 	if strings.Contains(env, "hooks.example") || strings.Contains(env, "NVD_API_KEY") || !strings.Contains(env, "PATCHTACIO_TEST_KEEP=yes") {
 		t.Errorf("browser environment:\n%s", env)
+	}
+}
+
+func TestBulkAck(t *testing.T) {
+	h := start(t)
+	h.b.file.Products = []config.Product{{ID: "microsoft-windows-server"}, {ID: "fortinet-fortios"}}
+	h.b.version = 1
+	win := func(cve string, recent bool) Finding {
+		return Finding{ID: "kev/microsoft-windows-server/" + cve, ProductID: "microsoft-windows-server", Product: "Microsoft Windows Server",
+			CVE: cve, Recent: recent, Card: card("[Action needed now] Windows Server: " + cve)}
+	}
+	h.b.report.Findings = []Finding{
+		win("CVE-2026-1", true), win("CVE-2019-2", false), win("CVE-2017-3", false),
+		{ID: "kev/fortinet-fortios/CVE-2026-9", ProductID: "fortinet-fortios", Product: "Fortinet FortiOS", CVE: "CVE-2026-9", Card: card("FortiOS")},
+	}
+	h.login()
+	body := h.page("/findings")
+	if !strings.Contains(body, "Microsoft Windows Server (3 open, 2 older than 30 days)") || !strings.Contains(body, `action="/findings/ack-bulk"`) {
+		t.Fatalf("bulk form missing:\n%s", body)
+	}
+
+	// Safeguards: a note and the confirmation are required.
+	for _, form := range []url.Values{
+		{"product": {"microsoft-windows-server"}, "scope": {"older"}, "note": {"patched"}},
+		{"product": {"microsoft-windows-server"}, "scope": {"older"}, "confirm": {"yes"}},
+		{"product": {"microsoft-windows-server"}, "scope": {"everything"}, "note": {"patched"}, "confirm": {"yes"}},
+	} {
+		if next := h.postOK("/findings/ack-bulk", form); !strings.Contains(next, "Nothing was marked") || len(h.b.acked) != 0 {
+			t.Errorf("form %v marked something", form)
+		}
+	}
+
+	// Older only: the recent one stays open, FortiOS is untouched.
+	next := h.postOK("/findings/ack-bulk", url.Values{"product": {"microsoft-windows-server"}, "scope": {"older"},
+		"note": {"cumulative update 2026-09"}, "confirm": {"yes"}})
+	if !strings.Contains(next, "Marked 2 entries for Microsoft Windows Server as dealt with.") || len(h.b.acked) != 2 ||
+		h.b.acked["kev/microsoft-windows-server/CVE-2019-2"] != "cumulative update 2026-09" {
+		t.Errorf("older only: %v\n%s", h.b.acked, next)
+	}
+	if !strings.Contains(next, `action="/findings/unack-bulk"`) || !strings.Contains(next, "Microsoft Windows Server (2)") {
+		t.Error("no way to move them all back")
+	}
+	h.postOK("/findings/ack-bulk", url.Values{"product": {"microsoft-windows-server"}, "scope": {"all"}, "note": {"x"}, "confirm": {"yes"}})
+	if len(h.b.acked) != 3 {
+		t.Errorf("all: %v", h.b.acked)
+	}
+	next = h.postOK("/findings/unack-bulk", url.Values{"product": {"microsoft-windows-server"}})
+	if !strings.Contains(next, "Moved 3 entries for Microsoft Windows Server back to the open list.") || len(h.b.acked) != 0 {
+		t.Errorf("unack all: %v", h.b.acked)
+	}
+	// A product with nothing to mark, or one that is not listed.
+	if next := h.postOK("/findings/unack-bulk", url.Values{"product": {"fortinet-fortios"}}); !strings.Contains(next, "No matching entries") {
+		t.Error("unack of nothing")
+	}
+	if next := h.postOK("/findings/ack-bulk", url.Values{"product": {"../x"}, "scope": {"all"}, "note": {"x"}, "confirm": {"yes"}}); !strings.Contains(next, "No matching entries") {
+		t.Error("unknown product")
+	}
+}
+
+func TestDataSources(t *testing.T) {
+	h := start(t)
+	h.b.feeds = []FeedStatus{
+		{Title: "CISA KEV catalog", State: "out of date", Saved: "1,733 entries", Checked: "1 Oct 2026 (3 days ago)",
+			Reason: "it has not been checked for more than 48 hours", Problem: "could not reach www.cisa.gov"},
+		{Title: "endoflife.date", State: "missing", Checked: "never"},
+	}
+	h.login()
+	body := h.page("/findings")
+	for _, want := range []string{"Data sources", "<strong class=\"bad\">out of date</strong>", "Out of date because it has not been checked for more than 48 hours.",
+		"Last problem: could not reach www.cisa.gov", "<td>none</td>"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("data sources lack %q", want)
+		}
 	}
 }
