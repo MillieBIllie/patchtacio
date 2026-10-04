@@ -69,14 +69,27 @@ a local ntfy-style HTTP receiver on 127.0.0.1, because WSL has no desktop notifi
 | Log: start line, check output, exit code, no "Usage:"; files mode 600 | pass | pass | not run | pass |
 | A second run sends nothing new (dedupe) | pass | n/a | not run | pass |
 | Failed run: `--status` exits 2 with the reason; desktop notification tried | n/a | pass (no display in WSL, so the attempt is logged) | not run | pass (toast shown) |
-| Restart, then the job is still installed and runs | pass (`wsl --terminate`, then start) | not run | not run | **not run** |
-| Missed run while off runs at the next start | pass (due 00:11 while off; ran 00:11:45 after boot) | n/a (cron skips) | not run | **not run** |
+| Restart, then the job is still installed and runs | pass (`wsl --terminate`, then start) | not run | not run | pass (restarted 11:49; ran 12:00:00) |
+| Missed run while off runs at the next start | pass (due 00:11 while off; ran 00:11:45 after boot) | n/a (cron skips) | not run | pass (due 12:18 while shut down; ran 12:36:54, 6 min after power-on) |
+| Missed run while asleep runs on wake | n/a | n/a | not run | pass (due 12:09 while asleep; ran 12:12:13, 2 s after waking) |
 | Reinstall at another time replaces the job (one job) | pass | n/a | not run | pass |
 | Uninstall removes it (and the drop-in); `--status` exits 2 | pass | pass (removes the crontab when ours was its only line) | not run | pass |
-| No window flashes | n/a | n/a | n/a | **not confirmed by eye**: `patchtaciow.exe` is a GUI-subsystem program, and PowerShell starts with `CREATE_NO_WINDOW` |
+| No window flashes | n/a | n/a | n/a | pass (watched at 12:00: toast shown, no console window) |
 
 Found and fixed during these runs: cobra's usage text in the log (Windows), and an empty crontab left
 behind where there had been none (cron).
 
-Still to do: macOS entirely; on Windows, a real reboot, a run missed while the PC was off, and
-watching the screen during a run.
+### 2026-10-04, Windows 11 restart and power-off, `main` at `bf22687`
+
+Patchtacio installed in `%LOCALAPPDATA%\Programs\patchtacio` (both programs), desktop channel,
+times read from the Windows event log and Task Scheduler:
+
+- **Restart:** installed 11:47 for 12:00; restarted from Start at 11:49; the task ran at 12:00:00
+  through `patchtaciow.exe`. The tester saw the toast and no console window.
+- **Asleep:** installed 12:06 for 12:09; Modern Standby 12:07 to 12:12:11; the missed run started
+  at 12:12:13.
+- **Shut down** (Start → Shut down, Fast Startup on): installed 12:15 for 12:18; off from 12:15 to
+  12:30:56; Task Scheduler counted one missed run and started it at 12:36:54. Windows waits up to
+  about 10 minutes after startup before running a missed task, so a catch-up is not instant.
+
+Still to do: macOS entirely.
