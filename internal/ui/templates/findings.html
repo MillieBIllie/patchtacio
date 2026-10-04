@@ -1,0 +1,101 @@
+{{define "card"}}{{/* . is an advice.Card */}}
+<div class="card-body">
+  <h3>What's affected</h3>
+  <ul>{{range .Affected}}<li>{{.}}</li>{{end}}</ul>
+  {{if .Caveat}}<p class="small">{{.Caveat}}</p>{{end}}
+  <h3>Why it matters</h3>
+  {{range .Why}}<p>{{linkify .}}</p>{{end}}
+  <h3>{{.ToDo}}</h3>
+  <ol>{{range .Steps}}<li>{{linkify .}}</li>{{end}}</ol>
+  {{if .Deadline}}<p>{{.Deadline}}</p>{{end}}
+  {{if .Links}}<h3>Links</h3>
+  <ul class="links">{{range .Links}}{{if weblink .URL}}<li>{{.Label}}: <a href="{{.URL}}" rel="noopener noreferrer" target="_blank">{{.URL}}</a></li>{{end}}{{end}}</ul>{{end}}
+</div>
+{{end}}
+
+{{define "ack"}}{{/* . is map: ID, CSRF */}}
+<form method="post" action="/findings/ack" class="ack">
+  <input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="id" value="{{.ID}}">
+  <label>What did you do? (optional) <input name="note" maxlength="500" placeholder="e.g. updated to 7.4.3 on 14 Oct"></label>
+  <button type="submit">Mark as dealt with</button>
+  <span class="small">Stops alerts and reminders about it.</span>
+</form>
+{{end}}
+
+{{define "content"}}{{with .Data}}
+<h1>Findings</h1>
+{{if .Err}}<div class="flash error" role="alert"><strong>Could not check your products</strong><ul><li>{{.Err}}</li></ul></div>
+{{else if .NoProducts}}<p>Choose your products first: <a class="button" href="/products">Choose products</a></p>
+{{else}}{{with .Report}}
+<div class="feed">
+  {{if .Feed}}<p class="small">{{.Feed}}</p>{{end}}
+  {{if .EOLFeed}}<p class="small">{{.EOLFeed}}</p>{{end}}
+  <form method="post" action="/findings/update" class="inline" data-busy>
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <button type="submit" class="{{if .NoData}}primary{{end}}">Download the latest data and check again</button>
+  </form>
+</div>
+{{if .Warnings}}
+<div class="flash warn" role="status"><strong>Read this before relying on the list below</strong>
+  <ul>{{range .Warnings}}<li>{{linkify .}}</li>{{end}}</ul></div>
+{{end}}
+{{if .NoData}}
+<p class="lead">Patchtacio has no vulnerability data yet, so it cannot say anything about your products.
+Download it with the button above (it needs internet access to cisa.gov or github.com).</p>
+{{end}}
+{{end}}
+
+{{if and .Report (not .Report.NoData)}}
+<section>
+  <h2>Known exploited vulnerabilities</h2>
+  {{if .Open}}
+  <p class="lead">{{plural (len .Open) "entry" "entries"}} on CISA's list of exploited vulnerabilities {{if eq (len .Open) 1}}matches{{else}}match{{end}} your products and {{if eq (len .Open) 1}}is{{else}}are{{end}} not marked as dealt with.
+  Attackers are already using these flaws. Open each one to see what to do.</p>
+  {{range .Open}}
+  <details class="finding">
+    <summary>{{.Card.Headline}}</summary>
+    {{template "card" .Card}}
+    {{template "ack" (dict "ID" .ID "CSRF" $.CSRF)}}
+  </details>
+  {{end}}
+  {{else}}
+  <p>None of your products has an open entry on CISA's list in the data Patchtacio has. This is not an all clear:
+  the list holds only flaws known to be exploited, and Patchtacio matches by product name. Keep installing your vendors' security updates.</p>
+  {{end}}
+  {{if .Acked}}
+  <h3>Dealt with ({{len .Acked}})</h3>
+  <ul class="acked">
+  {{range .Acked}}
+    <li><details><summary>{{.Card.Headline}}</summary>{{template "card" .Card}}</details>
+      <form method="post" action="/findings/unack" class="inline">
+        <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}">
+        <button type="submit">Move back to open</button></form></li>
+  {{end}}
+  </ul>
+  {{end}}
+</section>
+
+<section>
+  <h2>End of life</h2>
+  {{range .EOLCards}}
+  <details class="finding{{if .Acked}} done{{end}}">
+    <summary>{{.Card.Headline}}{{if .Acked}} (dealt with){{end}}</summary>
+    {{template "card" .Card}}
+    {{if .Acked}}
+    <form method="post" action="/findings/unack" class="inline">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}">
+      <button type="submit">Move back to open</button></form>
+    {{else}}{{template "ack" (dict "ID" .ID "CSRF" $.CSRF)}}{{end}}
+  </details>
+  {{end}}
+  {{if .EOLOther}}
+  <table>
+    <thead><tr><th scope="col">Product</th><th scope="col">Release</th><th scope="col">Security updates</th></tr></thead>
+    <tbody>{{range .EOLOther}}<tr><td>{{.Product}}{{if .Version}} {{.Version}}{{end}}</td><td>{{.Release}}</td><td>{{.What}}</td></tr>{{end}}</tbody>
+  </table>
+  {{end}}
+  {{if .Report.NoVersion}}<p class="small">To check end of life, add the version you run on the <a href="/products">Products</a> page.</p>{{end}}
+  {{if and (not .EOLCards) (not .EOLOther)}}<p>None of your products is tracked on endoflife.date.</p>{{end}}
+</section>
+{{end}}
+{{end}}{{end}}{{end}}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}} · Patchtacio</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">Patchtacio</a>
+  <nav aria-label="Main">
+    <a href="/" {{if eq .Nav "setup"}}aria-current="page"{{end}}>Setup</a>
+    <a href="/products" {{if eq .Nav "products"}}aria-current="page"{{end}}>Products</a>
+    <a href="/alerts" {{if eq .Nav "alerts"}}aria-current="page"{{end}}>Alerts</a>
+    <a href="/findings" {{if eq .Nav "findings"}}aria-current="page"{{end}}>Findings</a>
+    <a href="/schedule" {{if eq .Nav "schedule"}}aria-current="page"{{end}}>Daily check</a>
+  </nav>
+  <form method="post" action="/quit" class="quit">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <button type="submit" class="link">Stop Patchtacio</button>
+  </form>
+</header>
+<main>
+{{range .Flash}}
+<div class="flash {{.Kind}}" role="{{if eq .Kind "error"}}alert{{else}}status{{end}}">
+  <strong>{{.Title}}</strong>
+  {{if .Lines}}<ul>{{range .Lines}}<li>{{linkify .}}</li>{{end}}</ul>{{end}}
+</div>
+{{end}}
+{{template "content" .}}
+</main>
+<footer>
+  Patchtacio {{.Version}}. This page runs only on your computer.
+  Data: <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" rel="noopener noreferrer" target="_blank">CISA KEV</a> (CC0)
+  and <a href="https://endoflife.date" rel="noopener noreferrer" target="_blank">endoflife.date</a> (MIT).
+</footer>
+</body>
+</html>

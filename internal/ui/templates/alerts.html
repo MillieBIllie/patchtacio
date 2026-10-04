@@ -1,0 +1,121 @@
+{{define "secret"}}{{/* . is a Secret */}}
+<span class="secret-state">
+{{if eq .Source "keychain"}}Saved in this computer's keychain.
+{{else if eq .Source "environment"}}Set in the environment variable <code>{{.Env}}</code>, which is used first.
+{{else if .Problem}}Not set (the keychain could not be read: {{.Problem}}).
+{{else}}Not set yet.{{end}}
+</span>
+{{end}}
+
+{{define "content"}}{{with .Data}}
+<h1>Alerts</h1>
+<p class="lead">Choose how Patchtacio tells you about new findings. You get one message per channel per check,
+each finding once, and a reminder when CISA's deadline is near and when it has passed.</p>
+{{if .Problem}}
+<div class="flash error" role="alert"><strong>Patchtacio cannot change the settings file</strong>
+  <ul><li>{{.Problem}}</li><li>Fix the file <code>{{.Path}}</code> or move it away, then reload this page.</li></ul></div>
+{{end}}
+{{if .Problems}}
+<div class="flash error" role="alert"><strong>Nothing was saved. Please fix:</strong>
+  <ul>{{range .Problems}}<li>{{.}}</li>{{end}}</ul></div>
+{{end}}
+
+{{if .Saved}}
+<section class="card">
+  <h2>Send a test</h2>
+  <p>Sends a message marked as a test on the saved channels. It does not check your products.</p>
+  <form method="post" action="/alerts/test" class="inline" data-busy>
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <button type="submit" name="channel" value="all" class="primary">Test all channels</button>
+    {{range .Saved}}<button type="submit" name="channel" value="{{.}}">Test {{.}}</button>{{end}}
+  </form>
+</section>
+{{end}}
+
+<form method="post" action="/alerts" autocomplete="off">
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <input type="hidden" name="hash" value="{{.Hash}}">
+
+  <fieldset>
+    <legend><label><input type="checkbox" name="email" {{if .Form.Email}}checked{{end}}> Email</label></legend>
+    <div class="grid">
+      <label>Mail server <input name="host" value="{{.Form.Host}}" placeholder="smtp.example.org"></label>
+      <label>Port <input name="port" value="{{.Form.Port}}" inputmode="numeric" size="5" placeholder="587"></label>
+      <label>Encryption
+        <select name="security">
+          <option value="starttls" {{if eq .Form.Security "starttls"}}selected{{end}}>STARTTLS (usually port 587)</option>
+          <option value="tls" {{if eq .Form.Security "tls"}}selected{{end}}>TLS (usually port 465)</option>
+          <option value="none" {{if eq .Form.Security "none"}}selected{{end}}>None (only a mail server on this computer, 127.0.0.1)</option>
+        </select></label>
+      <label>User name <input name="username" value="{{.Form.Username}}" placeholder="leave empty if the server needs no login"></label>
+      <label>Password <input type="password" name="secret.PATCHTACIO_SMTP_PASSWORD" autocomplete="new-password" placeholder="leave empty to keep the saved one">
+        {{template "secret" index .Secrets "PATCHTACIO_SMTP_PASSWORD"}}</label>
+      <label>From <input name="from" type="email" value="{{.Form.From}}" placeholder="patchtacio@example.org"></label>
+      <label class="wide">To (one address per line) <textarea name="to" rows="2">{{.Form.To}}</textarea></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><label><input type="checkbox" name="webhook" {{if .Form.Webhook}}checked{{end}}> Chat channel (Teams, Slack or Discord)</label></legend>
+    <div class="grid">
+      <label>Service
+        <select name="kind">
+          <option value="teams" {{if eq .Form.Kind "teams"}}selected{{end}}>Microsoft Teams (Workflows webhook)</option>
+          <option value="slack" {{if eq .Form.Kind "slack"}}selected{{end}}>Slack</option>
+          <option value="discord" {{if eq .Form.Kind "discord"}}selected{{end}}>Discord</option>
+        </select></label>
+      <label class="wide">Webhook URL <input type="password" name="secret.PATCHTACIO_WEBHOOK_URL" autocomplete="off" placeholder="https://… (leave empty to keep the saved one)">
+        {{template "secret" index .Secrets "PATCHTACIO_WEBHOOK_URL"}}</label>
+    </div>
+    <p class="small">The URL works like a password, so Patchtacio keeps it in the keychain and never shows it again.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend><label><input type="checkbox" name="ntfy" {{if .Form.Ntfy}}checked{{end}}> ntfy phone app</label></legend>
+    <div class="grid">
+      <label class="wide">Topic URL <input type="password" name="secret.PATCHTACIO_NTFY_URL" autocomplete="off" placeholder="https://ntfy.sh/your-long-random-topic (leave empty to keep the saved one)">
+        {{template "secret" index .Secrets "PATCHTACIO_NTFY_URL"}}</label>
+      <label>Access token (optional) <input type="password" name="secret.PATCHTACIO_NTFY_TOKEN" autocomplete="off">
+        {{template "secret" index .Secrets "PATCHTACIO_NTFY_TOKEN"}}</label>
+      <label>Priority
+        <select name="priority">
+          {{range $p := (list "5" "4" "3" "2" "1")}}<option value="{{$p}}" {{if eq $.Data.Form.Priority $p}}selected{{end}}>{{$p}}{{if eq $p "4"}} (high, the default){{end}}</option>{{end}}
+        </select></label>
+    </div>
+    <p class="small">On ntfy.sh anyone who knows the topic name can read it: use a long random name.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend><label><input type="checkbox" name="desktop" {{if .Form.Desktop}}checked{{end}}> Notification on this computer</label></legend>
+    <p class="small">Shown only while you are logged in to this computer.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>How often</legend>
+    <label>Send alerts
+      <select name="digest">
+        <option value="off" {{if eq .Form.Digest "off"}}selected{{end}}>as soon as a check finds something</option>
+        <option value="daily" {{if eq .Form.Digest "daily"}}selected{{end}}>at most once a day</option>
+        <option value="weekly" {{if eq .Form.Digest "weekly"}}selected{{end}}>at most once a week</option>
+      </select></label>
+  </fieldset>
+
+  <p><button type="submit" class="primary" {{if .Problem}}disabled{{end}}>Save alert settings</button></p>
+</form>
+
+<section>
+  <h2>Saved secrets</h2>
+  <p class="small">Passwords and URLs are kept in this computer's keychain, never in the settings file, and never shown here.</p>
+  <table>
+    <tbody>
+    {{range $env, $s := .Secrets}}
+      <tr><td>{{$s.What}}</td><td>{{template "secret" $s}}</td>
+        <td>{{if eq $s.Source "keychain"}}
+          <form method="post" action="/alerts/secret/delete" class="inline">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="env" value="{{$env}}">
+            <button type="submit">Remove</button></form>{{end}}</td></tr>
+    {{end}}
+    </tbody>
+  </table>
+</section>
+{{end}}{{end}}
