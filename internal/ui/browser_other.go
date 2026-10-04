@@ -3,6 +3,7 @@
 package ui
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os/exec"
@@ -16,7 +17,7 @@ func openBrowser(u string) error {
 	if err != nil {
 		return errors.New("xdg-open is not installed, so the browser cannot be opened for you")
 	}
-	cmd := exec.Command(prog, u) //nolint:gosec // xdg-open from PATH; u is our own checked link
+	cmd := exec.CommandContext(context.Background(), prog, u) //nolint:gosec // xdg-open from PATH; u is our own checked link. Not cancelled: it must outlive the request.
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("open the browser: %w", err)
 	}
