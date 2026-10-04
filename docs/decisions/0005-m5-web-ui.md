@@ -28,10 +28,12 @@ The UI runs on a computer that other people may use too (a school or council PC 
 accounts), so "it only listens on 127.0.0.1" is not enough.
 
 - **Network:** a random port on `127.0.0.1` only, never `0.0.0.0` or `::`.
-- **Linux: same user only.** Accepted connections are looked up in `/proc/net/tcp`. One whose other
-  end is owned by another uid is closed before any HTTP is read, so another user's program cannot use
-  a stolen link or cookie at all. A socket that is not found (another network namespace, `/proc`
-  hidden) is let through: such a program cannot reach our 127.0.0.1 anyway. macOS and Windows have
+- **Linux: same user only.** Accepted connections are looked up in `/proc/net/tcp` and
+  `/proc/net/tcp6` (an IPv6 socket can connect to `::ffff:127.0.0.1`). One whose other end is owned by
+  another uid, or **cannot be found** (a connected socket is always listed), is closed before any HTTP
+  is read, so another user's program cannot use a stolen link or cookie at all. Only when `/proc/net`
+  cannot be read at all is the check skipped, with a warning. Addresses are compared in the machine's
+  own byte order, so big-endian Linux works too. macOS and Windows have
   no cheap unprivileged equivalent, so there the link and the cookie are the protection.
 - **Host check:** every request must carry `Host: 127.0.0.1:<port>` exactly. A web page on another
   site that makes its own name resolve to 127.0.0.1 (DNS rebinding) sends its own name and gets 421.
@@ -123,7 +125,7 @@ These are what is left after the protections above. Both need a hostile account 
 ## Lifetime
 
 - `patchtacio ui` runs until **Stop Patchtacio** (a POST, so another site cannot trigger it), Ctrl+C,
-  or **one hour without a request**, which bounds how long a forgotten window or a stolen session
+  or **one hour without a request from the session** (a stranger's requests do not count), which bounds how long a forgotten window or a stolen session
   lasts. Shutdown waits up to 5 seconds for requests in flight, then for any backend call still
   running (a keychain write, a schedule install) to finish, so nothing is left half done.
 - Showing a page runs `check` on the saved data, which records the findings it sees (as every

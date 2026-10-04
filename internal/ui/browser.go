@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/milliebillie/patchtacio/internal/config"
+	"github.com/milliebillie/patchtacio/internal/secrets"
 )
 
 // OpenBrowser opens u, which must be a link to this computer's UI, in the
@@ -23,7 +23,10 @@ func OpenBrowser(u string) error {
 // reads from it, for a browser started on our behalf: it may live for
 // hours and has no use for them.
 func browserEnv() []string {
-	secret := []string{config.EnvSMTPPassword, config.EnvWebhookURL, config.EnvNtfyURL, config.EnvNtfyToken, "NVD_API_KEY"}
+	secret := []string{"NVD_API_KEY"}
+	for _, s := range secrets.All {
+		secret = append(secret, s.Env)
+	}
 	return slices.DeleteFunc(os.Environ(), func(kv string) bool {
 		name, _, _ := strings.Cut(kv, "=")
 		return slices.ContainsFunc(secret, func(s string) bool { return strings.EqualFold(s, name) })

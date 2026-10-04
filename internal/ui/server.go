@@ -46,7 +46,8 @@ type Server struct {
 	opt   Options
 	pages map[string]*template.Template
 
-	work sync.Mutex // one Backend call at a time
+	work     sync.Mutex     // one Backend call at a time
+	inflight sync.WaitGroup // requests being answered, waited for on stop
 
 	mu          sync.Mutex
 	host        string // "127.0.0.1:<port>", set by Listen
@@ -84,7 +85,7 @@ func New(b Backend, o Options) (*Server, error) {
 	if o.LaunchTTL == 0 {
 		o.LaunchTTL = defaultLaunchTTL
 	}
-	if o.IdleTimeout == 0 {
+	if o.IdleTimeout <= 0 {
 		o.IdleTimeout = defaultIdle
 	}
 	if o.Tell == nil {
@@ -180,10 +181,10 @@ wait:
 	if err := srv.Shutdown(sctx); err != nil {
 		_ = srv.Close()
 	}
-	// Let a backend call still running (a keychain write, a schedule
-	// install) finish, so nothing is left half done.
-	s.work.Lock()
-	s.work.Unlock() //nolint:staticcheck // an empty critical section: waiting is the point
+	// Let requests still running (a keychain write, a schedule install)
+	// finish, so nothing is left half done. No new ones start: the listener
+	// and connections are closed.
+	s.inflight.Wait()
 	if err := <-errc; err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
@@ -214,9 +215,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "wrong host", http.StatusMisdirectedRequest)
 		return
 	}
-	s.mu.Lock()
-	s.lastSeen = s.opt.Now()
-	s.mu.Unlock()
+	s.inflight.Add(1)
+	defer s.inflight.Done()
 	if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -238,6 +238,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.renderStatus(w, http.StatusUnauthorized, "noSession")
 		return
 	}
+	// Only the session's own requests count as use: a stranger's must not
+	// keep Patchtacio running.
+	s.mu.Lock()
+	s.lastSeen = s.opt.Now()
+	s.mu.Unlock()
 	if r.Method == http.MethodPost {
 		if !s.checkPost(w, r, sess) {
 			return
@@ -262,7 +267,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		s.mu.Unlock()
 		s.opt.Tell("Warning: Patchtacio's link was opened a second time, so the browser session has been closed. " +
 			"If you did not open it twice, someone else on this computer may have tried to use it. Stop Patchtacio and start it again.")
-		s.renderStatus(w, http.StatusForbidden, "linkUsed")
+		s.renderStatus(w, http.StatusForbidden, "revoked")
 		return
 	}
 	ok := s.launch != "" && got != "" && subtle.ConstantTimeCompare([]byte(got), []byte(s.launch)) == 1 &&

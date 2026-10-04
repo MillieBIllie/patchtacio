@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -836,13 +837,16 @@ func TestReusedLaunchLinkEndsTheSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _ = io.Copy(io.Discard, resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	_ = resp.Body.Close()
-	if resp.StatusCode != http.StatusForbidden {
-		t.Errorf("reused link: %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusForbidden || !strings.Contains(string(body), "closed the browser session") {
+		t.Errorf("reused link: %d\n%s", resp.StatusCode, body)
 	}
 	if r := h.get("/"); r.StatusCode != http.StatusUnauthorized {
 		t.Errorf("the first session still works after the link was reused: %d", r.StatusCode)
+	}
+	if r := h.get(link); r.StatusCode != http.StatusForbidden {
+		t.Errorf("third use: %d", r.StatusCode)
 	}
 	if !strings.Contains(h.tells(), "opened a second time") {
 		t.Errorf("reuse not told: %q", h.tells())
@@ -933,14 +937,29 @@ func TestPeerUID(t *testing.T) {
 `)
 	server := &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0x3B6D}
 	client := &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0xD431}
-	if uid, ok := peerUID(table, client, server); !ok || uid != 1001 {
+	if binary.NativeEndian.Uint16([]byte{1, 0}) != 1 {
+		t.Skip("fixtures are from a little-endian machine")
+	}
+	if uid, ok := peerUID(table, client, server, false); !ok || uid != 1001 {
 		t.Errorf("peer uid = %d, %v; want 1001 (the client's socket, not ours)", uid, ok)
 	}
-	if _, ok := peerUID(table, &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 1}, server); ok {
+	if _, ok := peerUID(table, &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 1}, server, false); ok {
 		t.Error("found a socket that is not there")
 	}
-	if _, ok := peerUID(table, &net.TCPAddr{IP: net.IPv6loopback, Port: 1}, server); ok {
-		t.Error("IPv6 address matched an IPv4 table")
+	if _, ok := peerUID(table, &net.TCPAddr{IP: net.IPv6loopback, Port: 1}, server, false); ok {
+		t.Error("an IPv6 address matched")
+	}
+	// An IPv6 socket connected to ::ffff:127.0.0.1 is listed in tcp6.
+	table6 := []byte(`  sl  local_address                         remote_address                        st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+   0: 0000000000000000FFFF00000100007F:D431 0000000000000000FFFF00000100007F:3B6D 01 00000000:00000000 00:00000000 00000000  1002        0 9 1
+`)
+	if binary.NativeEndian.Uint16([]byte{1, 0}) == 1 { // the fixture is little-endian
+		if uid, ok := peerUID(table6, client, server, true); !ok || uid != 1002 {
+			t.Errorf("tcp6 peer uid = %d, %v; want 1002", uid, ok)
+		}
+		if _, ok := peerUID(table6, client, server, false); ok {
+			t.Error("tcp6 row matched as tcp")
+		}
 	}
 }
 
