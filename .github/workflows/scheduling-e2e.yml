@@ -1,0 +1,59 @@
+name: Scheduling end to end
+
+# Installs the daily check with the operating system's real scheduler on a CI
+# machine and checks that it runs. Unit tests fake the scheduler; this is the
+# real thing (docs/manual-testing.md lists what it does not cover, such as a
+# reboot). The macOS test fetches the live CISA KEV catalog, so this runs on
+# changes to scheduling code, weekly, and by hand, not on every pull request.
+
+on:
+  pull_request:
+    paths:
+      - "internal/schedule/**"
+      - "internal/notify/**"
+      - "internal/logging/**"
+      - "internal/sysdir/**"
+      - "cmd/patchtacio/watch*.go"
+      - ".github/workflows/scheduling-e2e.yml"
+  schedule:
+    - cron: "41 6 * * 1" # Mondays 06:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CGO_ENABLED: "0"
+
+jobs:
+  launchd:
+    name: launchd agent (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Install, run on demand, run on schedule, uninstall
+        run: go test -tags integration -count=1 -v -timeout 10m -run LaunchdEndToEnd ./cmd/patchtacio/
+
+  task-scheduler:
+    name: Task Scheduler (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Register, query, run and delete a real task
+        run: go test -tags integration -count=1 -v -run TaskScheduler ./internal/schedule/

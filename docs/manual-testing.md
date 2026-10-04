@@ -47,8 +47,17 @@ Where to look in each scheduler:
 
 ## Automated pieces
 
-`go test -tags integration -run TaskScheduler ./internal/schedule/` (Windows) registers a real task
-from the generated definition, checks the stored settings, starts it, and deletes it.
+The `Scheduling end to end` workflow (`.github/workflows/scheduling-e2e.yml`) runs these on
+GitHub's runners, on pull requests that touch scheduling code, weekly, and by hand. Neither covers a
+reboot or a missed run, so the table below still matters.
+
+- `go test -tags integration -run LaunchdEndToEnd ./cmd/patchtacio/` (macOS) builds Patchtacio,
+  installs a real launchd agent with every Patchtacio folder in a temp directory, and checks a run
+  started on demand, a run launchd starts by itself at the scheduled minute (alerts go to an SMTP
+  receiver inside the test), `watch --status`, and uninstall. It fetches the live KEV catalog, and
+  skips itself if a real Patchtacio agent is installed.
+- `go test -tags integration -run TaskScheduler ./internal/schedule/` (Windows) registers a real task
+  from the generated definition, checks the stored settings, starts it, and deletes it.
 
 ## Results
 
