@@ -454,10 +454,10 @@ func TestSecretWarningsLinuxKeychain(t *testing.T) {
 		t.Fatal(err)
 	}
 	n := &config.Notify{Webhook: &config.Webhook{Kind: "slack"}}
-	if w := e.app.secretWarnings(n, "linux"); len(w) != 1 || !strings.Contains(w[0], "logged out") {
+	if w := e.app.secretWarnings(n, "linux", false); len(w) != 1 || !strings.Contains(w[0], "logged out") {
 		t.Errorf("linux keychain: %q", w)
 	}
-	if w := e.app.secretWarnings(n, "windows"); len(w) != 0 {
+	if w := e.app.secretWarnings(n, "windows", false); len(w) != 0 {
 		t.Errorf("windows keychain needs no warning: %q", w)
 	}
 }
