@@ -2,7 +2,11 @@ package ui
 
 import (
 	"errors"
+	"os"
+	"slices"
 	"strings"
+
+	"github.com/milliebillie/patchtacio/internal/config"
 )
 
 // OpenBrowser opens u, which must be a link to this computer's UI, in the
@@ -13,4 +17,15 @@ func OpenBrowser(u string) error {
 		return errors.New("refusing to open a link that is not Patchtacio's own")
 	}
 	return openBrowser(u)
+}
+
+// browserEnv is this process's environment without the secrets Patchtacio
+// reads from it, for a browser started on our behalf: it may live for
+// hours and has no use for them.
+func browserEnv() []string {
+	secret := []string{config.EnvSMTPPassword, config.EnvWebhookURL, config.EnvNtfyURL, config.EnvNtfyToken, "NVD_API_KEY"}
+	return slices.DeleteFunc(os.Environ(), func(kv string) bool {
+		name, _, _ := strings.Cut(kv, "=")
+		return slices.ContainsFunc(secret, func(s string) bool { return strings.EqualFold(s, name) })
+	})
 }

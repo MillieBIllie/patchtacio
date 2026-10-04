@@ -28,6 +28,11 @@ The UI runs on a computer that other people may use too (a school or council PC 
 accounts), so "it only listens on 127.0.0.1" is not enough.
 
 - **Network:** a random port on `127.0.0.1` only, never `0.0.0.0` or `::`.
+- **Linux: same user only.** Accepted connections are looked up in `/proc/net/tcp`. One whose other
+  end is owned by another uid is closed before any HTTP is read, so another user's program cannot use
+  a stolen link or cookie at all. A socket that is not found (another network namespace, `/proc`
+  hidden) is let through: such a program cannot reach our 127.0.0.1 anyway. macOS and Windows have
+  no cheap unprivileged equivalent, so there the link and the cookie are the protection.
 - **Host check:** every request must carry `Host: 127.0.0.1:<port>` exactly. A web page on another
   site that makes its own name resolve to 127.0.0.1 (DNS rebinding) sends its own name and gets 421.
   `localhost` is refused too: the server opens and prints `127.0.0.1` only.
@@ -35,6 +40,10 @@ accounts), so "it only listens on 127.0.0.1" is not enough.
   `/login?token=…` once, and that exchanges it for a session cookie (`HttpOnly`, `SameSite=Strict`, host-only,
   no expiry: it ends with the browser session), then redirects to `/` so the token leaves the address bar.
   - The token works **once** and for **2 minutes**. A wrong guess does not burn it.
+  - **The right token used a second time ends the session**: the link may have been stolen, and
+    whoever used it first, attacker or not, loses access. The terminal says so; the user restarts.
+  - The terminal says "A browser opened Patchtacio at HH:MM:SS", so a session the user did not open
+    can be noticed.
   - There is one session per run. A second browser has to restart `patchtacio ui`.
   - Without the cookie, every page (except the stylesheet and script) answers 401 with "start
     Patchtacio with `patchtacio ui`".
@@ -61,18 +70,26 @@ accounts), so "it only listens on 127.0.0.1" is not enough.
 
 ### Accepted risks
 
+These are what is left after the protections above. Both need a hostile account on the same computer.
+
 - **The launch token is visible on the command line of the browser process** while it starts (`xdg-open`,
   `open`, or the browser itself). On Linux another local user can read other processes' command lines.
-  The token works once and for 2 minutes, and a stolen use shows up as "this link has already been used"
-  in the real browser. We chose this over opening a redirect file, as Jupyter does: snap and Flatpak
+  The token works once and for 2 minutes. If an attacker uses it first, the real browser's use ends
+  the attacker's session too, and the terminal warns. On Linux the peer check refuses the attacker's
+  connection anyway. We chose this over opening a redirect file, as Jupyter does: snap and Flatpak
   browsers (Ubuntu's default Firefox) cannot read files in `/tmp` or hidden folders, so on the most common
   Linux desktop the browser would not open at all. Windows does not show other users' command lines
   to a standard user.
-- **Cookies are per host, not per port.** A malicious program run by *another local user* that listens
-  on `127.0.0.1:<other port>`, and gets this user's browser to visit it, receives the session cookie
-  and could use it while `patchtacio ui` is running. This needs a hostile local account plus a lure,
-  and lasts only while the UI runs. `Secure` or `__Host-` cookies would stop it, but browsers do not
-  reliably keep them over plain http on `127.0.0.1`.
+- **Cookies are per host, not per port.** Any page the user's browser loads from
+  `127.0.0.1:<another port>` (a hostile local server, or a harmless dev server that logs headers)
+  gets the session cookie. On Linux another user's program still cannot connect (peer check); on
+  macOS and Windows it could use the cookie until the UI stops (Stop, Ctrl+C, or one idle hour).
+  `Secure` or `__Host-` cookies would stop it, but browsers do not reliably keep them over plain http
+  on `127.0.0.1`.
+- On Windows the browser is started with `ShellExecute`, so a browser that was not already running
+  inherits this process's environment, including any `PATCHTACIO_*` secrets set in it. Only the same
+  user (or an administrator) can read it. On Linux and macOS the browser gets the environment without
+  them.
 - No TLS: traffic never leaves the computer.
 
 ## Secrets
@@ -82,8 +99,11 @@ accounts), so "it only listens on 127.0.0.1" is not enough.
   never go in the configuration file, and **no page ever shows a secret's value**. Pages show only
   where a secret comes from: keychain, environment variable (used first), or not set.
 - A field left empty keeps the saved value. A secret for a channel that is turned off is ignored.
-- Webhook and ntfy URLs are checked (`notify.CheckURL`: https, or http to 127.0.0.1 only) before
-  they are saved.
+- Webhook and ntfy URLs are checked (`notify.CheckURL`: https, or http to 127.0.0.1 only) with the
+  rest of the form, before anything is saved.
+- Messages that may quote a server's reply (a failed test, an SMTP or webhook error) are shown as
+  plain text, never with links, so a hostile endpoint cannot put a link in Patchtacio's page. Only
+  Patchtacio's own feed warnings get links.
 - If the keychain cannot be reached (a Linux server without a desktop session), the page says so and
   the environment-variable route (docs/ALERTS.md) still applies.
 
@@ -93,7 +113,8 @@ accounts), so "it only listens on 127.0.0.1" is not enough.
   kept, as with `init`.
 - **No lost edits.** Each form carries the SHA-256 of the file as it was read. If the file has
   changed since then (hand edit, another tab, `init`), the save is refused and the page reloads the
-  current file.
+  current file. The hash is compared just before the atomic write; an edit in the milliseconds
+  between can still be overwritten, which is accepted.
 - **No overwriting a broken file.** A file that cannot be parsed or validated is shown with its
   error, and every save is refused until it is fixed, as `init` refuses.
 - Renamed catalog entries are shown and saved as their successors (`Config.Resolve`).
@@ -101,9 +122,13 @@ accounts), so "it only listens on 127.0.0.1" is not enough.
 
 ## Lifetime
 
-- `patchtacio ui` runs until **Stop Patchtacio** (a POST, so another site cannot trigger it) or Ctrl+C.
-  Shutdown waits up to 5 seconds for requests in flight.
-- There is no idle timeout. The window that runs it says to keep it open.
+- `patchtacio ui` runs until **Stop Patchtacio** (a POST, so another site cannot trigger it), Ctrl+C,
+  or **one hour without a request**, which bounds how long a forgotten window or a stolen session
+  lasts. Shutdown waits up to 5 seconds for requests in flight, then for any backend call still
+  running (a keychain write, a schedule install) to finish, so nothing is left half done.
+- Showing a page runs `check` on the saved data, which records the findings it sees (as every
+  `check` does, 0002), so that "Mark as dealt with" works for anything on the page. That is the only
+  write a GET makes, and it changes nothing a user could notice.
 - One backend call at a time (a mutex), because the app's lazily built pieces (the secrets store)
   are not safe for concurrent use, and one user does not need parallel checks.
 - No write timeout, because downloading the feeds can take minutes. Each feed keeps its own limits

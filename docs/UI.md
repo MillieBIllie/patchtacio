@@ -9,7 +9,8 @@ patchtacio ui --no-browser    # only prints the link (for example over remote de
 ```
 
 A window shows the address. **Keep it open while you use Patchtacio.** To stop, click
-**Stop Patchtacio** at the top of the page, or press Ctrl+C in that window.
+**Stop Patchtacio** at the top of the page, or press Ctrl+C in that window. Patchtacio also stops by
+itself after an hour without use.
 
 The page is served only to this computer, and only to the browser that opened Patchtacio's link,
 so other people using this computer cannot see or change your settings. The link works once,

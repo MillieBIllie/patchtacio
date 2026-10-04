@@ -32,6 +32,9 @@ type Backend interface {
 
 	// Secrets says where each alert secret comes from, never its value.
 	Secrets(ctx context.Context) []Secret
+	// CheckSecret says whether value can be used for env (a webhook URL
+	// must be https, for example), without saving it.
+	CheckSecret(env, value string) error
 	// SetSecret checks value and saves it in the OS keychain.
 	SetSecret(ctx context.Context, env, value string) error
 	// DeleteSecret removes a secret from the OS keychain.

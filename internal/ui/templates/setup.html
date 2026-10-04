@@ -25,11 +25,14 @@ Four steps set it up.</p>
     <p><a class="button" href="/alerts">Set up alerts and send a test</a></p>
   </li>
 
-  <li class="{{if and .Report (not .Report.NoData)}}done{{end}}">
+  <li class="{{if and .Report (not .Report.NoData) (not .Report.Warnings)}}done{{end}}">
     <h2>See what affects you now</h2>
     {{if .ReportErr}}<p class="bad">{{.ReportErr}}</p>
     {{else if not .Report}}<p>Choose your products first.</p>
-    {{else if .Report.NoData}}<p>No vulnerability data downloaded yet.</p>
+    {{else if .Report.NoData}}<p class="bad">No usable vulnerability data yet: Patchtacio cannot check your products.</p>
+    {{else if .Report.Warnings}}<p class="bad">The data has problems, so findings may be missing:</p>
+      <ul>{{range .Report.Warnings}}<li>{{.}}</li>{{end}}</ul>
+      {{if .Open}}<p class="bad">{{plural .Open "finding needs" "findings need"}} your attention.</p>{{end}}
     {{else if .Open}}<p class="bad">{{plural .Open "finding needs" "findings need"}} your attention.</p>
     {{else}}<p>Nothing open in the data Patchtacio has. That is not an all clear: keep installing your vendors' security updates.</p>{{end}}
     <p><a class="button" href="/findings">Open findings</a></p>

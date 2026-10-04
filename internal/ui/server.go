@@ -21,6 +21,7 @@ import (
 const (
 	maxBody          = 64 << 10 // POST bodies: forms are a few kilobytes
 	defaultLaunchTTL = 2 * time.Minute
+	defaultIdle      = time.Hour
 	shutdownWait     = 5 * time.Second
 )
 
@@ -29,7 +30,14 @@ type Options struct {
 	Version   string
 	Now       func() time.Time // defaults to time.Now
 	LaunchTTL time.Duration    // how long the launch link works; default 2 minutes
-	Logger    *slog.Logger
+	// IdleTimeout stops the server after this long without a request, so a
+	// forgotten window (or a stolen session) does not last for ever.
+	// Default one hour.
+	IdleTimeout time.Duration
+	// Tell writes a line to the person who started Patchtacio (the
+	// terminal), e.g. when a browser opens the session. Optional.
+	Tell   func(string)
+	Logger *slog.Logger
 }
 
 // Server is the web UI for one run of `patchtacio ui`.
@@ -43,8 +51,10 @@ type Server struct {
 	mu          sync.Mutex
 	host        string // "127.0.0.1:<port>", set by Listen
 	launch      string // the one-time launch token; "" once used
+	usedLaunch  string // the launch token after its one use: seen again, it means theft
 	launchUntil time.Time
 	sess        *session // the one session the launch link created
+	lastSeen    time.Time
 
 	stop     chan struct{}
 	stopOnce sync.Once
@@ -61,6 +71,9 @@ type Flash struct {
 	Kind  string // "ok", "warn" or "error"
 	Title string
 	Lines []string
+	// Linkify turns web links in Lines into links. Only for text Patchtacio
+	// writes itself: never for errors that may quote a server's reply.
+	Linkify bool
 }
 
 // New returns a server over b.
@@ -70,6 +83,12 @@ func New(b Backend, o Options) (*Server, error) {
 	}
 	if o.LaunchTTL == 0 {
 		o.LaunchTTL = defaultLaunchTTL
+	}
+	if o.IdleTimeout == 0 {
+		o.IdleTimeout = defaultIdle
+	}
+	if o.Tell == nil {
+		o.Tell = func(string) {}
 	}
 	if o.Logger == nil {
 		o.Logger = slog.New(slog.DiscardHandler)
@@ -98,8 +117,10 @@ func (s *Server) Listen(ctx context.Context) (net.Listener, error) {
 	s.host = ln.Addr().String()
 	s.launch = tok
 	s.launchUntil = s.opt.Now().Add(s.opt.LaunchTTL)
+	s.lastSeen = s.opt.Now()
 	s.mu.Unlock()
-	return ln, nil
+	// Linux: refuse connections from other users' programs.
+	return sameUserOnly(ln, s.opt.Logger), nil
 }
 
 // URL is the address of the UI, without the launch token: it works in the
@@ -133,17 +154,36 @@ func (s *Server) Serve(ctx context.Context, ln net.Listener) error {
 	}
 	errc := make(chan error, 1)
 	go func() { errc <- srv.Serve(ln) }()
-	select {
-	case err := <-errc:
-		return err
-	case <-ctx.Done():
-	case <-s.stop:
+	tick := time.NewTicker(min(s.opt.IdleTimeout/4, time.Minute))
+	defer tick.Stop()
+wait:
+	for {
+		select {
+		case err := <-errc:
+			return err
+		case <-ctx.Done():
+			break wait
+		case <-s.stop:
+			break wait
+		case <-tick.C:
+			s.mu.Lock()
+			idle := s.opt.Now().Sub(s.lastSeen) > s.opt.IdleTimeout
+			s.mu.Unlock()
+			if idle {
+				s.opt.Tell(fmt.Sprintf("Stopping: Patchtacio has not been used for %s.", s.opt.IdleTimeout))
+				break wait
+			}
+		}
 	}
 	sctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), shutdownWait)
 	defer cancel()
 	if err := srv.Shutdown(sctx); err != nil {
 		_ = srv.Close()
 	}
+	// Let a backend call still running (a keychain write, a schedule
+	// install) finish, so nothing is left half done.
+	s.work.Lock()
+	s.work.Unlock() //nolint:staticcheck // an empty critical section: waiting is the point
 	if err := <-errc; err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
@@ -174,6 +214,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "wrong host", http.StatusMisdirectedRequest)
 		return
 	}
+	s.mu.Lock()
+	s.lastSeen = s.opt.Now()
+	s.mu.Unlock()
 	if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -211,11 +254,22 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	got := r.URL.Query().Get("token")
 	s.mu.Lock()
+	if s.usedLaunch != "" && got != "" && subtle.ConstantTimeCompare([]byte(got), []byte(s.usedLaunch)) == 1 {
+		// The link was used twice: someone else may have it, so whoever
+		// used it first loses the session too.
+		s.sess = nil
+		s.usedLaunch = ""
+		s.mu.Unlock()
+		s.opt.Tell("Warning: Patchtacio's link was opened a second time, so the browser session has been closed. " +
+			"If you did not open it twice, someone else on this computer may have tried to use it. Stop Patchtacio and start it again.")
+		s.renderStatus(w, http.StatusForbidden, "linkUsed")
+		return
+	}
 	ok := s.launch != "" && got != "" && subtle.ConstantTimeCompare([]byte(got), []byte(s.launch)) == 1 &&
 		s.opt.Now().Before(s.launchUntil)
 	var sess *session
 	if ok {
-		s.launch = "" // once only
+		s.usedLaunch, s.launch = s.launch, "" // once only
 		var err error
 		if sess, err = newSession(); err != nil {
 			s.mu.Unlock()
@@ -230,6 +284,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		s.renderStatus(w, http.StatusForbidden, "linkUsed")
 		return
 	}
+	s.opt.Tell(fmt.Sprintf("A browser opened Patchtacio at %s. If that was not you, stop Patchtacio now.", s.opt.Now().Format("15:04:05")))
 	// Not Secure: the UI is plain http on 127.0.0.1, where browsers do not
 	// reliably keep Secure cookies. HttpOnly and SameSite=Strict are set.
 	http.SetCookie(w, &http.Cookie{ //nolint:gosec // see above

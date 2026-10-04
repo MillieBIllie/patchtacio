@@ -47,7 +47,10 @@ func newUICmd(a *app) *cobra.Command {
 }
 
 func (a *app) runUI(ctx context.Context, out, warn io.Writer, noBrowser bool) error {
-	srv, err := ui.New(&uiBackend{a: a}, ui.Options{Version: version.Get().Version, Now: a.now, Logger: a.log})
+	srv, err := ui.New(&uiBackend{a: a}, ui.Options{
+		Version: version.Get().Version, Now: a.now, Logger: a.log,
+		Tell: func(s string) { _, _ = fmt.Fprintln(out, s) },
+	})
 	if err != nil {
 		return err
 	}
@@ -167,16 +170,22 @@ func (b *uiBackend) Secrets(context.Context) []ui.Secret {
 	return out
 }
 
-func (b *uiBackend) SetSecret(_ context.Context, env, value string) error {
+func (b *uiBackend) CheckSecret(env, value string) error {
 	sec, ok := secrets.ByName(env)
 	if !ok {
 		return fmt.Errorf("unknown secret %s", env)
 	}
 	if env == config.EnvWebhookURL || env == config.EnvNtfyURL {
-		if err := notify.CheckURL(value, sec.What); err != nil {
-			return err
-		}
+		return notify.CheckURL(value, sec.What)
 	}
+	return nil
+}
+
+func (b *uiBackend) SetSecret(_ context.Context, env, value string) error {
+	if err := b.CheckSecret(env, value); err != nil {
+		return err
+	}
+	sec, _ := secrets.ByName(env)
 	return b.a.secretStore().Set(sec, value)
 }
 
@@ -269,7 +278,7 @@ func (b *uiBackend) Report(ctx context.Context, update bool) (*ui.Report, error)
 		})
 	}
 	for _, e := range rep.EndOfLife {
-		entry := ui.EOLEntry{ID: e.ID, Product: e.Product, Version: e.Version, Release: e.Release, What: eolWhat(e, rep.today), Acked: e.Acknowledged}
+		entry := ui.EOLEntry{ID: e.ID, Product: e.Product, Version: e.Version, Release: e.Release, What: uiText(eolWhat(e, rep.today)), Acked: e.Acknowledged}
 		if e.State == match.EOLNoVersion {
 			r.NoVersion++
 		}
@@ -291,6 +300,11 @@ func (b *uiBackend) Report(ctx context.Context, update bool) (*ui.Report, error)
 		r.EOL = append(r.EOL, entry)
 	}
 	return r, nil
+}
+
+// uiText points a CLI hint at the UI's button.
+func uiText(s string) string {
+	return strings.ReplaceAll(s, "run patchtacio feeds update", "use \"Download the latest data\"")
 }
 
 // recentDays is how new a KEV entry is to be listed first in the UI.

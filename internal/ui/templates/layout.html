@@ -26,7 +26,7 @@
 {{range .Flash}}
 <div class="flash {{.Kind}}" role="{{if eq .Kind "error"}}alert{{else}}status{{end}}">
   <strong>{{.Title}}</strong>
-  {{if .Lines}}<ul>{{range .Lines}}<li>{{linkify .}}</li>{{end}}</ul>{{end}}
+  {{if .Lines}}<ul>{{$f := .}}{{range .Lines}}<li>{{if $f.Linkify}}{{linkify .}}{{else}}{{.}}{{end}}</li>{{end}}</ul>{{end}}
 </div>
 {{end}}
 {{template "content" .}}

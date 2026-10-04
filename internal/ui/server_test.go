@@ -98,6 +98,13 @@ func (f *fake) Secrets(context.Context) []Secret {
 	return out
 }
 
+func (f *fake) CheckSecret(env, value string) error {
+	if env == config.EnvWebhookURL && !strings.HasPrefix(value, "https://") {
+		return errors.New("the webhook URL must be an https:// URL")
+	}
+	return nil
+}
+
 func (f *fake) SetSecret(_ context.Context, env, value string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -188,12 +195,25 @@ type harness struct {
 	client *http.Client
 	csrf   string
 	now    time.Time
+
+	mu   sync.Mutex
+	told []string // what the server told the terminal
+}
+
+func (h *harness) tells() string {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return strings.Join(h.told, "|")
 }
 
 func start(t *testing.T) *harness {
 	t.Helper()
 	h := &harness{t: t, b: newFake(), now: time.Date(2026, 10, 4, 9, 0, 0, 0, time.UTC)}
-	s, err := New(h.b, Options{Version: "test", Now: func() time.Time { return h.now }})
+	s, err := New(h.b, Options{Version: "test", Now: func() time.Time { return h.now }, Tell: func(m string) {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		h.told = append(h.told, m)
+	}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -799,5 +819,137 @@ func TestOpenBrowserRefusesOtherLinks(t *testing.T) {
 		if err := OpenBrowser(u); err == nil {
 			t.Errorf("OpenBrowser(%q) was allowed", u)
 		}
+	}
+}
+
+// A launch link used a second time may have been stolen: the session ends.
+func TestReusedLaunchLinkEndsTheSession(t *testing.T) {
+	h := start(t)
+	link := h.s.LaunchURL()
+	h.login()
+	if !strings.Contains(h.tells(), "A browser opened Patchtacio at 09:00:00") {
+		t.Errorf("session start not told: %q", h.tells())
+	}
+	other := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, link, nil)
+	resp, err := other.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = io.Copy(io.Discard, resp.Body)
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusForbidden {
+		t.Errorf("reused link: %d", resp.StatusCode)
+	}
+	if r := h.get("/"); r.StatusCode != http.StatusUnauthorized {
+		t.Errorf("the first session still works after the link was reused: %d", r.StatusCode)
+	}
+	if !strings.Contains(h.tells(), "opened a second time") {
+		t.Errorf("reuse not told: %q", h.tells())
+	}
+}
+
+func TestIdleTimeoutStops(t *testing.T) {
+	var mu sync.Mutex
+	var told []string
+	s, err := New(newFake(), Options{IdleTimeout: 40 * time.Millisecond, Tell: func(m string) {
+		mu.Lock()
+		defer mu.Unlock()
+		told = append(told, m)
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ln, err := s.Listen(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- s.Serve(t.Context(), ln) }()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("did not stop when idle")
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(told) != 1 || !strings.Contains(told[0], "has not been used") {
+		t.Errorf("told %q", told)
+	}
+}
+
+// Rule 3 on the first page too: data problems are never a finished step.
+func TestSetupPageShowsDataProblems(t *testing.T) {
+	h := start(t)
+	h.b.file.Products = []config.Product{{ID: "fortinet-fortios"}}
+	h.b.version = 1
+	h.b.report.Warnings = []string{"Warning: CISA KEV catalog data is out of date because it could not be downloaded."}
+	h.login()
+	body := h.page("/")
+	if !strings.Contains(body, "The data has problems, so findings may be missing") || !strings.Contains(body, "out of date") {
+		t.Errorf("setup page:\n%s", body)
+	}
+	if strings.Contains(body, "Nothing open in the data") {
+		t.Error("stale data shown as nothing open")
+	}
+	if strings.Count(body, `class="done"`) != 1 { // only the products step
+		t.Errorf("steps marked done: %d", strings.Count(body, `class="done"`))
+	}
+}
+
+// A server's reply quoted in an error must not become a link in our page.
+func TestErrorTextIsNotLinked(t *testing.T) {
+	h := start(t)
+	h.b.file = &config.Config{Version: 1, Notify: &config.Notify{Desktop: true}}
+	h.b.version = 1
+	h.b.testErr[config.ChannelDesktop] = errors.New("server said: log in at https://phish.example/now")
+	h.login()
+	page := h.postOK("/alerts/test", url.Values{"channel": {"all"}})
+	if !strings.Contains(page, "log in at https://phish.example/now") || strings.Contains(page, `href="https://phish.example`) {
+		t.Errorf("error text linked:\n%s", page)
+	}
+}
+
+func TestBadSecretIsRefusedBeforeSaving(t *testing.T) {
+	h := start(t)
+	h.login()
+	resp := h.post("/alerts", url.Values{"hash": {""}, "webhook": {"on"}, "kind": {"slack"}, "secret." + config.EnvWebhookURL: {"http://hooks.example/x"}})
+	if resp.StatusCode != http.StatusOK || !strings.Contains(resp.Body, "Nothing was saved") || !strings.Contains(resp.Body, "https://") {
+		t.Errorf("bad URL: %d\n%s", resp.StatusCode, resp.Body)
+	}
+	if h.b.version != 0 || len(h.b.secrets) != 0 {
+		t.Error("something was saved")
+	}
+}
+
+func TestPeerUID(t *testing.T) {
+	table := []byte(`  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+   0: 0100007F:3B6D 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 1 1 0000000000000000 100 0 0 10 0
+   1: 0100007F:D431 0100007F:3B6D 01 00000000:00000000 00:00000000 00000000  1001        0 2 1 0000000000000000 20 4 30 10 -1
+   2: 0100007F:3B6D 0100007F:D431 01 00000000:00000000 00:00000000 00000000  1000        0 3 1 0000000000000000 20 4 30 10 -1
+`)
+	server := &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0x3B6D}
+	client := &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0xD431}
+	if uid, ok := peerUID(table, client, server); !ok || uid != 1001 {
+		t.Errorf("peer uid = %d, %v; want 1001 (the client's socket, not ours)", uid, ok)
+	}
+	if _, ok := peerUID(table, &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 1}, server); ok {
+		t.Error("found a socket that is not there")
+	}
+	if _, ok := peerUID(table, &net.TCPAddr{IP: net.IPv6loopback, Port: 1}, server); ok {
+		t.Error("IPv6 address matched an IPv4 table")
+	}
+}
+
+func TestBrowserEnvHasNoSecrets(t *testing.T) {
+	t.Setenv(config.EnvWebhookURL, "https://hooks.example/secret")
+	t.Setenv("NVD_API_KEY", "k")
+	t.Setenv("PATCHTACIO_TEST_KEEP", "yes")
+	env := strings.Join(browserEnv(), "\n")
+	if strings.Contains(env, "hooks.example") || strings.Contains(env, "NVD_API_KEY") || !strings.Contains(env, "PATCHTACIO_TEST_KEEP=yes") {
+		t.Errorf("browser environment:\n%s", env)
 	}
 }

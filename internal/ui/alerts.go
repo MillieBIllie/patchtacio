@@ -164,6 +164,10 @@ func (s *Server) saveAlerts(w http.ResponseWriter, r *http.Request, sess *sessio
 			problems = append(problems, secretLabel(env)+" must be one line of at most 8 KB.")
 			continue
 		}
+		if err := s.b.CheckSecret(env, strings.TrimSpace(raw)); err != nil {
+			problems = append(problems, upperFirst(secretLabel(env))+": "+err.Error())
+			continue
+		}
 		values[env] = strings.TrimSpace(raw)
 	}
 	if len(problems) > 0 {
@@ -231,6 +235,13 @@ func cleanProblems(ps []string) []string {
 		}
 	}
 	return out
+}
+
+func upperFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }
 
 func sortedKeys(m map[string]string) []string {

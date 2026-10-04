@@ -150,7 +150,7 @@ func TestUIEndToEnd(t *testing.T) {
 		"hash": {hashOf(t, path)}, "webhook": {"on"}, "kind": {"slack"}, "desktop": {"on"},
 		"secret." + config.EnvWebhookURL: {"http://hooks.example.com/x"},
 	})
-	requireContains(t, page, "Some secrets were not saved", "must be an https:// URL")
+	requireContains(t, page, "Nothing was saved", "must be an https:// URL")
 	if v, _ := keyring.Get(secrets.Service, config.EnvWebhookURL); v != hook {
 		t.Errorf("a refused URL replaced the saved one: %q", v)
 	}

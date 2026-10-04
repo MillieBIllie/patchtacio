@@ -70,9 +70,9 @@ func (s *Server) updateFeeds(w http.ResponseWriter, r *http.Request, sess *sessi
 	case err != nil:
 		s.addFlash(sess, errorFlash("Could not check your products", err))
 	case rep.NoData:
-		s.addFlash(sess, Flash{Kind: "error", Title: "Could not download the data, and there is no saved copy", Lines: rep.Warnings})
+		s.addFlash(sess, Flash{Kind: "error", Title: "Could not download the data, and there is no saved copy", Lines: rep.Warnings, Linkify: true})
 	case len(rep.Warnings) > 0:
-		s.addFlash(sess, Flash{Kind: "warn", Title: "Checked, but with problems", Lines: rep.Warnings})
+		s.addFlash(sess, Flash{Kind: "warn", Title: "Checked, but with problems", Lines: rep.Warnings, Linkify: true})
 	default:
 		s.addFlash(sess, Flash{Kind: "ok", Title: "Downloaded the latest data and checked your products."})
 	}
