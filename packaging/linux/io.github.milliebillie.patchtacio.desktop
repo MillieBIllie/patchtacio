@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Patchtacio
+GenericName=Exploited-vulnerability and end-of-life alerts
+Comment=Set up alerts for exploited and end-of-life products you run, in your browser
+Exec=patchtacio ui
+Terminal=true
+Categories=System;Security;
+Keywords=security;vulnerability;KEV;CVE;patch;end of life;alerts;
+StartupNotify=false
