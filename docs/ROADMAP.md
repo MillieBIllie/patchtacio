@@ -70,6 +70,10 @@ with missed-run catch-up), on Linux with systemd and cron (WSL, including restar
 ### M6: Release + portfolio polish
 - [ ] GoReleaser: checksums, cosign signing, build provenance, SBOM for our own release
 - [ ] Homebrew tap, Scoop bucket, Docker image, `.deb`/`.rpm`
+      (already built, not published: the Scoop manifest with a Start-menu shortcut that opens `patchtacio ui`,
+      and `.deb`/`.rpm` with a menu entry for it. Still to do: publish them; a macOS way to open the UI without
+      a terminal, since GoReleaser's app bundles need Pro: a Homebrew cask with a small `.app`, or document
+      `patchtacio ui`)
 - [ ] README with demo GIF (recorded with `vhs`), install instructions per OS, architecture diagram
 - [ ] Docs: "How matching works", "Adding a product to the catalog"
 

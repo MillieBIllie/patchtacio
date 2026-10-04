@@ -1,5 +1,7 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# Signing, SBOMs, Homebrew, Scoop, Docker and packages are added in milestone M6.
+# Signing, SBOMs, Homebrew, Docker and publishing are added in milestone M6. The Scoop manifest
+# and the .deb/.rpm packages below are built but not published yet: they carry the shortcut that
+# opens the web UI (docs/UI.md).
 version: 2
 
 project_name: patchtacio
@@ -55,6 +57,50 @@ archives:
       - LICENSE
       - NOTICE
       - README.md
+
+# Linux packages, with a menu entry that opens the web UI in a terminal window (Terminal=true: it
+# shows the link and "keep this window open", and Ctrl+C stops it).
+nfpms:
+  - id: packages
+    ids: [patchtacio]
+    package_name: patchtacio
+    vendor: Patchtacio contributors
+    homepage: https://github.com/milliebillie/patchtacio
+    # M6: a real contact address before packages are published.
+    maintainer: Patchtacio contributors <https://github.com/milliebillie/patchtacio/issues>
+    section: utils
+    priority: optional
+    description: Alerts small IT teams when a product they run is actively exploited (CISA KEV) or reaches end of life.
+    license: Apache-2.0
+    formats: [deb, rpm]
+    bindir: /usr/bin
+    contents:
+      - src: packaging/linux/io.github.milliebillie.patchtacio.desktop
+        dst: /usr/share/applications/io.github.milliebillie.patchtacio.desktop
+        file_info:
+          mode: 0644
+      - src: LICENSE
+        dst: /usr/share/doc/patchtacio/LICENSE
+        file_info:
+          mode: 0644
+      - src: NOTICE
+        dst: /usr/share/doc/patchtacio/NOTICE
+        file_info:
+          mode: 0644
+
+# Scoop (Windows). A Start-menu shortcut "Patchtacio" runs `patchtacio.exe ui`. The manifest is
+# written to dist/ only: M6 creates the bucket repository and removes skip_upload.
+scoops:
+  - name: patchtacio
+    repository:
+      owner: milliebillie
+      name: scoop-bucket
+    homepage: https://github.com/milliebillie/patchtacio
+    description: Alerts small IT teams when a product they run is actively exploited (CISA KEV) or reaches end of life.
+    license: Apache-2.0
+    skip_upload: true
+    shortcuts:
+      - ["patchtacio.exe", "Patchtacio", "ui"]
 
 checksum:
   name_template: checksums.txt
