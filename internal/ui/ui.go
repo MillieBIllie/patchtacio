@@ -136,7 +136,6 @@ type FeedStatus struct {
 	Checked string // last successful contact, in words
 	Reason  string // why it is out of date
 	Problem string // the last update's error, if it failed
-	Source  string // where it comes from (a mirror is named)
 }
 
 // Schedule is how the daily check is set up.

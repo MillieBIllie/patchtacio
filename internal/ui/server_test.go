@@ -326,6 +326,18 @@ func (h *harness) postOK(path string, form url.Values) string {
 	return h.page(resp.Header.Get("Location"))
 }
 
+var seenField = regexp.MustCompile(`name="seen" value="([0-9a-f]{64})"`)
+
+// seen returns the list fingerprint the findings page puts in its bulk forms.
+func (h *harness) seen() string {
+	h.t.Helper()
+	m := seenField.FindStringSubmatch(h.page("/findings"))
+	if m == nil {
+		h.t.Fatal("no list fingerprint in the findings page")
+	}
+	return m[1]
+}
+
 var csrfField = regexp.MustCompile(`name="csrf" value="([0-9a-f]{64})"`)
 
 func csrfFrom(t *testing.T, body string) string {
@@ -1003,10 +1015,12 @@ func TestBulkAck(t *testing.T) {
 	}
 
 	// Safeguards: a note and the confirmation are required.
+	seen := h.seen()
 	for _, form := range []url.Values{
-		{"product": {"microsoft-windows-server"}, "scope": {"older"}, "note": {"patched"}},
-		{"product": {"microsoft-windows-server"}, "scope": {"older"}, "confirm": {"yes"}},
-		{"product": {"microsoft-windows-server"}, "scope": {"everything"}, "note": {"patched"}, "confirm": {"yes"}},
+		{"seen": {seen}, "product": {"microsoft-windows-server"}, "scope": {"older"}, "note": {"patched"}},
+		{"seen": {seen}, "product": {"microsoft-windows-server"}, "scope": {"older"}, "confirm": {"yes"}},
+		{"seen": {seen}, "product": {"microsoft-windows-server"}, "scope": {"everything"}, "note": {"patched"}, "confirm": {"yes"}},
+		{"product": {"microsoft-windows-server"}, "scope": {"older"}, "note": {"patched"}, "confirm": {"yes"}}, // no fingerprint
 	} {
 		if next := h.postOK("/findings/ack-bulk", form); !strings.Contains(next, "Nothing was marked") || len(h.b.acked) != 0 {
 			t.Errorf("form %v marked something", form)
@@ -1014,7 +1028,7 @@ func TestBulkAck(t *testing.T) {
 	}
 
 	// Older only: the recent one stays open, FortiOS is untouched.
-	next := h.postOK("/findings/ack-bulk", url.Values{"product": {"microsoft-windows-server"}, "scope": {"older"},
+	next := h.postOK("/findings/ack-bulk", url.Values{"seen": {seen}, "product": {"microsoft-windows-server"}, "scope": {"older"},
 		"note": {"cumulative update 2026-09"}, "confirm": {"yes"}})
 	if !strings.Contains(next, "Marked 2 entries for Microsoft Windows Server as dealt with.") || len(h.b.acked) != 2 ||
 		h.b.acked["kev/microsoft-windows-server/CVE-2019-2"] != "cumulative update 2026-09" {
@@ -1023,20 +1037,57 @@ func TestBulkAck(t *testing.T) {
 	if !strings.Contains(next, `action="/findings/unack-bulk"`) || !strings.Contains(next, "Microsoft Windows Server (2)") {
 		t.Error("no way to move them all back")
 	}
-	h.postOK("/findings/ack-bulk", url.Values{"product": {"microsoft-windows-server"}, "scope": {"all"}, "note": {"x"}, "confirm": {"yes"}})
+	h.postOK("/findings/ack-bulk", url.Values{"seen": {h.seen()}, "product": {"microsoft-windows-server"}, "scope": {"all"}, "note": {"x"}, "confirm": {"yes"}})
 	if len(h.b.acked) != 3 {
 		t.Errorf("all: %v", h.b.acked)
 	}
-	next = h.postOK("/findings/unack-bulk", url.Values{"product": {"microsoft-windows-server"}})
+	next = h.postOK("/findings/unack-bulk", url.Values{"seen": {h.seen()}, "product": {"microsoft-windows-server"}})
 	if !strings.Contains(next, "Moved 3 entries for Microsoft Windows Server back to the open list.") || len(h.b.acked) != 0 {
 		t.Errorf("unack all: %v", h.b.acked)
 	}
 	// A product with nothing to mark, or one that is not listed.
-	if next := h.postOK("/findings/unack-bulk", url.Values{"product": {"fortinet-fortios"}}); !strings.Contains(next, "No matching entries") {
+	if next := h.postOK("/findings/unack-bulk", url.Values{"seen": {h.seen()}, "product": {"fortinet-fortios"}}); !strings.Contains(next, "No matching entries") {
 		t.Error("unack of nothing")
 	}
-	if next := h.postOK("/findings/ack-bulk", url.Values{"product": {"../x"}, "scope": {"all"}, "note": {"x"}, "confirm": {"yes"}}); !strings.Contains(next, "No matching entries") {
+	if next := h.postOK("/findings/ack-bulk", url.Values{"seen": {h.seen()}, "product": {"../x"}, "scope": {"all"}, "note": {"x"}, "confirm": {"yes"}}); !strings.Contains(next, "No matching entries") {
 		t.Error("unknown product")
+	}
+}
+
+// A list that changed after the page was loaded (a new KEV entry from the
+// daily check) is never bulk-marked: the user has not seen the new entry.
+func TestBulkAckRefusesAChangedList(t *testing.T) {
+	h := start(t)
+	h.b.file.Products = []config.Product{{ID: "microsoft-windows-server"}}
+	h.b.version = 1
+	old := Finding{ID: "kev/microsoft-windows-server/CVE-2019-2", ProductID: "microsoft-windows-server", Product: "Microsoft Windows Server", Card: card("old")}
+	h.b.report.Findings = []Finding{old}
+	h.login()
+	seen := h.seen()
+	h.b.mu.Lock()
+	h.b.report.Findings = append(h.b.report.Findings, Finding{ID: "kev/microsoft-windows-server/CVE-2026-7", ProductID: "microsoft-windows-server",
+		Product: "Microsoft Windows Server", Recent: true, Card: card("new")})
+	h.b.mu.Unlock()
+	next := h.postOK("/findings/ack-bulk", url.Values{"seen": {seen}, "product": {"microsoft-windows-server"}, "scope": {"all"}, "note": {"x"}, "confirm": {"yes"}})
+	if !strings.Contains(next, "The list changed after this page was loaded") || len(h.b.acked) != 0 {
+		t.Errorf("changed list was marked: %v", h.b.acked)
+	}
+}
+
+// Every POST route goes through the CSRF check, including ones added later.
+func TestEveryPostRouteNeedsCSRF(t *testing.T) {
+	h := start(t)
+	h.login()
+	for _, p := range []string{"/products", "/alerts", "/alerts/test", "/alerts/secret/delete", "/findings/update", "/findings/ack",
+		"/findings/unack", "/findings/ack-bulk", "/findings/unack-bulk", "/schedule/install", "/schedule/uninstall", "/schedule/run", "/quit"} {
+		if r := h.post(p, url.Values{"csrf": {strings.Repeat("0", 64)}}); r.StatusCode != http.StatusForbidden {
+			t.Errorf("%s with a wrong CSRF token: %d", p, r.StatusCode)
+		}
+	}
+	select {
+	case <-h.s.Stopped():
+		t.Error("a forged stop request stopped the server")
+	default:
 	}
 }
 

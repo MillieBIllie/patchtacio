@@ -277,7 +277,8 @@ func (b *uiBackend) Report(ctx context.Context, update bool) (*ui.Report, error)
 		r.Findings = append(r.Findings, ui.Finding{
 			ID: f.ID, ProductID: f.ProductID, Product: shortName(f.Product),
 			CVE: f.CVEID, Acked: f.Acknowledged, Card: card, Added: calDate(f.DateAdded),
-			Recent: !f.DateAdded.IsZero() && !f.DateAdded.Before(today.AddDate(0, 0, -recentDays)),
+			// An unknown date counts as recent, so it is never swept up as "older".
+			Recent: f.DateAdded.IsZero() || !f.DateAdded.Before(today.AddDate(0, 0, -recentDays)),
 		})
 	}
 	for _, e := range rep.EndOfLife {
@@ -337,7 +338,7 @@ func (b *uiBackend) Ack(ctx context.Context, ids []string, note string) error {
 	return b.withStore(ctx, func(st *store.Store) error {
 		err := st.Acknowledge(ctx, ids, note)
 		if errors.Is(err, store.ErrNoFinding) {
-			return errors.New("this finding is not in Patchtacio's records yet; download the latest data and try again")
+			return errors.New("nothing was marked: Patchtacio has no record of an entry yet; download the latest data and try again")
 		}
 		return err
 	})
@@ -365,9 +366,6 @@ func (b *uiBackend) Feeds(ctx context.Context) ([]ui.FeedStatus, error) {
 		}
 		if st.LastUpdateFailed {
 			fs.Problem = firstLine(logging.RedactString(st.LastError))
-		}
-		if st.Via == feeds.ViaMirror {
-			fs.Source = "downloaded from its official GitHub mirror"
 		}
 		out = append(out, fs)
 	}

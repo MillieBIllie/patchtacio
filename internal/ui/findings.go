@@ -1,8 +1,11 @@
 package ui
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -17,6 +20,7 @@ type findingsData struct {
 	EOLCards   []EOLEntry // ended or ending
 	EOLOther   []EOLEntry // supported, unknown, not checked
 	Summary    []summaryRow
+	Seen       string // fingerprint of the KEV list shown, for the bulk forms
 	BulkOpen   []bulkProduct
 	BulkAcked  []bulkProduct
 	Feeds      []FeedStatus
@@ -33,6 +37,21 @@ type bulkProduct struct {
 type summaryRow struct {
 	Display, Version string
 	Open, Acked      int
+}
+
+// fingerprint identifies the KEV findings as a page shows them: which
+// ones, which are dealt with, and which count as recent. A bulk action is
+// refused if it changed after the page was loaded, so it never covers an
+// entry the user did not see (one a scheduled check added meanwhile, or one
+// that turned "older" at midnight).
+func fingerprint(fs []Finding) string {
+	lines := make([]string, len(fs))
+	for i, f := range fs {
+		lines[i] = f.ID + "|" + strconv.FormatBool(f.Acked) + "|" + strconv.FormatBool(f.Recent)
+	}
+	slices.Sort(lines)
+	h := sha256.Sum256([]byte(strings.Join(lines, "\n")))
+	return hex.EncodeToString(h[:])
 }
 
 // countByProduct groups findings by product, in first-seen order.
@@ -98,6 +117,7 @@ func (s *Server) findingsPage(w http.ResponseWriter, r *http.Request, sess *sess
 				d.EOLOther = append(d.EOLOther, e)
 			}
 		}
+		d.Seen = fingerprint(d.Report.Findings)
 		d.BulkOpen = countByProduct(d.Open)
 		d.BulkAcked = countByProduct(d.Acked)
 		for _, p := range d.Report.Products {
@@ -203,6 +223,12 @@ func (s *Server) ackBulk(w http.ResponseWriter, r *http.Request, sess *session, 
 	rep, err := s.b.Report(ctx, false)
 	if err != nil {
 		s.addFlash(sess, errorFlash("Could not read the findings", err))
+		redirect(w, r, "/findings")
+		return
+	}
+	if r.PostForm.Get("seen") != fingerprint(rep.Findings) {
+		s.addFlash(sess, Flash{Kind: "error", Title: "Nothing was marked",
+			Lines: []string{"The list changed after this page was loaded (new data, or a change in another tab). Check the list below again, then try again."}})
 		redirect(w, r, "/findings")
 		return
 	}

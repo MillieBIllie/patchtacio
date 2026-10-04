@@ -180,7 +180,11 @@ func TestUIEndToEnd(t *testing.T) {
 	requireContains(t, page, "Marked as dealt with.", "Dealt with (1)")
 	requireContains(t, page, "Data sources", "CISA KEV catalog", "up to date")
 	// Everything else for NetScaler at once.
-	page = c.post("/findings/ack-bulk", url.Values{"product": {"citrix-netscaler"}, "scope": {"all"},
+	seen := regexp.MustCompile(`name="seen" value="([0-9a-f]{64})"`).FindStringSubmatch(page)
+	if seen == nil {
+		t.Fatal("no list fingerprint")
+	}
+	page = c.post("/findings/ack-bulk", url.Values{"seen": {seen[1]}, "product": {"citrix-netscaler"}, "scope": {"all"},
 		"note": {"firmware 14.1-43 installed"}, "confirm": {"yes"}})
 	requireContains(t, page, "for Citrix NetScaler ADC and NetScaler Gateway as dealt with.")
 	// The CLI sees the same acknowledgements.

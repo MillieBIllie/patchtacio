@@ -156,8 +156,13 @@ gives up never sees the next real alert for what is left.
 - It needs a **note** (kept with every entry, as `ack --note` does) and a ticked confirmation that
   the entries were checked against the version run. Patchtacio does not compare versions, so it
   never offers to decide that for the user (CLAUDE.md rule 7: nothing is called safe to ignore).
-- The server works out which findings to mark from the saved data, at the moment of the request.
-  The browser sends only the product and the choice, never a list of IDs.
+- The server works out which findings to mark from the saved data. The browser sends only the
+  product, the choice, and a fingerprint of the list the page showed (which entries, which are dealt
+  with, which count as recent), never a list of IDs. If the list has changed since the page was loaded
+  (the daily check added an entry, another tab changed something, an entry turned "older" at
+  midnight), nothing is marked and the user is asked to look again. A bulk action never covers an
+  entry the user did not see.
+- An entry whose date added is unknown counts as recent, so "older" never sweeps it up.
 - "Move all back to open" undoes it per product. End-of-life findings are not included: each is
   one release and is acknowledged on its own.
 - The CLI keeps `ack <CVE>...`. A product-wide `ack` can follow if someone needs it in scripts.

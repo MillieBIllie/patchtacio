@@ -69,7 +69,7 @@ Download it with the button above (it needs internet access to cisa.gov or githu
     <p>For example after installing every update for a product. Patchtacio does not compare versions, so first check
     that the version you run is not affected (or is patched): it will not alert or remind you about these entries again.</p>
     <form method="post" action="/findings/ack-bulk" class="bulk-form">
-      <input type="hidden" name="csrf" value="{{$.CSRF}}">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="seen" value="{{.Seen}}">
       <label>Product
         <select name="product">{{range .BulkOpen}}<option value="{{.ID}}">{{.Display}} ({{.Count}} open, {{.Older}} older than 30 days)</option>{{end}}</select></label>
       <fieldset class="plain"><legend>Which entries</legend>
@@ -98,7 +98,7 @@ Download it with the button above (it needs internet access to cisa.gov or githu
   {{if .Acked}}
   <h3>Dealt with ({{len .Acked}})</h3>
   <form method="post" action="/findings/unack-bulk" class="inline">
-    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="seen" value="{{.Seen}}">
     <label>Move all for <select name="product">{{range .BulkAcked}}<option value="{{.ID}}">{{.Display}} ({{.Count}})</option>{{end}}</select></label>
     <button type="submit">back to open</button>
   </form>
@@ -146,7 +146,7 @@ Download it with the button above (it needs internet access to cisa.gov or githu
     <thead><tr><th scope="col">Source</th><th scope="col">State</th><th scope="col">Saved copy</th><th scope="col">Last checked</th></tr></thead>
     <tbody>
     {{range .Feeds}}
-      <tr><td>{{.Title}}{{if .Source}}<br><span class="small">{{.Source}}</span>{{end}}</td>
+      <tr><td>{{.Title}}</td>
         <td>{{if .OK}}{{.State}}{{else}}<strong class="bad">{{.State}}</strong>{{end}}</td>
         <td>{{if .Saved}}{{.Saved}}{{else}}none{{end}}</td>
         <td>{{.Checked}}</td></tr>
