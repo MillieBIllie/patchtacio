@@ -121,7 +121,7 @@ func (c *Config) Validate(cat *catalog.Catalog) (warnings []string, err error) {
 	return warnings, nil
 }
 
-const header = "# Patchtacio configuration. Change it with `patchtacio init`, or edit it by hand.\n" +
+const header = "# Patchtacio configuration. Change it with `patchtacio ui` or `patchtacio init`, or edit it by hand.\n" +
 	"# Product IDs come from `patchtacio catalog list`. version and notes are optional.\n" +
 	"# Do not put passwords or tokens here: Patchtacio reads them from environment variables.\n"
 

@@ -1,0 +1,50 @@
+{{define "content"}}{{with .Data}}
+<h1>Daily check</h1>
+<p class="lead">Your computer's own scheduler runs Patchtacio's check once a day and sends alerts on the channels you set up.
+It runs as you, needs no administrator rights, and catches up on a missed run where the scheduler can.</p>
+
+{{if .Err}}<div class="flash error" role="alert"><strong>Could not ask the scheduler</strong><ul><li>{{.Err}}</li></ul></div>{{end}}
+
+{{with .Schedule}}
+<section class="card">
+  {{if .Installed}}
+  <h2>{{if .Problems}}Set up, but it needs attention{{else}}Set up{{end}}</h2>
+  <dl>
+    <dt>How</dt><dd>{{.Method}}</dd>
+    {{if .At}}<dt>When</dt><dd>every day at {{.At}}</dd>{{end}}
+    {{if .NextRun}}<dt>Next run</dt><dd>{{.NextRun}}</dd>{{end}}
+    <dt>Last run</dt><dd>{{.LastRun}}</dd>
+    <dt>Log file</dt><dd><code>{{.LogFile}}</code></dd>
+  </dl>
+  {{else}}
+  <h2>Not set up</h2>
+  <p>Alerts are sent only when a check runs, so without the daily check nothing tells you about new findings.</p>
+  {{end}}
+  {{if .Problems}}<div class="flash error" role="alert"><strong>Problems</strong><ul>{{range .Problems}}<li>{{.}}</li>{{end}}</ul></div>{{end}}
+  {{if .Notes}}<ul class="small">{{range .Notes}}<li>{{.}}</li>{{end}}</ul>{{end}}
+</section>
+{{end}}
+
+{{if .Ready}}
+<form method="post" action="/schedule/install" class="inline">
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <label>Time of day <input type="time" name="at" value="{{if .Schedule}}{{.Schedule.At}}{{end}}"></label>
+  <button type="submit" class="primary">{{if and .Schedule .Schedule.Installed}}Change the daily check{{else}}Set up the daily check{{end}}</button>
+  <span class="small">Leave the time empty for a time between 08:00 and 08:59.</span>
+</form>
+{{else if .Why}}
+<p>{{.Why}}</p>
+{{end}}
+
+{{if and .Schedule .Schedule.Installed}}
+<form method="post" action="/schedule/run" class="inline" data-busy>
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <button type="submit">Run it now</button>
+  <span class="small">Runs the real daily check in the background, alerts included, to test the setup.</span>
+</form>
+<form method="post" action="/schedule/uninstall" class="inline">
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <button type="submit" class="danger">Remove the daily check</button>
+</form>
+{{end}}
+{{end}}{{end}}

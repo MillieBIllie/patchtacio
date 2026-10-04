@@ -1,0 +1,37 @@
+{{define "content"}}{{with .Data}}
+<h1>Your products</h1>
+<p class="lead">Tick every product you run. Add its version to also check when its security updates end
+(for example <code>7.4.2</code> or <code>2019</code>). Notes are for you, such as where it runs; they appear in alerts.</p>
+<p class="small">Patchtacio matches known exploited vulnerabilities by product name. It does not compare versions yet,
+so check each finding against the version you run.</p>
+{{if .Problem}}
+<div class="flash error" role="alert"><strong>Patchtacio cannot change the settings file</strong>
+  <ul><li>{{.Problem}}</li><li>Fix the file <code>{{.Path}}</code> or move it away, then reload this page.</li></ul></div>
+{{end}}
+<form method="post" action="/products">
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <input type="hidden" name="hash" value="{{.Hash}}">
+  <div class="toolbar">
+    <label for="filter">Search</label>
+    <input id="filter" type="search" data-filter="#products tbody tr" placeholder="Fortinet, VPN, Exchange…" autocomplete="off">
+    <span class="small" data-ticked="#products">{{.Ticked}} ticked</span>
+  </div>
+  <table id="products" class="products">
+    <thead><tr><th scope="col">Use</th><th scope="col">Product</th><th scope="col">Version</th><th scope="col">Notes</th></tr></thead>
+    <tbody>
+    {{range .Rows}}
+      <tr data-search="{{.Search}}">
+        <td><input type="checkbox" name="pick" value="{{.ID}}" id="p-{{.ID}}" {{if .Ticked}}checked{{end}}></td>
+        <td><label for="p-{{.ID}}">{{.Display}}</label> <span class="tag">{{.Category}}</span></td>
+        <td><input name="version.{{.ID}}" value="{{.Version}}" maxlength="64" size="10" aria-label="Version of {{.Display}}"
+             placeholder="{{if .EOL}}for end of life{{else}}optional{{end}}"></td>
+        <td><input name="notes.{{.ID}}" value="{{.Notes}}" maxlength="200" aria-label="Notes for {{.Display}}"></td>
+      </tr>
+    {{end}}
+    </tbody>
+  </table>
+  <p class="small">Missing a product? The list grows with each release; see "Adding a product" in the Patchtacio documentation.</p>
+  <div class="savebar"><button type="submit" class="primary" {{if .Problem}}disabled{{end}}>Save products</button>
+    <span class="small">Ticked products are saved with their versions and notes.</span></div>
+</form>
+{{end}}{{end}}

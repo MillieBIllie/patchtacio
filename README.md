@@ -3,7 +3,8 @@
 > **Status: pre-alpha.** Patchtacio can show the CISA KEV entries for the products you run
 > (`patchtacio init`, then `patchtacio check`), check end-of-life dates for products whose version
 > you give, send alerts about both (`patchtacio check --notify`), and run that every day with your
-> computer's scheduler (`patchtacio watch --install`). There are no release builds yet.
+> computer's scheduler (`patchtacio watch --install`). All of that can also be set up in your web
+> browser with `patchtacio ui`. There are no release builds yet.
 > See [docs/ROADMAP.md](docs/ROADMAP.md) for what's coming.
 
 Patchtacio is a free, open source, **local-only** tool for small IT teams in schools, local
@@ -30,6 +31,19 @@ go build ./cmd/patchtacio
 Release binaries for Linux, Windows, and macOS will be published once v0.1.0 is tagged.
 
 ## Try it
+
+### In your browser
+
+```sh
+./patchtacio ui                      # opens your browser: products, alerts + test, findings, daily check
+```
+
+On Windows, double-clicking `patchtacio.exe` does the same. The page is served only to your own
+browser on this computer (127.0.0.1, one-time link, CSRF-protected forms), and passwords and webhook
+URLs go to the OS keychain, never into the page or the settings file. Walkthrough:
+[docs/UI.md](docs/UI.md).
+
+### On the command line
 
 ```sh
 ./patchtacio init                    # tick the products you run (type / to search)

@@ -62,10 +62,14 @@ with missed-run catch-up), on Linux with systemd and cron (WSL, including restar
 (launchd installs and runs the check on schedule). Still to do on a real Mac: restart and missed runs.
 
 ### M5: Local web UI
-- [ ] `patchtacio ui` opens the browser on 127.0.0.1:<random port>
-- [ ] Product picker with search, notification setup + test button, findings list with ack
+Design decisions: [docs/decisions/0005-m5-web-ui.md](decisions/0005-m5-web-ui.md). Guide: [docs/UI.md](UI.md).
+- [x] `patchtacio ui` opens the browser on 127.0.0.1:<random port> (Windows: double-click `patchtacio.exe`)
+- [x] Product picker with search, notification setup + test button, findings list with ack (plus the daily check)
 
 **Done when:** a non-technical tester can set everything up without touching the CLI.
+Checklist and results: [docs/manual-testing-ui.md](manual-testing-ui.md). The whole setup runs without the CLI in an
+end-to-end test and in a developer walkthrough on Windows 11 with live feeds. Still to do: a session with a
+non-technical tester, and the Windows double-click and macOS/Linux desktops by hand.
 
 ### M6: Release + portfolio polish
 - [ ] GoReleaser: checksums, cosign signing, build provenance, SBOM for our own release

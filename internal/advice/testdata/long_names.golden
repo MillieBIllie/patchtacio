@@ -40,3 +40,18 @@ When you have dealt with it, run: patchtacio ack CVE-2026-81963
 
 === short
 Patchtacio: Microsoft Windows and Microsoft Windows Server exploited flaw CVE-2026-81963. Patch or mitigate by 12 Oct 2026. Details: patchtacio check
+=== web UI cards
+# [Action needed by 12 Oct 2026] Microsoft Windows and Microsoft Windows Server: actively exploited flaw (CVE-2026-81963)
+affected: Microsoft Windows (desktop: Windows 10, 11, and every older release still running somewhere in the building)
+affected: Microsoft Windows Server (including the domain controller under the stairs that nobody dares to reboot)
+caveat: Patchtacio matched this by product name and has not checked whether your version is affected.
+why: Attackers are already using this flaw: Microsoft Windows Common Log File System (CLFS) Driver Heap-Based Buffer Overflow Vulnerability (CVE-2026-81963). CISA added it to its list of exploited vulnerabilities on 28 Sep 2026.
+why: Fortinet FortiOS, FortiManager and FortiAnalyzer contain an authentication bypass that may allow an attacker with a FortiCloud account to log into other devices.
+What to do by 12 Oct 2026:
+  1. Update: check the vendor advisory for the fixed version: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+  2. If you cannot update yet, follow CISA's required action: "Apply mitigations per vendor instructions, follow applicable BOD 22-01 guidance for cloud services, or discontinue use of the product if mitigations are unavailable."
+  3. If neither is possible, disconnect it or restrict who can reach it until you can update.
+deadline: CISA set 12 Oct 2026 as the deadline for US government agencies. Use it as a guide to how urgent this is.
+link: Vendor advisory: https://fortiguard.fortinet.com/psirt/FG-IR-26-060
+link: CISA KEV entry: https://www.cisa.gov/known-exploited-vulnerabilities-catalog?search_api_fulltext=CVE-2026-81963
+link: NVD: https://nvd.nist.gov/vuln/detail/CVE-2026-81963

@@ -22,6 +22,7 @@ import (
 	"github.com/milliebillie/patchtacio/internal/schedule"
 	"github.com/milliebillie/patchtacio/internal/secrets"
 	"github.com/milliebillie/patchtacio/internal/store"
+	"github.com/milliebillie/patchtacio/internal/ui"
 	"github.com/milliebillie/patchtacio/internal/version"
 )
 
@@ -52,6 +53,8 @@ type app struct {
 	randIntN   func(int) int
 	// desktopNotice tells the desktop a scheduled run failed; fake in tests.
 	desktopNotice func(context.Context, advice.Notice) error
+	// openBrowser opens the web UI's launch link; fake in tests.
+	openBrowser func(string) error
 
 	// Set from global flags before a command runs.
 	verbosity  int
@@ -75,6 +78,7 @@ func defaultApp() *app {
 		lookPath:      exec.LookPath,
 		randIntN:      rand.IntN, // spreads install times; not security relevant
 		desktopNotice: notify.NewDesktop().SendNotice,
+		openBrowser:   ui.OpenBrowser,
 		log:           slog.New(slog.DiscardHandler),
 	}
 	a.channels = func(n *config.Notify) ([]notify.Channel, error) { return realChannels(n, a.secretStore().Getenv) }

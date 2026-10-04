@@ -125,31 +125,10 @@ func (a *app) printEOL(w io.Writer, rep checkReport) {
 		if e.Version != "" {
 			name += " " + clean(e.Version)
 		}
-		var what string
-		switch e.State {
-		case match.EOLEnded:
-			what = "security updates have stopped"
-			if !e.EOLDate.IsZero() && !e.EOLDate.After(rep.today) {
-				what = "security updates stopped on " + calDate(e.EOLDate)
-			}
-			what += upgradeHint(e)
-		case match.EOLEnding:
-			days := int(e.EOLDate.Sub(rep.today).Hours() / 24)
-			what = fmt.Sprintf("security updates stop on %s (in %d days)", calDate(e.EOLDate), days) + upgradeHint(e)
-		case match.EOLSupported:
-			what = "security updates until " + calDate(e.EOLDate)
-		case match.EOLNoEndDate:
-			what = "no end date announced on endoflife.date yet"
-		case match.EOLNotListed:
-			what = "endoflife.date does not list this product (any more); check the vendor's lifecycle page"
-		case match.EOLNoVersion:
+		if e.State == match.EOLNoVersion {
 			noVersion++
-			what = "no version in your configuration, so end of life is not checked"
-		case match.EOLNoMatch:
-			what = "version matches no release on endoflife.date; use one of: " + strings.Join(firstN(e.Releases, 8), ", ")
-		case match.EOLNoData:
-			what = "no saved endoflife.date data for it; run patchtacio feeds update"
 		}
+		what := eolWhat(e, rep.today)
 		rel := ""
 		if e.Release != "" {
 			rel = "release " + clean(e.Release)
@@ -167,6 +146,36 @@ func (a *app) printEOL(w io.Writer, rep checkReport) {
 	if noVersion > 0 {
 		_, _ = fmt.Fprintln(w, "To check end of life, add version: to those products in your configuration (e.g. version: \"7.4.2\").")
 	}
+}
+
+// eolWhat says, in words, what endoflife.date says about e. It never calls
+// anything "supported" without a date from endoflife.date to say until when.
+func eolWhat(e eolEntry, today time.Time) string {
+	var what string
+	switch e.State {
+	case match.EOLEnded:
+		what = "security updates have stopped"
+		if !e.EOLDate.IsZero() && !e.EOLDate.After(today) {
+			what = "security updates stopped on " + calDate(e.EOLDate)
+		}
+		what += upgradeHint(e)
+	case match.EOLEnding:
+		days := int(e.EOLDate.Sub(today).Hours() / 24)
+		what = fmt.Sprintf("security updates stop on %s (in %d days)", calDate(e.EOLDate), days) + upgradeHint(e)
+	case match.EOLSupported:
+		what = "security updates until " + calDate(e.EOLDate)
+	case match.EOLNoEndDate:
+		what = "no end date announced on endoflife.date yet"
+	case match.EOLNotListed:
+		what = "endoflife.date does not list this product (any more); check the vendor's lifecycle page"
+	case match.EOLNoVersion:
+		what = "no version in your configuration, so end of life is not checked"
+	case match.EOLNoMatch:
+		what = "version matches no release on endoflife.date; use one of: " + strings.Join(firstN(e.Releases, 8), ", ")
+	case match.EOLNoData:
+		what = "no saved endoflife.date data for it; run patchtacio feeds update"
+	}
+	return what
 }
 
 // notListed names the products endoflife.date no longer lists although the

@@ -1,0 +1,51 @@
+{{define "content"}}{{with .Data}}
+<h1>Set up Patchtacio</h1>
+<p class="lead">Patchtacio tells you when a product you run has a flaw that attackers are already using
+(from CISA's list of known exploited vulnerabilities), or is reaching the end of its security updates.
+Four steps set it up.</p>
+
+<ol class="steps">
+  <li class="{{if and .Config (not .Config.Problem) .Config.File.Products}}done{{end}}">
+    <h2>Choose your products</h2>
+    {{if .ConfigErr}}<p class="bad">{{.ConfigErr}}</p>
+    {{else if .Config.Problem}}<p class="bad">{{.Config.Problem}}</p>
+    {{else if .Config.File.Products}}<p>{{plural (len .Config.File.Products) "product" "products"}} chosen.</p>
+    {{else}}<p>No products chosen yet.</p>{{end}}
+    <p><a class="button" href="/products">Choose products</a></p>
+  </li>
+
+  <li class="{{if and .Channels (not .Unset)}}done{{end}}">
+    <h2>Choose how to be alerted</h2>
+    {{if .Channels}}
+      <p>Alerts go by: {{join .Channels ", "}}.</p>
+      {{if .Unset}}<p class="bad">Still needed: {{join .Unset ", "}}.</p>{{end}}
+    {{else}}
+      <p>No alerts set up yet: email, a Teams, Slack or Discord channel, the ntfy phone app, or a notification on this computer.</p>
+    {{end}}
+    <p><a class="button" href="/alerts">Set up alerts and send a test</a></p>
+  </li>
+
+  <li class="{{if and .Report (not .Report.NoData) (not .Report.Warnings)}}done{{end}}">
+    <h2>See what affects you now</h2>
+    {{if .ReportErr}}<p class="bad">{{.ReportErr}}</p>
+    {{else if not .Report}}<p>Choose your products first.</p>
+    {{else if .Report.NoData}}<p class="bad">No usable vulnerability data yet: Patchtacio cannot check your products.</p>
+    {{else if .Report.Warnings}}<p class="bad">The data has problems, so findings may be missing:</p>
+      <ul>{{range .Report.Warnings}}<li>{{.}}</li>{{end}}</ul>
+      {{if .Open}}<p class="bad">{{plural .Open "finding needs" "findings need"}} your attention.</p>{{end}}
+    {{else if .Open}}<p class="bad">{{plural .Open "finding needs" "findings need"}} your attention.</p>
+    {{else}}<p>Nothing open in the data Patchtacio has. That is not an all clear: keep installing your vendors' security updates.</p>{{end}}
+    <p><a class="button" href="/findings">Open findings</a></p>
+  </li>
+
+  <li class="{{if and .Schedule .Schedule.Installed (not .Schedule.Problems)}}done{{end}}">
+    <h2>Check every day</h2>
+    {{if .ScheduleErr}}<p class="bad">{{.ScheduleErr}}</p>
+    {{else if not .Schedule.Installed}}<p>Not set up: alerts are sent only when a check runs, so set up the daily check.</p>
+    {{else if .Schedule.Problems}}<p class="bad">Set up, but it needs attention.</p>
+    {{else}}<p>Set up{{if .Schedule.At}}: every day at {{.Schedule.At}}{{end}}.</p>{{end}}
+    <p><a class="button" href="/schedule">Daily check</a></p>
+  </li>
+</ol>
+{{if .Config}}<p class="small">Settings file: <code>{{.Config.Path}}</code></p>{{end}}
+{{end}}{{end}}

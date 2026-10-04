@@ -40,6 +40,13 @@ func newPoster() *poster {
 	}
 }
 
+// CheckURL reports whether raw may be used as a webhook or ntfy URL, so it
+// can be checked before it is saved. The error names envName, never the URL.
+func CheckURL(raw, envName string) error {
+	_, err := checkURL(raw, envName)
+	return err
+}
+
 // checkURL accepts https URLs, and http only for this computer (a local
 // ntfy server, or a test).
 func checkURL(raw, envName string) (*url.URL, error) {

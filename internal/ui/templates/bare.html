@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patchtacio</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="narrow">
+<h1>Patchtacio</h1>
+{{if eq .Which "stopped"}}
+<p>Patchtacio has stopped. You can close this tab.</p>
+<p>To open it again, run <code>patchtacio ui</code>{{/* */}} (on Windows you can also double-click <code>patchtacio.exe</code>).</p>
+{{else if eq .Which "revoked"}}
+<p>Patchtacio's link was opened a second time, so Patchtacio closed the browser session to be safe: someone else may have the link.</p>
+<p>Stop Patchtacio (close its window, or press Ctrl+C there) and start it again with <code>patchtacio ui</code>.</p>
+{{else if eq .Which "linkUsed"}}
+<p>This link has already been used or has expired. Each link opens Patchtacio once, in one browser.</p>
+<p>If Patchtacio is open in another tab, use that one. Otherwise stop Patchtacio and start it again with <code>patchtacio ui</code>.</p>
+{{else}}
+<p>This page needs the link Patchtacio opened when it started, so that nobody else using this computer can change your settings.</p>
+<p>Start Patchtacio with <code>patchtacio ui</code> (on Windows you can also double-click <code>patchtacio.exe</code>): it opens this page for you. If it is already running, use the tab it opened.</p>
+{{end}}
+</main>
+</body>
+</html>

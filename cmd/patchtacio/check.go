@@ -70,134 +70,37 @@ func newCheckCmd(a *app) *cobra.Command {
 				}
 			}
 
-			u, closeFn, err := a.openUpdater(cmd.Context())
+			res, err := a.runCheck(cmd.Context(), cat, cfg, cmd.ErrOrStderr(), checkOpts{offline: offline, notify: sendAlerts, since: sinceDate})
 			if err != nil {
 				return err
 			}
-			defer closeFn()
-			// KEV always; endoflife.date only when a product has a version to
-			// look up, so KEV-only users fetch nothing more.
-			needEOL := wantsEOL(cat, cfg)
-			u.Sources = slices.DeleteFunc(u.Sources, func(s feeds.Source) bool {
-				return s.Name() != "kev" && (s.Name() != "eol" || !needEOL)
-			})
-			results, err := u.Update(cmd.Context(), offline)
-			if err != nil {
-				return fmt.Errorf("update feeds: %w", err)
-			}
-			warn := cmd.ErrOrStderr()
-			kevCode, eolCode := exitOK, exitOK
-			for _, r := range results {
-				// Success lines are for `feeds update`; check prints only what
-				// changes how far the result can be trusted.
-				c := a.reportResult(io.Discard, warn, r, offline)
-				if r.Status.Name == "eol" {
-					eolCode = worse(eolCode, c)
-				} else {
-					kevCode = worse(kevCode, c)
-				}
-			}
-			kc, st, err := a.loadKEV(cmd.Context(), u)
-			if err != nil {
-				_, _ = fmt.Fprintf(warn, "Cannot check your products: %s\n", firstLine(logging.RedactString(err.Error())))
+			out, warn := cmd.OutOrStdout(), cmd.ErrOrStderr()
+			if res.noData {
 				if sendAlerts {
-					// No data means no alerts: say so on the alert channels,
-					// or silence would read as an all clear.
-					reps, alertErr := a.sendAlerts(cmd.Context(), u.Store, cfg, nil, nil, false, []feedProblem{{
-						kind: noticeKEVStale, feed: advice.KEVFeed, lastGood: st.CheckedAt, why: logging.RedactString(err.Error()),
-					}})
-					out := cmd.OutOrStdout()
 					if asJSON {
 						out = io.Discard // stdout stays JSON (or empty)
 					}
-					a.reportAlerts(out, warn, reps, alertErr)
+					a.reportAlerts(out, warn, res.rep.Alerts, res.alertErr)
 				}
-				return outcome(exitToolError)
-			}
-			kevCode = worse(kevCode, stateCode(st.State)) // in case a source reported no result
-			stale := kevCode != exitOK
-			var problems []feedProblem
-			if st.State != feeds.Fresh {
-				// Only when the copy is actually out of date: one failed fetch
-				// while it is still fresh is not worth an alert.
-				problems = append(problems, feedProblem{kind: noticeKEVStale, feed: advice.KEVFeed, lastGood: st.CheckedAt, why: logging.RedactString(staleWhy(st))})
-			}
-
-			findings := match.New(cat).KEV(kc.Vulnerabilities, cfg.IDs())
-			var eols []match.EOLStatus
-			var eolFeed *feeds.Status
-			if needEOL {
-				ec, est, err := a.loadEOL(cmd.Context(), u)
-				eolFeed = &est
-				switch {
-				case err != nil:
-					// Whatever the feed's state: unreadable data must never
-					// quietly stop end-of-life alerts.
-					why := logging.RedactString(err.Error())
-					_, _ = fmt.Fprintf(warn, "Cannot check end of life: %s\n", firstLine(why))
-					eolCode = worse(eolCode, exitToolError)
-					problems = append(problems, feedProblem{kind: noticeEOLStale, feed: advice.EOLFeed, lastGood: est.CheckedAt, why: why})
-				case est.State != feeds.Fresh:
-					eolCode = worse(eolCode, stateCode(est.State))
-					problems = append(problems, feedProblem{kind: noticeEOLStale, feed: advice.EOLFeed, lastGood: est.CheckedAt, why: logging.RedactString(staleWhy(est))})
-				}
-				eols = match.EOL(cat, ec, ticked(cfg), a.today())
-				if gone := notListed(eols); len(gone) > 0 {
-					_, _ = fmt.Fprintf(warn, "Warning: endoflife.date no longer lists %s, so end of life cannot be checked for it; check the vendor's lifecycle page.\n",
-						strings.Join(gone, ", "))
-					eolCode = worse(eolCode, exitStale)
-					problems = append(problems, feedProblem{kind: noticeEOLNotListed, notice: advice.NotListedNotice(gone)})
-				}
-			}
-			// Every run records what matched, so `patchtacio ack` works after
-			// a plain check; only --notify sends anything.
-			if err := u.Store.RecordFindings(cmd.Context(), append(storedFindings(findings), storedEOLFindings(eols)...)); err != nil {
-				return fmt.Errorf("save findings: %w", err)
-			}
-			allFindings := slices.Clone(findings) // --since narrows the report, never the alerts (DeleteFunc works in place)
-			if !sinceDate.IsZero() {
-				findings = slices.DeleteFunc(findings, func(f match.Finding) bool { return f.Vuln.DateAdded.Before(sinceDate.Time) })
-			}
-			rep := a.newCheckReport(cat, cfg, kc.Version, kc.Released, st, stale, sinceDate, findings)
-			rep.EndOfLife = a.eolReport(cat, cfg, eols, needEOL)
-			rep.EOLFeed = eolFeed
-			rep.EOLStale = needEOL && eolCode != exitOK
-			for _, e := range rep.EndOfLife {
-				if e.State.IsFinding() {
-					rep.eolFindings++
-				}
-			}
-			if err := markAcknowledged(cmd.Context(), u.Store, &rep); err != nil {
-				return err
-			}
-			var alertErr error
-			if sendAlerts {
-				rep.Alerts, alertErr = a.sendAlerts(cmd.Context(), u.Store, cfg, allFindings, eols, true, problems)
+				return outcome(res.code)
 			}
 			if asJSON {
-				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc := json.NewEncoder(out)
 				enc.SetIndent("", "  ")
-				if err := enc.Encode(rep); err != nil {
+				if err := enc.Encode(res.rep); err != nil {
 					return fmt.Errorf("encode findings: %w", err)
 				}
 			} else {
-				a.printCheck(cmd.OutOrStdout(), rep)
-				a.printEOL(cmd.OutOrStdout(), rep)
+				a.printCheck(out, res.rep)
+				a.printEOL(out, res.rep)
 			}
 			if sendAlerts {
-				out := cmd.OutOrStdout()
 				if asJSON {
 					out = io.Discard // the reports are in the JSON
 				}
-				a.reportAlerts(out, warn, rep.Alerts, alertErr)
+				a.reportAlerts(out, warn, res.rep.Alerts, res.alertErr)
 			}
-			if alertErr != nil {
-				return outcome(exitToolError) // a scheduled run must not fail silently
-			}
-			if len(findings) > 0 || rep.eolFindings > 0 {
-				return outcome(exitFindings) // stale warnings, if any, are already printed
-			}
-			return outcome(worse(kevCode, eolCode))
+			return outcome(res.code)
 		},
 	}
 	cmd.Flags().BoolVar(&offline, "offline", false, "do not use the network; check against the saved copy")
@@ -205,6 +108,138 @@ func newCheckCmd(a *app) *cobra.Command {
 	cmd.Flags().BoolVar(&sendAlerts, "notify", false, "also send alerts for new findings and reminders (see the notify: section of the configuration)")
 	cmd.Flags().StringVar(&since, "since", "", "only show entries added to KEV on or after this date (YYYY-MM-DD)")
 	return cmd
+}
+
+// checkOpts are check's choices.
+type checkOpts struct {
+	offline bool       // use only the saved copies
+	notify  bool       // also send alerts
+	since   feeds.Date // narrows the report, never the alerts
+}
+
+// checkResult is what runCheck found.
+type checkResult struct {
+	rep      checkReport // with noData, only Alerts is set
+	noData   bool        // the KEV data could not be read at all (warning already written)
+	alertErr error       // with notify: some alert could not be sent
+	code     int         // check's exit code
+}
+
+// runCheck updates the feeds (unless offline), matches the configured
+// products, records the findings and, with o.notify, sends alerts. Anything
+// that limits how far the result can be trusted goes to warn. The error is
+// for failures before or around the check itself; no KEV data is a result
+// (noData), so alerts can still say so.
+func (a *app) runCheck(ctx context.Context, cat *catalog.Catalog, cfg *config.Config, warn io.Writer, o checkOpts) (*checkResult, error) {
+	u, closeFn, err := a.openUpdater(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer closeFn()
+	// KEV always; endoflife.date only when a product has a version to
+	// look up, so KEV-only users fetch nothing more.
+	needEOL := wantsEOL(cat, cfg)
+	u.Sources = slices.DeleteFunc(u.Sources, func(s feeds.Source) bool {
+		return s.Name() != "kev" && (s.Name() != "eol" || !needEOL)
+	})
+	results, err := u.Update(ctx, o.offline)
+	if err != nil {
+		return nil, fmt.Errorf("update feeds: %w", err)
+	}
+	kevCode, eolCode := exitOK, exitOK
+	for _, r := range results {
+		// Success lines are for `feeds update`; check prints only what
+		// changes how far the result can be trusted.
+		c := a.reportResult(io.Discard, warn, r, o.offline)
+		if r.Status.Name == "eol" {
+			eolCode = worse(eolCode, c)
+		} else {
+			kevCode = worse(kevCode, c)
+		}
+	}
+	kc, st, err := a.loadKEV(ctx, u)
+	if err != nil {
+		_, _ = fmt.Fprintf(warn, "Cannot check your products: %s\n", firstLine(logging.RedactString(err.Error())))
+		res := &checkResult{noData: true, code: exitToolError}
+		if o.notify {
+			// No data means no alerts: say so on the alert channels,
+			// or silence would read as an all clear.
+			res.rep.Alerts, res.alertErr = a.sendAlerts(ctx, u.Store, cfg, nil, nil, false, []feedProblem{{
+				kind: noticeKEVStale, feed: advice.KEVFeed, lastGood: st.CheckedAt, why: logging.RedactString(err.Error()),
+			}})
+		}
+		return res, nil
+	}
+	kevCode = worse(kevCode, stateCode(st.State)) // in case a source reported no result
+	stale := kevCode != exitOK
+	var problems []feedProblem
+	if st.State != feeds.Fresh {
+		// Only when the copy is actually out of date: one failed fetch
+		// while it is still fresh is not worth an alert.
+		problems = append(problems, feedProblem{kind: noticeKEVStale, feed: advice.KEVFeed, lastGood: st.CheckedAt, why: logging.RedactString(staleWhy(st))})
+	}
+
+	findings := match.New(cat).KEV(kc.Vulnerabilities, cfg.IDs())
+	var eols []match.EOLStatus
+	var eolFeed *feeds.Status
+	if needEOL {
+		ec, est, err := a.loadEOL(ctx, u)
+		eolFeed = &est
+		switch {
+		case err != nil:
+			// Whatever the feed's state: unreadable data must never
+			// quietly stop end-of-life alerts.
+			why := logging.RedactString(err.Error())
+			_, _ = fmt.Fprintf(warn, "Cannot check end of life: %s\n", firstLine(why))
+			eolCode = worse(eolCode, exitToolError)
+			problems = append(problems, feedProblem{kind: noticeEOLStale, feed: advice.EOLFeed, lastGood: est.CheckedAt, why: why})
+		case est.State != feeds.Fresh:
+			eolCode = worse(eolCode, stateCode(est.State))
+			problems = append(problems, feedProblem{kind: noticeEOLStale, feed: advice.EOLFeed, lastGood: est.CheckedAt, why: logging.RedactString(staleWhy(est))})
+		}
+		eols = match.EOL(cat, ec, ticked(cfg), a.today())
+		if gone := notListed(eols); len(gone) > 0 {
+			_, _ = fmt.Fprintf(warn, "Warning: endoflife.date no longer lists %s, so end of life cannot be checked for it; check the vendor's lifecycle page.\n",
+				strings.Join(gone, ", "))
+			eolCode = worse(eolCode, exitStale)
+			problems = append(problems, feedProblem{kind: noticeEOLNotListed, notice: advice.NotListedNotice(gone)})
+		}
+	}
+	// Every run records what matched, so `patchtacio ack` works after
+	// a plain check; only --notify sends anything.
+	if err := u.Store.RecordFindings(ctx, append(storedFindings(findings), storedEOLFindings(eols)...)); err != nil {
+		return nil, fmt.Errorf("save findings: %w", err)
+	}
+	allFindings := slices.Clone(findings) // --since narrows the report, never the alerts (DeleteFunc works in place)
+	if !o.since.IsZero() {
+		findings = slices.DeleteFunc(findings, func(f match.Finding) bool { return f.Vuln.DateAdded.Before(o.since.Time) })
+	}
+	rep := a.newCheckReport(cat, cfg, kc.Version, kc.Released, st, stale, o.since, findings)
+	rep.EndOfLife = a.eolReport(cat, cfg, eols, needEOL)
+	rep.EOLFeed = eolFeed
+	rep.EOLStale = needEOL && eolCode != exitOK
+	for _, e := range rep.EndOfLife {
+		if e.State.IsFinding() {
+			rep.eolFindings++
+		}
+	}
+	if err := markAcknowledged(ctx, u.Store, &rep); err != nil {
+		return nil, err
+	}
+	res := &checkResult{}
+	if o.notify {
+		rep.Alerts, res.alertErr = a.sendAlerts(ctx, u.Store, cfg, allFindings, eols, true, problems)
+	}
+	res.rep = rep
+	switch {
+	case res.alertErr != nil:
+		res.code = exitToolError // a scheduled run must not fail silently
+	case len(findings) > 0 || rep.eolFindings > 0:
+		res.code = exitFindings // stale warnings, if any, are already written
+	default:
+		res.code = worse(kevCode, eolCode)
+	}
+	return res, nil
 }
 
 // loadConfig reads and validates the configuration for commands that need
